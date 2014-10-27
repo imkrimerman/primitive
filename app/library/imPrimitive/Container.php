@@ -6,7 +6,7 @@
  * Time: 06:56
  */
 
-class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSerializable, Countable, IteratorAggregate, Traversable{
+class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSerializable, Countable, IteratorAggregate, Traversable {
 
     /*
 	|--------------------------------------------------------------------------
@@ -147,7 +147,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function hasKey( $key )
     {
-        return in_array( $key, array_keys($this->items) );
+        return isset( $this->items[$key] );
     }
 
     // --------------------------------------------------------------------------
@@ -767,7 +767,8 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     /**
      * @return int
      */
-    public function count(){
+    public function count()
+    {
         return $this->length;
     }
 
@@ -861,6 +862,6 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      * @return Container
      */
     function a( $array )
-{
-    return new Container( $array );
-}
+    {
+        return new Container( $array );
+    }

@@ -55,18 +55,18 @@ namespace im\Primitive {
         // --------------------------------------------------------------------------
 
         /**
-         * @param array $array | string json | string path_to_file
+         * @param array|string|Container|String $from
          * @throws ContainerException
          */
-        public function __construct( $array = array() )
+        public function __construct( $from = array() )
         {
-            if( is_string($array) )
+            if( is_string($from) or $from instanceof String )
             {
-                $this->fromJson($array);
+                $this->fromJson($from);
 
                 if( $this->isEmpty() )
                 {
-                    $container = new Container( explode(DIRECTORY_SEPARATOR, $array) );
+                    $container = new Container( explode(DIRECTORY_SEPARATOR, $from) );
                     $container->pop();
 
                     $dir = $container->implode('');
@@ -75,21 +75,25 @@ namespace im\Primitive {
 
                     if( is_dir($dir) )
                     {
-                        $this->fromFile( $array );
+                        $this->fromFile( $from );
                     }
                     else
                     {
-                        $array = array();
+                        $from = array();
                     }
                 }
             }
-            elseif( ! is_array($array) )
+            elseif( $from instanceof Container )
+            {
+                $from = $from->all();
+            }
+            elseif( ! is_array($from) )
             {
                 throw new ContainerException('Bad value given');
             }
 
-            $this->items  = $array;
-            $this->clone  = $array;
+            $this->items  = $from;
+            $this->clone  = $from;
             $this->booted = true;
             $this->measure();
 
@@ -284,11 +288,11 @@ namespace im\Primitive {
 
         /**
          * @param string $delimiter
-         * @return string
+         * @return String|string
          */
         public function implode( $delimiter = ' ' )
         {
-            if( class_exists('String') and function_exists('s') )
+            if( class_exists('String') )
             {
                 return new String( implode( $delimiter, $this->items ) );
             }
@@ -300,7 +304,7 @@ namespace im\Primitive {
 
         /**
          * @param int $size
-         * @return array|bool
+         * @return bool|Container
          */
         public function chunk( $size = 2 )
         {
@@ -357,7 +361,7 @@ namespace im\Primitive {
 
         /**
          * @param callable $function
-         * @return array|Container
+         * @return Container
          */
         public function filter( callable $function )
         {
@@ -409,7 +413,6 @@ namespace im\Primitive {
         /**
          * @param int $increase_size
          * @param int $value
-         * @internal param int $inc_size
          * @return $this
          */
         public function pad( $increase_size = 1, $value = 0 )
@@ -460,7 +463,7 @@ namespace im\Primitive {
          */
         public function encrypt()
         {
-            $this->items = base64_encode( gzcompress($this->flip()->toJson()) );
+            $this->items = base64_encode( gzcompress( $this->flip()->toJson() ) );
 
             return $this;
         }
@@ -481,22 +484,29 @@ namespace im\Primitive {
 
         /**
          * @param $key
+         * @param bool $is_value
          * @return bool
          */
-        public function forget( $key )
+        public function forget( $key, $is_value = false )
         {
-            if( $this->hasKey($key) )
+            if( $is_value === false )
             {
-                unset( $this->items[ $key ] );
+                if( $this->hasKey($key) )
+                {
+                    unset( $this->items[ $key ] );
 
-                return true;
+                    return true;
+                }
             }
-            elseif( $this->has($key) )
+            else
             {
-                $found = $this->find($key);
-                unset( $this->items[ $found ], $found );
+                if( $this->has($key) )
+                {
+                    $found = $this->find($key);
+                    unset( $this->items[ $found ], $found );
 
-                return true;
+                    return true;
+                }
             }
 
             return false;
@@ -598,6 +608,134 @@ namespace im\Primitive {
         public function all()
         {
             return $this->toArray();
+        }
+
+        // --------------------------------------------------------------------------
+
+        public function copy()
+        {
+            return clone $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param null $nth
+         * @return Container
+         * @throws ContainerException
+         */
+        public function initial( $nth = null )
+        {
+            if( $this->length > 1 )
+            {
+                if( is_null($nth) )
+                {
+                    $nth = $this->length - 1;
+                }
+                elseif( (int) $nth >= $this->length )
+                {
+                    return false;
+                }
+
+                if( $this->hasKey($nth) )
+                {
+                    $this->save()->forget( $nth );
+
+                    $copy = $this->copy();
+
+                    $this->revert();
+
+                    return $copy;
+                }
+            }
+
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $index
+         * @return bool|Container
+         */
+        public function rest( $index )
+        {
+            if( is_numeric($index) and $this->length > $index )
+            {
+                $index = (int) $index;
+
+                $this->save();
+
+                $i = 0;
+                foreach( $this->items as $key => $item )
+                {
+                    if( $i++ === $index ) break;
+                    
+                    $this->forget( $key );
+                }
+
+                $copy = $this->copy();
+                
+                $this->revert();
+                
+                return $copy;
+            }
+
+            return false;
+        }
+        
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function flatten()
+        {
+            $flattened = array();
+
+            array_walk_recursive($array, function( $value, $key ) use ( &$flattened )
+            {
+                $return[ $key ] = $value;
+            });
+
+            $this->items = $flattened;
+            $this->measure();
+
+            unset( $flattened );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function truly()
+        {
+            function onlyTruly( $a )
+            {
+                if( ! empty($a) and $a !== false )
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            $this->items = $this->filter('onlyTruly');
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        public function where( array $condition )
+        {
+            $condition_length = count( $condition );
+
+
         }
 
         // ------------------------------------------------------------------------------

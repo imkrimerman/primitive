@@ -6,904 +6,934 @@
  * Time: 06:56
  */
 
+namespace im\Primitive {
 
-class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSerializable, Countable, IteratorAggregate {
+    use \ArrayAccess;
+    use \JsonSerializable;
+    use \Countable;
+    use \ArrayIterator;
+    use \IteratorAggregate;
 
-    /*
-	|--------------------------------------------------------------------------
-	| Container inner variables
-	|--------------------------------------------------------------------------
-	*/
+    use im\Primitive\Interfaces\ArrayableInterface;
+    use im\Primitive\Interfaces\JsonableInterface;
+    use im\Primitive\Interfaces\FileableInterface;
+    use im\Primitive\Interfaces\RevertableInterface;
+    use im\Primitive\Exceptions\ContainerException;
 
-    private   $clone;
-    protected $items;
+    use im\Primitive\String;
 
-    /*
-	|--------------------------------------------------------------------------
-	| Container public variables
-	|--------------------------------------------------------------------------
-	*/
+    class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, RevertableInterface, Countable, IteratorAggregate {
 
-    public $length;
-    public $booted;
+        /*
+        |--------------------------------------------------------------------------
+        | Storing clone of main items, used for reverting
+        |--------------------------------------------------------------------------
+        */
+        private $clone;
 
-    // --------------------------------------------------------------------------
+        /*
+        |--------------------------------------------------------------------------
+        | Storing main items
+        |--------------------------------------------------------------------------
+        */
+        protected $items;
 
-    /**
-     * @param array $array | string json | string path_to_file
-     * @throws ContainerException
-     */
-    public function __construct( $array = array() )
-    {
-        if( is_string($array) )
+        /*
+        |--------------------------------------------------------------------------
+        | Storing Container length
+        |--------------------------------------------------------------------------
+        */
+        public $length;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Flag to check if Container is booted and can be reverted
+        |--------------------------------------------------------------------------
+        */
+        public $booted;
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param array $array | string json | string path_to_file
+         * @throws ContainerException
+         */
+        public function __construct( $array = array() )
         {
-            $this->fromJson($array);
-
-            if( $this->isEmpty() )
+            if( is_string($array) )
             {
-                $container = new Container( explode(DIRECTORY_SEPARATOR, $array) );
-                $container->pop();
+                $this->fromJson($array);
 
-                $dir = $container->implode('');
-
-                unset( $container );
-
-                if( is_dir($dir) )
+                if( $this->isEmpty() )
                 {
-                    $this->fromFile( $array );
-                }
-                else
-                {
-                    $array = array();
+                    $container = new Container( explode(DIRECTORY_SEPARATOR, $array) );
+                    $container->pop();
+
+                    $dir = $container->implode('');
+
+                    unset( $container );
+
+                    if( is_dir($dir) )
+                    {
+                        $this->fromFile( $array );
+                    }
+                    else
+                    {
+                        $array = array();
+                    }
                 }
             }
-        }
-        elseif( ! is_array($array) )
-        {
-            throw new ContainerException('Bad value given');
-        }
-
-        $this->items  = $array;
-        $this->clone  = $array;
-        $this->booted = true;
-        $this->measure();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $item
-     * @param null $key
-     * @return $this
-     */
-    public function push( $item, $key = null )
-    {
-        if( is_array($item) )
-        {
-            $this->merge( $item );
-            $this->measure();
-        }
-        else
-        {
-            if( is_null($key) )
+            elseif( ! is_array($array) )
             {
-                $this->items[] = $item;
+                throw new ContainerException('Bad value given');
+            }
+
+            $this->items  = $array;
+            $this->clone  = $array;
+            $this->booted = true;
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $item
+         * @param null $key
+         * @return $this
+         */
+        public function push( $item, $key = null )
+        {
+            if( is_array($item) )
+            {
+                $this->merge( $item );
+                $this->measure();
             }
             else
             {
-                $this->items[ $key ] = $item;
+                if( is_null($key) )
+                {
+                    $this->items[] = $item;
+                }
+                else
+                {
+                    $this->items[ $key ] = $item;
+                }
+
+                $this->length++;
             }
 
-            $this->length++;
+            return $this;
         }
 
-        return $this;
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     */
-    public function pop()
-    {
-        return array_pop( $this->items );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $item
-     * @return $this
-     */
-    public function unshift( $item )
-    {
-        $this->length = array_unshift( $this->items, $item );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     */
-    public function shift()
-    {
-        return array_shift( $this->items );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $value
-     * @return mixed
-     */
-    public function find( $value )
-    {
-        return array_search( $value, $this->items );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $value
-     * @return bool
-     */
-    public function has( $value )
-    {
-        return in_array( $value, $this->items );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $key
-     * @return bool
-     */
-    public function hasKey( $key )
-    {
-        return isset( $this->items[ $key ] );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     * @throws ContainerException
-     */
-    public function firstKey()
-    {
-        return $this->key('first');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     * @throws ContainerException
-     */
-    public function lastKey()
-    {
-        return $this->key('last');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     */
-    public function first()
-    {
-        return $this->items[ $this->firstKey() ];
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return mixed
-     */
-    public function last()
-    {
-        return $this->items[ $this->lastKey() ];
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function unique()
-    {
-        $this->items = array_unique( $this->items );
-        $this->measure();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return array
-     */
-    public function keys()
-    {
-        return new Container( array_keys($this->items) );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return array
-     */
-    public function values()
-    {
-        return new Container( array_values( $this->items ) );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function shuffle()
-    {
-        shuffle( $this->items );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param string $delimiter
-     * @return string
-     */
-    public function implode( $delimiter = ' ' )
-    {
-        if( class_exists('String') and function_exists('s') )
+        /**
+         * @return mixed
+         */
+        public function pop()
         {
-            return new String( implode( $delimiter, $this->items ) );
+            return array_pop( $this->items );
         }
 
-        return implode( $delimiter, $this->items );
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param int $size
-     * @return array|bool
-     */
-    public function chunk( $size = 2 )
-    {
-        if( ! is_integer( $size ) or $size > $this->length )
+        /**
+         * @param $item
+         * @return $this
+         */
+        public function unshift( $item )
         {
+            $this->length = array_unshift( $this->items, $item );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return mixed
+         */
+        public function shift()
+        {
+            return array_shift( $this->items );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $value
+         * @return mixed
+         */
+        public function find( $value )
+        {
+            return array_search( $value, $this->items );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $value
+         * @return bool
+         */
+        public function has( $value )
+        {
+            return in_array( $value, $this->items );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $key
+         * @return bool
+         */
+        public function hasKey( $key )
+        {
+            return isset( $this->items[ $key ] );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return mixed
+         * @throws ContainerException
+         */
+        public function firstKey()
+        {
+            return $this->key('first');
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return mixed
+         * @throws ContainerException
+         */
+        public function lastKey()
+        {
+            return $this->key('last');
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return mixed
+         */
+        public function first()
+        {
+            return $this->items[ $this->firstKey() ];
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return mixed
+         */
+        public function last()
+        {
+            return $this->items[ $this->lastKey() ];
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function unique()
+        {
+            $this->items = array_unique( $this->items );
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return Container
+         */
+        public function keys()
+        {
+            return new Container( array_keys($this->items) );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return Container
+         */
+        public function values()
+        {
+            return new Container( array_values($this->items) );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function shuffle()
+        {
+            shuffle( $this->items );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param string $delimiter
+         * @return string
+         */
+        public function implode( $delimiter = ' ' )
+        {
+            if( class_exists('String') and function_exists('s') )
+            {
+                return new String( implode( $delimiter, $this->items ) );
+            }
+
+            return implode( $delimiter, $this->items );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param int $size
+         * @return array|bool
+         */
+        public function chunk( $size = 2 )
+        {
+            if( ! is_integer( $size ) or $size > $this->length )
+            {
+                return false;
+            }
+
+            return new Container( array_chunk($this->items, $size) );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $array
+         * @param string $what
+         * @return array|string
+         */
+        public function combine( $array, $what = 'keys' )
+        {
+            $result = array();
+
+            if( is_string($what) )
+            {
+                if( $what === 'keys' )
+                {
+                    $result = array_combine( $array, $this->values()->all() );
+                }
+                elseif( $what === 'values' )
+                {
+                    $result = array_combine( $this->keys()->all(), $array );
+                }
+                elseif( str_replace(' ', '', $what) === 'keys&&values' )
+                {
+                    if( isset($array['keys']) and isset($array['values']) )
+                    {
+                        $result = array_combine( $array['keys'], $array['values'] );
+                    }
+                }
+            }
+
+            if( ! empty($result) )
+            {
+                $this->items = $result;
+
+            }
+
+            unset( $result );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param callable $function
+         * @return array|Container
+         */
+        public function filter( callable $function )
+        {
+            return new Container( array_filter($this->items, $function) );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function flip()
+        {
+            $this->items = array_flip( $this->items );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param callable $function
+         * @return $this
+         */
+        public function each( callable $function )
+        {
+            array_map( $function, $this->items );
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param array $array
+         * @return $this
+         */
+        public function merge( array $array )
+        {
+            $this->items = array_merge( $this->items, $array );
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param int $increase_size
+         * @param int $value
+         * @internal param int $inc_size
+         * @return $this
+         */
+        public function pad( $increase_size = 1, $value = 0 )
+        {
+            $this->items = array_pad( $this->items, $increase_size, $value );
+            $this->measure();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param int $quantity
+         * @return mixed
+         */
+        public function rand( $quantity = 1 )
+        {
+            return array_rand( $this->items, $quantity );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $offset
+         * @param null $length
+         * @param bool $set
+         * @param bool $preserve_keys
+         * @return array|Container
+         */
+        public function cut( $offset, $length = null, $set = true, $preserve_keys = false )
+        {
+            $result = array_slice( $this->items, $offset, $length, $preserve_keys );
+
+            if( $set === true )
+            {
+                $this->items = $result;
+                $this->measure();
+            }
+
+            return ( $set === true ) ? $this : $result;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return string
+         */
+        public function encrypt()
+        {
+            $this->items = base64_encode( gzcompress($this->flip()->toJson()) );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function decrypt()
+        {
+            $this->fromJson( gzuncompress( base64_decode( $this->items ) ) )->flip();
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $key
+         * @return bool
+         */
+        public function forget( $key )
+        {
+            if( $this->hasKey($key) )
+            {
+                unset( $this->items[ $key ] );
+
+                return true;
+            }
+            elseif( $this->has($key) )
+            {
+                $found = $this->find($key);
+                unset( $this->items[ $found ], $found );
+
+                return true;
+            }
+
             return false;
         }
 
-        return new Container( array_chunk($this->items, $size) );
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $array
-     * @param string $what
-     * @return array|string
-     */
-    public function combine( $array, $what = 'keys' )
-    {
-        $result = array();
-
-        if( is_string($what) )
+        public function save()
         {
-            if( $what === 'keys' )
+            $this->clone  = $this->items;
+            $this->booted = true;
+
+            return $this;
+        }
+
+        // ------------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function revert()
+        {
+            if( $this->booted )
             {
-                $result = array_combine( $array, $this->values()->all() );
+                $this->items = $this->clone;
+                $this->measure();
             }
-            elseif( $what === 'values' )
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        public function clean()
+        {
+            $this->items  = array();
+            $this->length = 0;
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param bool $preserve_keys
+         * @return $this
+         */
+        public function reverse( $preserve_keys = true )
+        {
+            $this->items = array_reverse( $this->items, $preserve_keys );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param string $what
+         * @param bool $with_key
+         * @return array
+         * @throws ContainerException
+         */
+        public function pre( $what = 'first', $with_key = false )
+        {
+            if( $this->length or $what === 'first' or $what === 'last' )
             {
-                $result = array_combine( $this->keys()->all(), $array );
-            }
-            elseif( str_replace(' ', '', $what) === 'keys&&values' )
-            {
-                if( isset($array['keys']) and isset($array['values']) )
+                $copy = clone $this;
+
+                if( $what === 'last' )
                 {
-                    $result = array_combine( $array['keys'], $array['values'] );
+                    $copy->reverse();
+                }
+
+                $i = 0;
+
+                foreach( $copy as $key => $value )
+                {
+                    if( $i++ === 1 )
+                    {
+                        $that = ( $with_key === true ) ? array( $key => $value ) : $value;
+                        unset( $copy );
+
+                        return $that;
+                    }
                 }
             }
+
+            throw new ContainerException();
         }
 
-        if( ! empty($result) )
-        {
-            $this->items = $result;
+        // --------------------------------------------------------------------------
 
+        /**
+         * @return array
+         */
+        public function all()
+        {
+            return $this->toArray();
         }
 
-        unset( $result );
+        // ------------------------------------------------------------------------------
 
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param callable $function
-     * @param bool $set
-     * @return array|Container
-     */
-    public function filter( callable $function )
-    {
-        return new Container( array_filter($this->items, $function) );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function flip()
-    {
-        $this->items = array_flip( $this->items );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param callable $function
-     * @return $this
-     */
-    public function each( callable $function )
-    {
-        array_map( $function, $this->items );
-        $this->measure();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param array $array
-     * @return $this
-     */
-    public function merge( array $array )
-    {
-        $this->items = array_merge( $this->items, $array );
-        $this->measure();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param int $increase_size
-     * @param int $value
-     * @internal param int $inc_size
-     * @return $this
-     */
-    public function pad( $increase_size = 1, $value = 0 )
-    {
-        $this->items = array_pad( $this->items, $increase_size, $value );
-        $this->measure();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param int $quantity
-     * @return mixed
-     */
-    public function rand( $quantity = 1 )
-    {
-        return array_rand( $this->items, $quantity );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $offset
-     * @param null $length
-     * @param bool $set
-     * @param bool $preserve_keys
-     * @return array|Container
-     */
-    public function cut( $offset, $length = null, $set = true, $preserve_keys = false )
-    {
-        $result = array_slice( $this->items, $offset, $length, $preserve_keys );
-
-        if( $set === true )
+        /**
+         * @return bool
+         */
+        public function isAssoc()
         {
-            $this->items = $result;
-            $this->measure();
+            return $this->keys()->filter('is_int')->length !== $this->length;
         }
 
-        return ( $set === true ) ? $this : $result;
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return string
-     */
-    public function encrypt()
-    {
-        $this->items = base64_encode( gzcompress($this->flip()->toJson()) );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $string
-     * @return $this
-     */
-    public function decrypt()
-    {
-        $this->fromJson( gzuncompress( base64_decode( $this->items ) ) )->flip();
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $key
-     * @return bool
-     */
-    public function forget( $key )
-    {
-        if( $this->hasKey($key) )
+        /**
+         * @return bool
+         */
+        public function isEmpty()
         {
-            unset( $this->items[ $key ] );
-
-            return true;
-        }
-        elseif( $this->has($key) )
-        {
-            $found = $this->find($key);
-            unset( $this->items[ $found ], $found );
-
-            return true;
+            return (bool) empty( $this->items );
         }
 
-        return false;
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    public function save()
-    {
-        $this->clone  = $this->items;
-        $this->booted = true;
-
-        return $this;
-    }
-
-    // ------------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function revert()
-    {
-        if( $this->booted )
+        /**
+         * @return array
+         */
+        public function toArray()
         {
-            $this->items = $this->clone;
-            $this->measure();
+            return $this->items;
         }
 
-        return $this;
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function clean()
-    {
-        $this->items  = array();
-        $this->length = 0;
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param bool $preserve_keys
-     * @return $this
-     */
-    public function reverse( $preserve_keys = true )
-    {
-        $this->items = array_reverse( $this->items, $preserve_keys );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param string $what
-     * @param bool $with_key
-     * @return array
-     * @throws ContainerException
-     */
-    public function pre( $what = 'first', $with_key = false )
-    {
-        if( $this->length or $what === 'first' or $what === 'last' )
+        /**
+         * @param array $array
+         * @return $this
+         */
+        public function fromArray( array $array = array() )
         {
-            $copy = clone $this;
+            $this->__construct( $array );
+            $this->booted = true;
 
-            if( $what === 'last' )
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param int $options
+         * @return string
+         */
+        public function toJson( $options = 0 )
+        {
+            return json_encode($this->items, $options);
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $json
+         * @return $this
+         */
+        public function fromJson( $json )
+        {
+            if( $this->isJson($json) )
             {
-                $copy->reverse();
-            }
-
-            $i = 0;
-
-            foreach( $copy as $key => $value )
-            {
-                if( $i++ === 1 )
-                {
-                    $that = ( $with_key === true ) ? array( $key => $value ) : $value;
-                    unset( $copy );
-
-                    return $that;
-                }
-            }
-        }
-
-        throw new ContainerException();
-    }
-
-    // --------------------------------------------------------------------------
-
-    public function all()
-    {
-        return $this->toArray();
-    }
-
-    // ------------------------------------------------------------------------------
-
-    public function isAssoc()
-    {
-        return $this->keys()->filter('is_int')->length !== $this->length;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return bool
-     */
-    public function isEmpty()
-    {
-        return (bool) empty( $this->items );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return array
-     */
-    public function toArray()
-    {
-        return $this->items;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param array $array
-     * @return $this
-     */
-    public function fromArray( array $array = array() )
-    {
-        $this->__construct( $array );
-        $this->booted = true;
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param int $options
-     * @return string
-     */
-    public function toJson( $options = 0 )
-    {
-        return json_encode($this->items, $options);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $json
-     * @return $this
-     */
-    public function fromJson( $json )
-    {
-        if( $this->isJson($json) )
-        {
-            $this->items = json_decode( $json, true );
-            $this->measure();
-        }
-        else
-        {
-            $this->__construct();
-        }
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $path
-     * @param int $json_key
-     * @return bool
-     */
-    public function toFile( $path, $json_key = JSON_PRETTY_PRINT )
-    {
-        $source = new Container( explode( DIRECTORY_SEPARATOR, $path ) );
-
-        $source->pop();
-
-        $dir = $source->implode('');
-
-        if( is_dir($dir) )
-        {
-            return (bool) file_put_contents( $path, $this->toJson($json_key) );
-        }
-
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $file
-     * @return $this
-     */
-    public function fromFile( $file )
-    {
-        if( is_string($file) and is_file($file) and is_readable($file) )
-        {
-            $content = file_get_contents( $file );
-            unset( $file );
-
-            if( $this->isJson($content) )
-            {
-                $this->fromJson( $content );
-                $this->booted = true;
-            }
-            elseif( $this->is_serialized($content) )
-            {
-                $this->items = unserialize( $content );
-                $this->booted = true;
+                $this->items = json_decode( $json, true );
+                $this->measure();
             }
             else
             {
                 $this->__construct();
             }
-        }
-        else
-        {
-            $this->__construct();
+
+            return $this;
         }
 
-        $this->measure();
+        // --------------------------------------------------------------------------
 
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->implode();
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     *  Destructor
-     */
-    public function __destruct()
-    {
-        unset( $this->items, $this->clone, $this->length, $this->booted );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    private function measure()
-    {
-        $this->length = count( $this->items );
-
-        return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param string $what
-     * @return mixed
-     * @throws ContainerException
-     */
-    private function key( $what = 'first' )
-    {
-        if( $what === 'first' or $what === 'last' )
+        /**
+         * @param $path
+         * @param int $json_key
+         * @return bool
+         */
+        public function toFile( $path, $json_key = JSON_PRETTY_PRINT )
         {
-            $copy = $this->items;
+            $source = new Container( explode( DIRECTORY_SEPARATOR, $path ) );
 
-            if( $what === 'first' )
+            $source->pop();
+
+            $dir = $source->implode('');
+
+            if( is_dir($dir) )
             {
-                reset($copy);
+                return (bool) file_put_contents( $path, $this->toJson($json_key) );
+            }
+
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $file
+         * @return $this
+         */
+        public function fromFile( $file )
+        {
+            if( is_string($file) and is_file($file) and is_readable($file) )
+            {
+                $content = file_get_contents( $file );
+                unset( $file );
+
+                if( $this->isJson($content) )
+                {
+                    $this->fromJson( $content );
+                    $this->booted = true;
+                }
+                elseif( $this->is_serialized($content) )
+                {
+                    $this->items = unserialize( $content );
+                    $this->booted = true;
+                }
+                else
+                {
+                    $this->__construct();
+                }
             }
             else
             {
-                end($copy);
+                $this->__construct();
             }
 
-            unset( $what );
+            $this->measure();
 
-            $key = key( $copy );
-
-            unset( $copy );
-
-            return $key;
+            return $this;
         }
 
-        throw new ContainerException('Unavailable $what given');
-    }
+        // --------------------------------------------------------------------------
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $string
-     * @return bool
-     */
-    private function isJson($string)
-    {
-        if( is_string($string) )
+        /**
+         * @return string
+         */
+        public function __toString()
         {
-            $decoded = json_decode($string);
+            return $this->implode();
+        }
 
-            if( is_object($decoded) or is_array($decoded) )
+        // --------------------------------------------------------------------------
+
+        /**
+         *  Destructor
+         */
+        public function __destruct()
+        {
+            unset( $this->items, $this->clone, $this->length, $this->booted );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @return $this
+         */
+        private function measure()
+        {
+            $this->length = count( $this->items );
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param string $what
+         * @return mixed
+         * @throws ContainerException
+         */
+        private function key( $what = 'first' )
+        {
+            if( $what === 'first' or $what === 'last' )
+            {
+                $copy = $this->items;
+
+                if( $what === 'first' )
+                {
+                    reset($copy);
+                }
+                else
+                {
+                    end($copy);
+                }
+
+                unset( $what );
+
+                $key = key( $copy );
+
+                unset( $copy );
+
+                return $key;
+            }
+
+            throw new ContainerException('Unavailable $what given');
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $string
+         * @return bool
+         */
+        private function isJson($string)
+        {
+            if( is_string($string) )
+            {
+                $decoded = json_decode($string);
+
+                if( is_object($decoded) or is_array($decoded) )
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param $string
+         * @return bool
+         */
+        private function is_serialized( $string )
+        {
+            if ( $string === 'b:0;' or @unserialize( $string ) !== false )
             {
                 return true;
             }
+
+            return false;
         }
 
-        return false;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Countable
+        |--------------------------------------------------------------------------
+        */
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param $string
-     * @return bool
-     */
-    private function is_serialized( $string )
-    {
-        if ( $string === 'b:0;' or @unserialize( $string ) !== false )
+        /**
+         * @return int
+         */
+        public function count()
         {
-            return true;
+            return $this->length;
         }
 
-        return false;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | JsonSerializable
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Countable
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * @return int
-     */
-    public function count()
-    {
-        return $this->length;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | JsonSerializable
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * @return array|string
-     */
-    public function jsonSerialize()
-    {
-        return $this->items;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | IteratorAggregate
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * @return ArrayIterator
-     */
-    public function getIterator()
-    {
-        return new ArrayIterator($this->items);
-    }
-
-    /*
-	|--------------------------------------------------------------------------
-	| ArrayAccess
-	|--------------------------------------------------------------------------
-	*/
-
-    /**
-     * @param mixed $offset
-     * @param mixed $value
-     */
-    public function offsetSet($offset, $value)
-    {
-        if( is_null($offset) )
+        /**
+         * @return array|string
+         */
+        public function jsonSerialize()
         {
-            $this->items[] = $value;
+            return $this->items;
         }
-        else
+
+        /*
+        |--------------------------------------------------------------------------
+        | IteratorAggregate
+        |--------------------------------------------------------------------------
+        */
+
+        /**
+         * @return ArrayIterator
+         */
+        public function getIterator()
         {
-            $this->items[ $offset ] = $value;
+            return new ArrayIterator($this->items);
         }
-    }
 
-    // --------------------------------------------------------------------------
+        /*
+        |--------------------------------------------------------------------------
+        | ArrayAccess
+        |--------------------------------------------------------------------------
+        */
 
-    /**
-     * @param mixed $offset
-     * @return bool
-     */
-    public function offsetExists($offset)
-    {
-        return isset( $this->items[ $offset ] );
-    }
+        /**
+         * @param mixed $offset
+         * @param mixed $value
+         */
+        public function offsetSet($offset, $value)
+        {
+            if( is_null($offset) )
+            {
+                $this->items[] = $value;
+            }
+            else
+            {
+                $this->items[ $offset ] = $value;
+            }
+        }
 
-    // --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-    /**
-     * @param mixed $offset
-     */
-    public function offsetUnset($offset)
-    {
-        unset( $this->items[ $offset ] );
-    }
+        /**
+         * @param mixed $offset
+         * @return bool
+         */
+        public function offsetExists($offset)
+        {
+            return isset( $this->items[ $offset ] );
+        }
 
-    // --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-    /**
-     * @param mixed $offset
-     * @return null
-     */
-    public function offsetGet($offset)
-    {
-        return isset( $this->items[ $offset ] ) ? $this->items[ $offset ] : null;
+        /**
+         * @param mixed $offset
+         */
+        public function offsetUnset($offset)
+        {
+            unset( $this->items[ $offset ] );
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * @param mixed $offset
+         * @return null
+         */
+        public function offsetGet($offset)
+        {
+            return isset( $this->items[ $offset ] ) ? $this->items[ $offset ] : null;
+        }
     }
 }

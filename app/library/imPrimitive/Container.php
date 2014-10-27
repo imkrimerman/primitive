@@ -61,6 +61,10 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
                 $this->booted = true;
             }
         }
+        else
+        {
+            throw new ContainerException();
+        }
 
         $this->items  = $array;
         $this->clone  = $array;
@@ -517,6 +521,13 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
         }
 
         throw new ContainerException();
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function all()
+    {
+        return $this->toArray();
     }
 
     // --------------------------------------------------------------------------

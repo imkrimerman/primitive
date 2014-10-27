@@ -6,7 +6,8 @@
  * Time: 06:56
  */
 
-class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSerializable, Countable, IteratorAggregate, Traversable {
+
+class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSerializable, Countable, IteratorAggregate {
 
     /*
 	|--------------------------------------------------------------------------
@@ -30,10 +31,11 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
 
     /**
      * @param array $array | string json | string path_to_file
+     * @throws ContainerException
      */
     public function __construct( $array = array() )
     {
-        if( ! is_array($array) and is_string($array) )
+        if( is_string($array) )
         {
             $this->fromJson($array);
 
@@ -49,37 +51,53 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
                 if( is_dir($dir) )
                 {
                     $this->fromFile( $array );
-                    $this->booted = true;
                 }
                 else
                 {
                     $array = array();
                 }
             }
-            else
-            {
-                $this->booted = true;
-            }
         }
-        else
+        elseif( ! is_array($array) )
         {
-            throw new ContainerException();
+            throw new ContainerException('Bad value given');
         }
 
         $this->items  = $array;
         $this->clone  = $array;
-        $this->length = count( $this->items );
+        $this->booted = true;
+        $this->measure();
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param $item
+     * @param null $key
      * @return $this
      */
-    public function push( $item ){
-        $this->items[] = $item;
-        $this->length++;
+    public function push( $item, $key = null )
+    {
+        if( is_array($item) )
+        {
+            $this->merge( $item );
+            $this->measure();
+        }
+        else
+        {
+            if( is_null($key) )
+            {
+                $this->items[] = $item;
+            }
+            else
+            {
+                $this->items[ $key ] = $item;
+            }
+
+            $this->length++;
+        }
 
         return $this;
     }
@@ -147,7 +165,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function hasKey( $key )
     {
-        return isset( $this->items[$key] );
+        return isset( $this->items[ $key ] );
     }
 
     // --------------------------------------------------------------------------
@@ -212,7 +230,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function keys()
     {
-        return array_keys( $this->items );
+        return new Container( array_keys($this->items) );
     }
 
     // --------------------------------------------------------------------------
@@ -222,7 +240,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function values()
     {
-        return array_values( $this->items );
+        return new Container( array_values( $this->items ) );
     }
 
     // --------------------------------------------------------------------------
@@ -245,6 +263,11 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function implode( $delimiter = ' ' )
     {
+        if( class_exists('String') and function_exists('s') )
+        {
+            return new String( implode( $delimiter, $this->items ) );
+        }
+
         return implode( $delimiter, $this->items );
     }
 
@@ -261,7 +284,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
             return false;
         }
 
-        return array_chunk( $this->items, $size );
+        return new Container( array_chunk($this->items, $size) );
     }
 
     // --------------------------------------------------------------------------
@@ -279,11 +302,11 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
         {
             if( $what === 'keys' )
             {
-                $result = array_combine( $array, $this->values() );
+                $result = array_combine( $array, $this->values()->all() );
             }
             elseif( $what === 'values' )
             {
-                $result = array_combine( $this->keys(), $array );
+                $result = array_combine( $this->keys()->all(), $array );
             }
             elseif( str_replace(' ', '', $what) === 'keys&&values' )
             {
@@ -302,7 +325,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
 
         unset( $result );
 
-        return $this->items;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -312,17 +335,9 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      * @param bool $set
      * @return array|Container
      */
-    public function filter( callable $function = '', $set = true )
+    public function filter( callable $function )
     {
-        $result = array_filter( $this->items, $function );
-
-        if( $set === true )
-        {
-            $this->items = $result;
-            $this->measure();
-        }
-
-        return ( $set === true ) ? $this : $result;
+        return new Container( array_filter($this->items, $function) );
     }
 
     // --------------------------------------------------------------------------
@@ -345,7 +360,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function each( callable $function )
     {
-        $this->items = array_map( $function, $this->items );
+        array_map( $function, $this->items );
         $this->measure();
 
         return $this;
@@ -368,8 +383,9 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     // --------------------------------------------------------------------------
 
     /**
-     * @param int $inc_size
+     * @param int $increase_size
      * @param int $value
+     * @internal param int $inc_size
      * @return $this
      */
     public function pad( $increase_size = 1, $value = 0 )
@@ -420,7 +436,9 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     public function encrypt()
     {
-        return base64_encode( $this->toJson() );
+        $this->items = base64_encode( gzcompress($this->flip()->toJson()) );
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -429,9 +447,9 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      * @param $string
      * @return $this
      */
-    public function decrypt( $string )
+    public function decrypt()
     {
-        $this->items = base64_decode( json_encode($string, true) );
+        $this->fromJson( gzuncompress( base64_decode( $this->items ) ) )->flip();
 
         return $this;
     }
@@ -450,19 +468,39 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
 
             return true;
         }
+        elseif( $this->has($key) )
+        {
+            $found = $this->find($key);
+            unset( $this->items[ $found ], $found );
+
+            return true;
+        }
 
         return false;
     }
 
     // --------------------------------------------------------------------------
 
+    public function save()
+    {
+        $this->clone  = $this->items;
+        $this->booted = true;
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
     /**
      * @return $this
      */
     public function revert()
     {
-        $this->items = $this->clone;
-        $this->measure();
+        if( $this->booted )
+        {
+            $this->items = $this->clone;
+            $this->measure();
+        }
 
         return $this;
     }
@@ -472,7 +510,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     /**
      * @return $this
      */
-    public function clear()
+    public function clean()
     {
         $this->items  = array();
         $this->length = 0;
@@ -505,12 +543,18 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     {
         if( $this->length or $what === 'first' or $what === 'last' )
         {
-            $copy = ( $what === 'last' ) ? array_reverse( $this->items, true ) : $this->items;
-            $i    = 0;
+            $copy = clone $this;
+
+            if( $what === 'last' )
+            {
+                $copy->reverse();
+            }
+
+            $i = 0;
 
             foreach( $copy as $key => $value )
             {
-                if( $i === 1 )
+                if( $i++ === 1 )
                 {
                     $that = ( $with_key === true ) ? array( $key => $value ) : $value;
                     unset( $copy );
@@ -528,6 +572,13 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     public function all()
     {
         return $this->toArray();
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function isAssoc()
+    {
+        return $this->keys()->filter('is_int')->length !== $this->length;
     }
 
     // --------------------------------------------------------------------------
@@ -585,8 +636,7 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
     {
         if( $this->isJson($json) )
         {
-            $this->items  = json_decode( $json, true );
-            $this->booted = true;
+            $this->items = json_decode( $json, true );
             $this->measure();
         }
         else
@@ -699,26 +749,29 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
      */
     private function key( $what = 'first' )
     {
-        $function = 'reset';
-
-        if( $what === 'last' )
+        if( $what === 'first' or $what === 'last' )
         {
-            $function = 'last';
+            $copy = $this->items;
+
+            if( $what === 'first' )
+            {
+                reset($copy);
+            }
+            else
+            {
+                end($copy);
+            }
+
+            unset( $what );
+
+            $key = key( $copy );
+
+            unset( $copy );
+
+            return $key;
         }
-        else
-        {
-            throw new ContainerException();
-        }
 
-        unset( $what );
-
-        $copy = $this->items;
-        call_user_func( $function, $copy );
-
-        $key = key( $copy );
-        unset( $copy );
-
-        return $key;
+        throw new ContainerException('Unavailable $what given');
     }
 
     // --------------------------------------------------------------------------
@@ -854,14 +907,3 @@ class Container implements ArrayAccess, ArrayInterface, JsonInterface, JsonSeria
         return isset( $this->items[ $offset ] ) ? $this->items[ $offset ] : null;
     }
 }
-
-// --------------------------------------------------------------------------
-
-    /**
-     * @param $array
-     * @return Container
-     */
-    function a( $array )
-    {
-        return new Container( $array );
-    }

@@ -8,6 +8,7 @@
 
 class String implements Countable{
 
+    private   $clone;
     protected $string;
     public    $length;
     
@@ -27,6 +28,7 @@ class String implements Countable{
             $this->string = '';
         }
 
+        $this->clone = $this->string;
         $this->measure();
 
         return $this;
@@ -62,6 +64,20 @@ class String implements Countable{
         if( is_string($string) and is_string($delimiter) )
         {
             $this->string = "{$string}{$delimiter}{$this->string}";
+            $this->measure();
+        }
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function eq( $string )
+    {
+        if( is_string($string) )
+        {
+            $this->string = $string;
+            $this->clone  = $string;
             $this->measure();
         }
 
@@ -181,28 +197,36 @@ class String implements Countable{
      * @param $string
      * @return bool
      */
-    public function has( $string )
+    public function has( $string, $caseSensitive = true )
     {
-        return strpos( $this->string, $string ) !== false;
+        if( $caseSensitive === true )
+        {
+            return strpos( $this->string, $string ) !== false;
+        }
+        else
+        {
+            return stripos( $this->string, $string ) !== false;
+        }
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param $needle
-     * @param $replacement
+     * @param $search
+     * @param $replace
      * @return $this
      */
-    public function replace( $needle, $replacement )
+    public function replace( $search, $replace )
     {
-        if( is_string($needle) and (is_string($replacement) or is_array($replacement) or $replacement instanceof Container) )
+        if( is_string($replace) and (is_string($search) or is_array($search) or $search instanceof Container) )
         {
-            if( $replacement instanceof Container )
+            if( $search instanceof Container )
             {
-                $replacement = $replacement->all();
+                $search = $search->all();
             }
 
-            $this->string = str_replace( $replacement, $needle, $this->string );
+            $this->string = str_replace( $search, $replace, $this->string );
+            $this->measure();
         }
 
         return $this;
@@ -211,23 +235,33 @@ class String implements Countable{
     // --------------------------------------------------------------------------
 
     /**
-     * @param $sub
+     * @param $needles
      * @return bool
      */
-    public function beginsWith( $sub )
+    public function startsWith( $needles )
     {
-        return ( substr( $this->string, 0, $this->measure( $sub ) ) == $sub );
+        foreach ((array) $needles as $needle)
+        {
+            if ( $needle != '' and strpos($this->string, $needle) === 0 ) return true;
+        }
+
+        return false;
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param $sub
+     * @param $needles
      * @return bool
      */
-    public function endsWith( $sub )
+    public function endsWith( $needles )
     {
-        return ( substr( $this->string, $this->length - $this->measure( $sub ) ) == $sub );
+        foreach ( (array) $needles as $needle )
+        {
+            if ( (string) $needle === substr($this->string, -strlen($needle)) ) return true;
+        }
+
+        return false;
     }
 
     // --------------------------------------------------------------------------
@@ -251,13 +285,18 @@ class String implements Countable{
     /**
      * @param $delimiter
      * @param array $array
+     * @throws StringException
      * @return $this
      */
-    public function implode( $delimiter, array $array )
+    public function implode( $delimiter, $array )
     {
-        if( class_exists('Container') )
+        if( $array instanceof Container )
         {
-            //TODO Think about implementation
+            $array = $array->all();
+        }
+        elseif( ! is_array($array) )
+        {
+            throw new StringException('Unavailable $array is given');
         }
 
         $this->string = implode( $delimiter, $array );
@@ -382,22 +421,10 @@ class String implements Countable{
      * @param null $base_64_encoded
      * @return $this
      */
-    public function fromBase64( $base_64_encoded = null )
+    public function fromBase64()
     {
-        if( $base_64_encoded !== null and is_string($base_64_encoded) )
-        {
-            $this->__construct( $base_64_encoded );
-        }
-
-        $decoded = base64_decode($this->string);
-
-        if( $decoded !== false )
-        {
-            $this->string = $decoded;
-            $this->measure();
-        }
-
-        unset( $decoded );
+        $this->string = base64_decode( $this->string );
+        $this->measure();
 
         return $this;
     }
@@ -464,12 +491,51 @@ class String implements Countable{
 
     /**
      * Echo string
+     * @param string $before
+     * @param string $after
+     * @return $this
      */
-    public function say()
+    public function say( $before = '', $after = '' )
     {
-        echo $this->string;
+        if( ! is_string($before) )
+        {
+            $before = '';
+        }
+
+        if( ! is_string($after) )
+        {
+            $after = '';
+        }
+
+        echo "{$before}$this->string{$after}";
+
+        return $this;
     }
-    
+
+    // ------------------------------------------------------------------------------
+
+    public function cut( $offset, $length, $encoding = 'UTF-8' )
+    {
+        $this->string = mb_substr( $this->string, $offset, $length, $encoding);
+        $this->measure();
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function limit( $limit = 100, $end = '...' )
+    {
+        if( $this->length <= $limit)
+        {
+            return $this;
+        }
+
+        $this->cut( 0, $limit, 'UTF-8' )->trim('back')->append( $end );
+
+        return $this;
+    }
+
     // --------------------------------------------------------------------------
 
     /**
@@ -514,7 +580,63 @@ class String implements Countable{
         return $this;
     }
 
+    // ------------------------------------------------------------------------------
+
+    public function compress()
+    {
+        $this->string = gzcompress( $this->string );
+        $this->measure();
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function uncompress()
+    {
+        $this->string = gzuncompress( $this->string );
+        $this->measure();
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function encrypt()
+    {
+        $this->compress()->inBase64();
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function decrypt()
+    {
+        $this->fromBase64()->uncompress();
+
+        return $this;
+    }
+
     // --------------------------------------------------------------------------
+
+    public function save()
+    {
+        $this->clone = $this->string;
+
+        return true;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function revert()
+    {
+        $this->string = $this->clone;
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
 
     /**
      * @param null $string
@@ -524,10 +646,10 @@ class String implements Countable{
     {
         if( $string === null )
         {
-            $this->length = strlen( $this->string );
+            $this->length = mb_strlen( $this->string );
         }
 
-        return ( $string === null ) ? $this : strlen($string);
+        return ( $string === null ) ? $this : mb_strlen($string);
     }
 
     /*
@@ -544,15 +666,4 @@ class String implements Countable{
         return $this->length;
     }
 
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * @param $string
- * @return String
- */
-function s( $string )
-{
-    return new String($string);
 }

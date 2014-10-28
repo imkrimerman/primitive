@@ -769,6 +769,69 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $result;
     }
 
+    // --------------------------------------------------------------------------
+
+    public function findWhere( $key, $condition, $value )
+    {
+        if( is_string($condition) )
+        {
+            switch( $condition )
+            {
+                // Greater
+                case '>':
+                    break;
+                //Lower
+                case '<':
+                    break;
+                //Equal without type
+                case '==':
+                    break;
+                //Not Equal without type
+                case '!=':
+                    break;
+                //Equal with type
+                case '===':
+                    break;
+                //Not Equal with type
+                case '!==':
+                    break;
+                default:
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function intersect( $array, $assoc = false )
+    {
+        if( $array instanceof Container )
+        {
+            $array = $array->all();
+        }
+
+        if( $assoc === true )
+        {
+            return new Container( array_intersect_assoc($this->items, $array) );
+        }
+
+        return new Container( array_intersect($this->items, $array) );
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function intersectKey( $array )
+    {
+        if( $array instanceof Container )
+        {
+            $array = $array->all();
+        }
+
+        return new Container( array_intersect_key($this->items, $array) );
+    }
+
     // ------------------------------------------------------------------------------
 
     /**

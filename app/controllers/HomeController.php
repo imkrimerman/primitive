@@ -1,5 +1,8 @@
 <?php
 
+use \im\Primitive\Container;
+use \im\Primitive\String;
+
 class HomeController extends BaseController {
 
 	/*
@@ -21,10 +24,21 @@ class HomeController extends BaseController {
 		// ------------------------------------------------------------------------------
 		// Container TEST
 		// ------------------------------------------------------------------------------
+        $_ = array(
+            array('id' => 1),
+            array('name' => 'Garry'),
+            array('id' => 1),
+            array('parent' => 'def-1')
+        );
+		$tester    = array(
+            1,
+            2
+        );
 
+		$container = new Container( $_ );
 
-		$tester    = array(1,2,3,4,5,6,7);
-		$container = new Container( $tester );
+        $result = $container->where( array('id' => 1) );
+        return $result;
 
 //		$container->push('pushed');
 //		$container->push('pushed', 25);

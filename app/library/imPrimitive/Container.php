@@ -394,6 +394,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     // --------------------------------------------------------------------------
 
+    public function walk( callable $function, $recursive = false, $userdata = null )
+    {
+        if( $recursive === false )
+        {
+            array_walk( $this->items, $function, $userdata );
+        }
+        else
+        {
+            array_walk_recursive( $this->items, $function, $userdata );
+        }
+
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
     /**
      * @param array $array
      * @return $this
@@ -775,28 +791,13 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if( is_string($condition) )
         {
-            switch( $condition )
+            if( $condition === '==' or $condition === '===' )
             {
-                // Greater
-                case '>':
-                    break;
-                //Lower
-                case '<':
-                    break;
-                //Equal without type
-                case '==':
-                    break;
-                //Not Equal without type
-                case '!=':
-                    break;
-                //Equal with type
-                case '===':
-                    break;
-                //Not Equal with type
-                case '!==':
-                    break;
-                default:
-                    return false;
+                foreach( $this->items as $key => $item )
+                {
+
+                }
+
             }
         }
 
@@ -1176,6 +1177,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function offsetSet($offset, $value)
     {
+        if( is_array($value) or $value instanceof \stdClass )
+        {
+            $value = new Container( $value );
+        }
+
         if( is_null($offset) )
         {
             $this->items[] = $value;

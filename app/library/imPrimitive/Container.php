@@ -774,18 +774,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
             unset( $condition );
 
-            $where = $this->recursive( $this->items, $neededKey, $neededVal );
-            var_dump($where);
-//            $this->walk( function ( $value ) use (&$where, $neededKey, $neededVal)
-//            {
-//                if( is_array($value) or $value instanceof \stdClass )
-//                {
-//                    if( isset($value[ $neededKey ]) and $value[ $neededKey ] === $neededVal )
-//                    {
-//                        $where[] = $value;
-//                    }
-//                }
-//            }, true);
+            $where = $this->recursiveIt( $this->items, $neededKey, $neededVal );
         }
         else
         {
@@ -1118,28 +1107,25 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         throw new ContainerException('Unavailable $what given (Can be passed "first" or "last")');
     }
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
 
-    private function recursive( $array, $key, $value )
+    private function recursiveIt( $array, $key, $value )
     {
-        $_ = array();
+        $outputArray = array();
 
-        foreach( $array as $k => $val )
+        $arrIt = new \RecursiveIteratorIterator( new \RecursiveArrayIterator($array) );
+
+        foreach ($arrIt as $sub)
         {
-            if( $k === $key and $val === $value )
+            $subArray = $arrIt->getSubIterator();
+
+            if ( isset($subArray[ $key ]) and $subArray[ $key ] === $value )
             {
-                if( is_array($value) or $value instanceof \stdClass )
-                {
-                    array_merge( $_, $this->recursive($value, $key, $value) );
-                }
-                else
-                {
-                    $_[] = $value;
-                }
+                $outputArray[] = iterator_to_array( $subArray );
             }
         }
 
-        return $_;
+        return $outputArray;
     }
 
     // --------------------------------------------------------------------------

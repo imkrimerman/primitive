@@ -5,6 +5,8 @@
  * Date: 10/27/14
  * Time: 15:08
  */
+use im\Primitive\Container;
+use im\Primitive\String;
 
 /**
  * @param $array

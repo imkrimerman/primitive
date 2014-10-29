@@ -483,6 +483,13 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     // --------------------------------------------------------------------------
 
+    public function sumInner()
+    {
+        return array_sum( $this->each('array_pop') );
+    }
+
+    // --------------------------------------------------------------------------
+
     /**
      * @param $offset
      * @param null $length
@@ -1179,6 +1186,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @param $array
+     * @param $key
+     * @param $value
+     * @return array
+     */
     private function recursiveIt( $array, $key, $value )
     {
         $outputArray = array();
@@ -1232,6 +1245,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return false;
     }
 
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param $a
+     * @param $b
+     */
+    private function swapVars( &$a, &$b )
+    {
+        $a ^= $b ^= $a ^= $b;
+        // list($a, $b) = array($b, $a);
+    }
     /*
     |--------------------------------------------------------------------------
     | Countable

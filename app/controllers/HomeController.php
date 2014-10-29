@@ -25,20 +25,17 @@ class HomeController extends BaseController {
 		// Container TEST
 		// ------------------------------------------------------------------------------
         $_ = array(
-            array('id' => 1),
-            array('name' => 'Garry'),
+            1,2,3,
+            array('id' => 1, 'mas' => 0),
+            array('name' => 'Garry', array( 'id' => 1, 'get me')),
             array('id' => 1),
             array('parent' => 'def-1')
         );
-		$tester    = array(
-            1,
-            2
-        );
+		$tester = array( 1, 2 );
 
 		$container = new Container( $_ );
 
-        $result = $container->where( array('id' => 1) );
-        return $result;
+        $container->where([ 'id' => 1 ])->dump();
 
 //		$container->push('pushed');
 //		$container->push('pushed', 25);

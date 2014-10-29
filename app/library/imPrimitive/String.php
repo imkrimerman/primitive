@@ -206,8 +206,10 @@ class String implements Countable
      */
     public function replace( $search, $replace )
     {
-        if( is_string( $replace ) and ( is_string( $search ) or is_array( $search ) or $search instanceof Container ) ) {
-            if( $search instanceof Container ) {
+        if( is_string( $replace ) and (is_string( $search ) or is_array( $search ) or $search instanceof Container) )
+        {
+            if( $search instanceof Container )
+            {
                 $search = $search->all();
             }
 
@@ -226,8 +228,9 @@ class String implements Countable
      */
     public function startsWith( $needles )
     {
-        foreach( (array) $needles as $needle ) {
-            if( $needle != '' and strpos( $this->string, $needle ) === 0 ) return true;
+        foreach( (array) $needles as $needle )
+        {
+            if( $needle != '' and strpos($this->string, $needle) === 0 ) return true;
         }
 
         return false;
@@ -241,8 +244,9 @@ class String implements Countable
      */
     public function endsWith( $needles )
     {
-        foreach( (array) $needles as $needle ) {
-            if( (string) $needle === substr( $this->string, -strlen( $needle ) ) ) return true;
+        foreach( (array) $needles as $needle )
+        {
+            if( (string) $needle === substr($this->string, -strlen($needle)) ) return true;
         }
 
         return false;
@@ -257,7 +261,7 @@ class String implements Countable
     public function explode( $delimiter )
     {
         if( class_exists( 'Container' ) ) {
-            return new Container( explode( $delimiter, $this->string ) );
+            return new Container( explode($delimiter, $this->string) );
         }
 
         return explode( $delimiter, $this->string );
@@ -273,9 +277,12 @@ class String implements Countable
      */
     public function implode( $delimiter, $array )
     {
-        if( $array instanceof Container ) {
+        if( $array instanceof Container )
+        {
             $array = $array->all();
-        } elseif( ! is_array( $array ) ) {
+        }
+        elseif( ! is_array($array) )
+        {
             throw new StringException( 'Unavailable $array is given' );
         }
 
@@ -293,12 +300,16 @@ class String implements Countable
      */
     public function trim( $what = null )
     {
-
-        if( $what === 'front' ) {
+        if( $what === 'front' )
+        {
             $this->string = ltrim( $this->string );
-        } elseif( $what === 'back' ) {
+        }
+        elseif( $what === 'back' )
+        {
             $this->string = rtrim( $this->string );
-        } else {
+        }
+        else
+        {
             $this->string = trim( $this->string );
         }
 
@@ -380,7 +391,7 @@ class String implements Countable
     /**
      * @return $this
      */
-    public function inBase64()
+    public function base64()
     {
         $this->string = base64_encode( $this->string );
         $this->measure();
@@ -393,7 +404,7 @@ class String implements Countable
     /**
      * @return $this
      */
-    public function fromBase64()
+    public function unbase64()
     {
         $this->string = base64_decode( $this->string );
         $this->measure();
@@ -419,17 +430,12 @@ class String implements Countable
     // ------------------------------------------------------------------------------
 
     /**
-     * @param null $html_entities_string
      * @param int $flags
      * @param string $encoding
      * @return $this
      */
-    public function fromEntities( $html_entities_string = null, $flags = ENT_QUOTES, $encoding = 'UTF-8' )
+    public function fromEntities( $flags = ENT_QUOTES, $encoding = 'UTF-8' )
     {
-        if( $html_entities_string !== null and is_string( $html_entities_string ) ) {
-            $this->__construct( $html_entities_string );
-        }
-
         $this->string = html_entity_decode( $this->string, $flags, $encoding );
         $this->measure();
 
@@ -439,23 +445,21 @@ class String implements Countable
     // ------------------------------------------------------------------------------
 
     /**
+     * @param bool $return
      * @return string
      */
-    public function md5()
+    public function md5( $return = false )
     {
-        return md5( $this->string );
-    }
+        if( $return === false )
+        {
+            return md5( $this->string );
+        }
 
-    // ------------------------------------------------------------------------------
-
-    /**
-     * @return $this
-     */
-    public function toMd5()
-    {
-        $this->string = $this->md5();
+        $this->string = md5( $this->string );
+        $this->measure();
 
         return $this;
+
     }
 
     // --------------------------------------------------------------------------
@@ -476,13 +480,19 @@ class String implements Countable
             $after = '';
         }
 
-        echo "{$before}$this->string{$after}";
+        echo $before, $this->string, $after;
 
         return $this;
     }
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @param $offset
+     * @param $length
+     * @param string $encoding
+     * @return $this
+     */
     public function cut( $offset, $length, $encoding = 'UTF-8' )
     {
         $this->string = mb_substr( $this->string, $offset, $length, $encoding );
@@ -493,6 +503,11 @@ class String implements Countable
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @param int $limit
+     * @param string $end
+     * @return $this
+     */
     public function limit( $limit = 100, $end = '...' )
     {
         if( $this->length <= $limit ) {
@@ -537,9 +552,9 @@ class String implements Countable
      * @param string $thousands_delimiter
      * @return $this
      */
-    public function numFormat( $decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ' )
+    public function float( $decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ' )
     {
-        if( is_numeric( $this->string ) ) {
+        if( is_numeric($this->string) ) {
             $this->string = number_format( (float) $this->string, $decimals, $decimal_delimiter, $thousands_delimiter );
             $this->measure();
         }
@@ -549,6 +564,9 @@ class String implements Countable
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @return $this
+     */
     public function compress()
     {
         $this->string = gzcompress( $this->string );
@@ -559,6 +577,9 @@ class String implements Countable
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @return $this
+     */
     public function uncompress()
     {
         $this->string = gzuncompress( $this->string );
@@ -569,24 +590,33 @@ class String implements Countable
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @return $this
+     */
     public function encrypt()
     {
-        $this->compress()->inBase64();
+        $this->compress()->base64();
 
         return $this;
     }
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @return $this
+     */
     public function decrypt()
     {
-        $this->fromBase64()->uncompress();
+        $this->unbase64()->uncompress();
 
         return $this;
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @return bool
+     */
     public function save()
     {
         $this->clone = $this->string;
@@ -596,9 +626,13 @@ class String implements Countable
 
     // ------------------------------------------------------------------------------
 
+    /**
+     * @return $this
+     */
     public function revert()
     {
         $this->string = $this->clone;
+        $this->measure();
 
         return $this;
     }

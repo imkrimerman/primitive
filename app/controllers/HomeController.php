@@ -29,13 +29,15 @@ class HomeController extends BaseController {
             array('id' => 1, 'mas' => 0),
             array('name' => 'Garry', array( 'id' => 1, 'get me')),
             array('id' => 1),
+            array(1,2,3, array('id' => 1, 'mas' => 0, 'sad' => 'no')),
             array('parent' => 'def-1')
         );
 		$tester = array( 1, 2 );
 
 		$container = new Container( $_ );
 
-        $container->where([ 'id' => 1 ])->dump();
+        $container->where([ 'id' => 1, 'mas' => 0 ]);
+
 
 //		$container->push('pushed');
 //		$container->push('pushed', 25);

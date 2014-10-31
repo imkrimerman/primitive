@@ -36,7 +36,7 @@ class HomeController extends BaseController {
 
 		$container = new Container( $_ );
 
-        $container->where([ 'id' => 1, 'mas' => 0 ]);
+        $container->without('id');
 
 
 //		$container->push('pushed');

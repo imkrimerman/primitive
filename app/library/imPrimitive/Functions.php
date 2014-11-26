@@ -1,29 +1,22 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: imkrimerman
- * Date: 10/27/14
- * Time: 15:08
- */
-use im\Primitive\Container;
-use im\Primitive\String;
 
 /**
- * @param $array
- * @return Container
+ * @param array $array
+ * @return \im\Primitive\Container
  */
 function a( $array = array() )
 {
-    return new Container( $array );
+    return new im\Primitive\Container( $array );
 }
 
 // ------------------------------------------------------------------------------
 
+
 /**
- * @param $string
- * @return String
+ * @param string $string
+ * @return \im\Primitive\String
  */
 function s( $string = '' )
 {
-    return new String($string);
+    return new im\Primitive\String($string);
 }

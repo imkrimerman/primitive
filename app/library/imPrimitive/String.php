@@ -1,7 +1,7 @@
 <?php namespace im\Primitive;
+
 /**
- * Created by PhpStorm.
- * User: Nastya
+ * Created by Igor Krimerman.
  * Date: 26.10.14
  * Time: 13:38
  */
@@ -24,9 +24,12 @@ class String implements Countable
      */
     public function __construct( $string = '' )
     {
-        if( is_string( $string ) ) {
+        if( is_string( $string ) )
+        {
             $this->string = $string;
-        } else {
+        }
+        else
+        {
             $this->string = '';
         }
 
@@ -45,7 +48,13 @@ class String implements Countable
      */
     public function append( $string, $delimiter = ' ' )
     {
-        if( is_string( $string ) and is_string( $delimiter ) ) {
+        if( $string instanceof String )
+        {
+            $string = $string->__toString();
+        }
+
+        if( is_string( $string ) and is_string( $delimiter ) )
+        {
             $this->string .= "{$delimiter}{$string}";
             $this->measure();
         }
@@ -62,7 +71,13 @@ class String implements Countable
      */
     public function prepand( $string, $delimiter = ' ' )
     {
-        if( is_string( $string ) and is_string( $delimiter ) ) {
+        if( $string instanceof String )
+        {
+            $string = $string->__toString();
+        }
+
+        if( is_string( $string ) and is_string( $delimiter ) )
+        {
             $this->string = "{$string}{$delimiter}{$this->string}";
             $this->measure();
         }
@@ -74,7 +89,8 @@ class String implements Countable
 
     public function eq( $string )
     {
-        if( is_string( $string ) ) {
+        if( is_string( $string ) )
+        {
             $this->string = $string;
             $this->clone = $string;
             $this->measure();
@@ -91,9 +107,12 @@ class String implements Countable
      */
     public function lower( $what = null )
     {
-        if( $what === 'first' ) {
+        if( $what === 'first' )
+        {
             $this->string = lcfirst( $this->string );
-        } else {
+        }
+        else
+        {
             $this->string = mb_strtolower( $this->string );
         }
 
@@ -108,11 +127,16 @@ class String implements Countable
      */
     public function upper( $what = null )
     {
-        if( $what === 'first' ) {
+        if( $what === 'first' )
+        {
             $this->string = ucfirst( $this->string );
-        } elseif( $what === 'words' ) {
+        }
+        elseif( $what === 'words' )
+        {
             $this->string = ucwords( $this->string );
-        } else {
+        }
+        else
+        {
             $this->string = mb_strtoupper( $this->string );
         }
 
@@ -150,7 +174,8 @@ class String implements Countable
      */
     public function snake( $delimiter = '_' )
     {
-        if( ctype_lower( $this->string ) ) {
+        if( ctype_lower( $this->string ) )
+        {
             return $this;
         }
 
@@ -190,9 +215,12 @@ class String implements Countable
      */
     public function has( $string, $caseSensitive = true )
     {
-        if( $caseSensitive === true ) {
+        if( $caseSensitive === true )
+        {
             return strpos( $this->string, $string ) !== false;
-        } else {
+        }
+        else
+        {
             return stripos( $this->string, $string ) !== false;
         }
     }
@@ -206,7 +234,7 @@ class String implements Countable
      */
     public function replace( $search, $replace )
     {
-        if( is_string( $replace ) and (is_string( $search ) or is_array( $search ) or $search instanceof Container) )
+        if( is_string( $replace ) and ( is_string( $search ) or is_array( $search ) or $search instanceof Container ) )
         {
             if( $search instanceof Container )
             {
@@ -228,9 +256,12 @@ class String implements Countable
      */
     public function startsWith( $needles )
     {
-        foreach( (array) $needles as $needle )
+        foreach( (array)$needles as $needle )
         {
-            if( $needle != '' and strpos($this->string, $needle) === 0 ) return true;
+            if( $needle != '' and strpos( $this->string, $needle ) === 0 )
+            {
+                return true;
+            }
         }
 
         return false;
@@ -244,9 +275,12 @@ class String implements Countable
      */
     public function endsWith( $needles )
     {
-        foreach( (array) $needles as $needle )
+        foreach( (array)$needles as $needle )
         {
-            if( (string) $needle === substr($this->string, -strlen($needle)) ) return true;
+            if( (string)$needle === substr( $this->string, -strlen( $needle ) ) )
+            {
+                return true;
+            }
         }
 
         return false;
@@ -260,8 +294,9 @@ class String implements Countable
      */
     public function explode( $delimiter )
     {
-        if( class_exists( 'Container' ) ) {
-            return new Container( explode($delimiter, $this->string) );
+        if( class_exists( 'Container' ) )
+        {
+            return new Container( explode( $delimiter, $this->string ) );
         }
 
         return explode( $delimiter, $this->string );
@@ -281,7 +316,7 @@ class String implements Countable
         {
             $array = $array->all();
         }
-        elseif( ! is_array($array) )
+        elseif( !is_array( $array ) )
         {
             throw new StringException( 'Unavailable $array is given' );
         }
@@ -308,6 +343,10 @@ class String implements Countable
         {
             $this->string = rtrim( $this->string );
         }
+        elseif( $what === 'all' )
+        {
+            $this->replace(' ', '');
+        }
         else
         {
             $this->string = trim( $this->string );
@@ -326,7 +365,7 @@ class String implements Countable
      */
     public function repeat( $quantity = 2 )
     {
-        $this->string = str_repeat( $this->string, (int) $quantity );
+        $this->string = str_repeat( $this->string, (int)$quantity );
         $this->measure();
 
         return $this;
@@ -352,7 +391,8 @@ class String implements Countable
      */
     public function split( $length = 1 )
     {
-        if( class_exists( 'Container' ) ) {
+        if( class_exists( 'Container' ) )
+        {
             return new Container( str_split( $this->string, $length ) );
         }
 
@@ -366,7 +406,8 @@ class String implements Countable
      */
     public function wordSplit()
     {
-        if( class_exists( 'Container' ) ) {
+        if( class_exists( 'Container' ) )
+        {
             return new Container( str_word_count( $this->string, 2 ) );
         }
 
@@ -472,11 +513,13 @@ class String implements Countable
      */
     public function say( $before = '', $after = '' )
     {
-        if( ! is_string( $before ) ) {
+        if( !is_string( $before ) )
+        {
             $before = '';
         }
 
-        if( ! is_string( $after ) ) {
+        if( !is_string( $after ) )
+        {
             $after = '';
         }
 
@@ -510,7 +553,8 @@ class String implements Countable
      */
     public function limit( $limit = 100, $end = '...' )
     {
-        if( $this->length <= $limit ) {
+        if( $this->length <= $limit )
+        {
             return $this;
         }
 
@@ -554,8 +598,9 @@ class String implements Countable
      */
     public function float( $decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ' )
     {
-        if( is_numeric($this->string) ) {
-            $this->string = number_format( (float) $this->string, $decimals, $decimal_delimiter, $thousands_delimiter );
+        if( is_numeric( $this->string ) )
+        {
+            $this->string = number_format( (float)$this->string, $decimals, $decimal_delimiter, $thousands_delimiter );
             $this->measure();
         }
 
@@ -615,13 +660,13 @@ class String implements Countable
     // --------------------------------------------------------------------------
 
     /**
-     * @return bool
+     * @return $this
      */
     public function save()
     {
         $this->clone = $this->string;
 
-        return true;
+        return $this;
     }
 
     // ------------------------------------------------------------------------------
@@ -645,11 +690,70 @@ class String implements Countable
      */
     private function measure( $string = null )
     {
-        if( $string === null ) {
+        if( $string === null )
+        {
             $this->length = mb_strlen( $this->string );
         }
 
         return ( $string === null ) ? $this : mb_strlen( $string );
+    }
+
+    // ------------------------------------------------------------------------------
+
+    public function all()
+    {
+        return $this->string;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return !(bool)$this->length;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isNotEmpty()
+    {
+        return (bool)$this->length;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param $string
+     * @return bool
+     */
+    public function isJson( $string = '' )
+    {
+        if( empty($string) )
+        {
+            $string = $this->string;
+        }
+
+        if( is_string($string) )
+        {
+            return is_array( json_decode($string, true) );
+        }
+
+        return false;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->string;
     }
 
     /*

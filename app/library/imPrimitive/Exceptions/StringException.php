@@ -1,7 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Nastya
+ * Created by Igor Krimerman.
  * Date: 26.10.14
  * Time: 14:18
  */

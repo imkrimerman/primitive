@@ -1,7 +1,7 @@
 <?php namespace im\Primitive;
+
 /**
- * Created by PhpStorm.
- * Author: Igor Krimerman
+ * Created by Igor Krimerman.
  * Date: 26.10.14
  * Time: 06:56
  */
@@ -18,6 +18,7 @@ use im\Primitive\Interfaces\FileableInterface;
 use im\Primitive\Interfaces\RevertableInterface;
 use im\Primitive\Exceptions\ContainerException;
 use im\Primitive\Exceptions\EmptyContainerException;
+use im\Primitive\Exceptions\OffsetNotExistsException;
 
 use im\Primitive\String;
 
@@ -55,28 +56,29 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param array|string|Container|String $from
+     *
      * @throws ContainerException
      */
-    public function __construct( $from = array() )
+    public function __construct($from = array())
     {
-        if( is_string($from) or $from instanceof String )
+        if (is_string($from) or $from instanceof String)
         {
-            if( $this->isJson($from) )
+            if ($this->isJson($from))
             {
                 $this->fromJson($from);
             }
             else
             {
-                $this->fromFile( $from );
+                $this->fromFile($from);
             }
 
             return $this;
         }
-        elseif( $from instanceof Container )
+        elseif ($from instanceof Container)
         {
             $from = $from->all();
         }
-        elseif( ! is_array($from) )
+        elseif (! is_array($from))
         {
             throw new ContainerException('Bad argument given');
         }
@@ -89,33 +91,69 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $this;
     }
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
 
     /**
      * @param $item
+     *
+     * @throws OffsetNotExistsException
+     * @return null
+     */
+    public function __get($item)
+    {
+        if (isset($this->items[ $item ]))
+        {
+            return $this->items[ $item ];
+        }
+
+        throw new OffsetNotExistsException('Variable: ' . $item . ' not exists');
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param $item
+     * @param $value
+     */
+    public function __set($item, $value)
+    {
+        $this->offsetSet($item, $value);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param      $item
      * @param null $key
+     *
+     * @param bool $preserve_empty
+     *
+     * @throws ContainerException
      * @return $this
      */
-    public function push( $item, $key = null )
+    public function push($item, $key = null, $preserve_empty = true)
     {
-        if( is_array($item) )
+        if ($preserve_empty === true and empty($item) and $item !== 0)
         {
-            $this->merge( $item );
-            $this->measure();
+            return $this;
+        }
+
+        if ($key === null)
+        {
+            $this->items[] = $item;
         }
         else
         {
-            if( $key === null )
+            if ($key instanceof String)
             {
-                $this->items[] = $item;
-            }
-            else
-            {
-                $this->items[ $key ] = $item;
+                $key = $key->__toString();
             }
 
-            ++$this->length;
+            $this->items[ $key ] = $item;
         }
+
+        ++$this->length;
+
 
         return $this;
     }
@@ -127,9 +165,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function pop()
     {
-        $pop = array_pop( $this->items );
+        $pop = array_pop($this->items);
 
-        if( $pop !== false )
+        if ($pop !== false)
         {
             --$this->length;
         }
@@ -141,11 +179,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $item
+     *
      * @return $this
      */
-    public function unshift( $item )
+    public function unshift($item)
     {
-        $this->length = array_unshift( $this->items, $item );
+        $this->length = array_unshift($this->items, $item);
 
         return $this;
     }
@@ -157,9 +196,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function shift()
     {
-        $shift = array_shift( $this->items );
+        $shift = array_shift($this->items);
 
-        if( $shift !== false )
+        if ($shift !== false)
         {
             --$this->length;
         }
@@ -171,33 +210,36 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $value
+     *
      * @return mixed
      */
-    public function find( $value )
+    public function find($value)
     {
-        return array_search( $value, $this->items );
+        return array_search($value, $this->items);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param $value
+     *
      * @return bool
      */
-    public function has( $value )
+    public function has($value)
     {
-        return in_array( $value, $this->items );
+        return in_array($value, $this->items);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param $key
+     *
      * @return bool
      */
-    public function hasKey( $key )
+    public function hasKey($key)
     {
-        return isset( $this->items[ $key ] );
+        return isset($this->items[ $key ]);
     }
 
     // --------------------------------------------------------------------------
@@ -209,7 +251,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function firstKey()
     {
-        if( $this->isNotEmpty() )
+        if ($this->isNotEmpty())
         {
             return $this->key('first');
         }
@@ -228,7 +270,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function lastKey()
     {
-        if( $this->isNotEmpty() )
+        if ($this->isNotEmpty())
         {
             return $this->key('last');
         }
@@ -242,11 +284,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param bool $return
+     *
      * @return mixed
      */
-    public function first( $return = false )
+    public function first($return = false)
     {
-        if( $return === false )
+        if ($return === false)
         {
             $this->items = $this->items[ $this->firstKey() ];
             $this->measure();
@@ -261,11 +304,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param bool $return
+     *
      * @return mixed
      */
-    public function last( $return = false )
+    public function last($return = false)
     {
-        if( $return === false )
+        if ($return === false)
         {
             $this->items = $this->items[ $this->lastKey() ];
             $this->measure();
@@ -283,7 +327,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function unique()
     {
-        $this->items = array_unique( $this->items );
+        $this->items = array_unique($this->items);
         $this->measure();
 
         return $this;
@@ -296,7 +340,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function keys()
     {
-        return new Container( array_keys($this->items) );
+        return new Container(array_keys($this->items));
     }
 
     // --------------------------------------------------------------------------
@@ -306,7 +350,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function values()
     {
-        return new Container( array_values($this->items) );
+        return new Container(array_values($this->items));
     }
 
     // --------------------------------------------------------------------------
@@ -316,7 +360,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function shuffle()
     {
-        shuffle( $this->items );
+        shuffle($this->items);
 
         return $this;
     }
@@ -325,66 +369,69 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param string $delimiter
+     *
      * @return String|string
      */
-    public function implode( $delimiter = ' ' )
+    public function implode($delimiter = ' ')
     {
-        return implode( $delimiter, $this->items );
+        return implode($delimiter, $this->items);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param int $size
+     *
      * @return bool|Container
      */
-    public function chunk( $size = 2 )
+    public function chunk($size = 2)
     {
-        if( ! is_integer( $size ) or $size > $this->length )
+        if (! is_integer($size) or $size > $this->length)
         {
             return false;
         }
 
-        return new Container( array_chunk($this->items, $size) );
+        return new Container(array_chunk($this->items, $size));
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param $array
+     * @param        $array
      * @param string $what
+     *
      * @return array|string
      */
-    public function combine( $array, $what = 'keys' )
+    public function combine($array, $what = 'keys')
     {
         $result = array();
 
-        if( is_string($what) )
+        if (is_string($what))
         {
-            if( $what === 'keys' )
+            if ($what === 'keys')
             {
-                $result = array_combine( $array, $this->values()->all() );
+                $result = array_combine($array, $this->values()->all());
             }
-            elseif( $what === 'values' )
+            elseif ($what === 'values')
             {
-                $result = array_combine( $this->keys()->all(), $array );
+                $result = array_combine($this->keys()->all(), $array);
             }
-            elseif( str_replace(' ', '', $what) === 'keys&&values' )
+            elseif (str_replace(' ', '', $what) === 'keys&&values')
             {
-                if( isset($array['keys']) and isset($array['values']) )
+                if (isset($array['keys']) and isset($array['values']))
                 {
-                    $result = array_combine( $array['keys'], $array['values'] );
+                    $result = array_combine($array['keys'], $array['values']);
                 }
             }
         }
 
-        if( ! empty($result) )
+        if (! empty($result))
         {
             $this->items = $result;
 
         }
 
-        unset( $result );
+        unset($result);
 
         return $this;
     }
@@ -393,11 +440,24 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param callable $function
+     * @param bool     $recursive
+     *
      * @return Container
      */
-    public function filter( callable $function )
+    public function filter(callable $function, $recursive = false)
     {
-        return new Container( array_filter($this->items, $function) );
+        $new_items = [];
+
+        if ($recursive === true)
+        {
+            $new_items = $this->filterRecursive($function, $this->items);
+        }
+        else
+        {
+            $new_items = array_filter($this->items, $function);
+        }
+
+        return new Container($new_items);
     }
 
     // --------------------------------------------------------------------------
@@ -407,7 +467,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function flip()
     {
-        $this->items = array_flip( $this->items );
+        $this->items = array_flip($this->items);
 
         return $this;
     }
@@ -416,11 +476,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param callable $function
+     *
      * @return $this
      */
-    public function each( callable $function )
+    public function each(callable $function)
     {
-        array_map( $function, $this->items );
+        array_map($function, $this->items);
+        $this->measure();
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param callable $function
+     *
+     * @return $this
+     */
+    public function map(callable $function)
+    {
+        $this->items = array_map($function, $this->items);
         $this->measure();
 
         return $this;
@@ -428,15 +504,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     // --------------------------------------------------------------------------
 
-    public function walk( callable $function, $recursive = false, $userdata = null )
+    /**
+     * @param callable $function
+     * @param bool     $recursive
+     * @param null     $userdata
+     *
+     * @return $this
+     */
+    public function walk(callable $function, $recursive = false, $userdata = null)
     {
-        if( $recursive === false )
+        if ($recursive === false)
         {
-            array_walk( $this->items, $function, $userdata );
+            array_walk($this->items, $function, $userdata);
         }
         else
         {
-            array_walk_recursive( $this->items, $function, $userdata );
+            array_walk_recursive($this->items, $function, $userdata);
         }
 
         return $this;
@@ -446,25 +529,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param array $array
-     * @param null $key
+     * @param null  $key
+     *
      * @throws ContainerException
      * @return $this
      */
-    public function merge( array $array, $key = null )
+    public function merge(array $array, $key = null)
     {
-        if( $key === null )
+        if ($key === null)
         {
-            $this->items = array_merge( $this->items, $array );
+            $this->items = array_merge($this->items, $array);
             $this->measure();
         }
-        elseif( $this->hasKey($key) )
+        elseif ($this->hasKey($key))
         {
-            if( ! is_array($this->items[ $key ]) )
+            if (! is_array($this->items[ $key ]))
             {
-                $this->items[ $key ] = array( $this->items[ $key ] );
+                $this->items[ $key ] = array($this->items[ $key ]);
             }
 
-            $this->items[ $key ] = array_merge( $this->items[ $key ], $array );
+            $this->items[ $key ] = array_merge($this->items[ $key ], $array);
         }
         else
         {
@@ -479,11 +563,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * @param int $increase_size
      * @param int $value
+     *
      * @return $this
      */
-    public function pad( $increase_size = 1, $value = 0 )
+    public function pad($increase_size = 1, $value = 0)
     {
-        $this->items = array_pad( $this->items, $increase_size, $value );
+        $this->items = array_pad($this->items, $increase_size, $value);
         $this->measure();
 
         return $this;
@@ -493,40 +578,35 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param int $quantity
+     *
      * @return mixed
      */
-    public function rand( $quantity = 1 )
+    public function rand($quantity = 1)
     {
-        return array_rand( $this->items, $quantity );
-    }
-
-    // --------------------------------------------------------------------------
-
-    public function sumInner()
-    {
-//        return array_sum( $this->each('array_pop') );
+        return array_rand($this->items, $quantity);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param $offset
+     * @param      $offset
      * @param null $length
      * @param bool $set
      * @param bool $preserve_keys
+     *
      * @return array|Container
      */
-    public function cut( $offset, $length = null, $set = true, $preserve_keys = false )
+    public function cut($offset, $length = null, $set = true, $preserve_keys = false)
     {
-        $result = array_slice( $this->items, $offset, $length, $preserve_keys );
+        $result = array_slice($this->items, $offset, $length, $preserve_keys);
 
-        if( $set === true )
+        if ($set === true)
         {
             $this->items = $result;
             $this->measure();
         }
 
-        return ( $set === true ) ? $this : $result;
+        return ($set === true) ? $this : $result;
     }
 
     // --------------------------------------------------------------------------
@@ -536,7 +616,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function encrypt()
     {
-        $this->items = base64_encode( gzcompress( $this->flip()->toJson() ) );
+        $this->items = base64_encode(gzcompress($this->flip()->toJson()));
 
         return $this;
     }
@@ -548,7 +628,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function decrypt()
     {
-        $this->fromJson( gzuncompress( base64_decode( $this->items ) ) )->flip();
+        $this->fromJson(gzuncompress(base64_decode($this->items)))->flip();
 
         return $this;
     }
@@ -556,27 +636,30 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     // --------------------------------------------------------------------------
 
     /**
-     * @param $key
+     * @param      $key
      * @param bool $is_value
+     *
      * @return bool
      */
-    public function forget( $key, $is_value = false )
+    public function forget($key, $is_value = false)
     {
-        if( $is_value === false )
+        if ($is_value === false)
         {
-            if( $this->hasKey($key) )
+            if ($this->hasKey($key))
             {
-                unset( $this->items[ $key ] );
+                unset($this->items[ $key ]);
+                $this->measure();
 
                 return true;
             }
         }
         else
         {
-            if( $this->has($key) )
+            if ($this->has($key))
             {
                 $found = $this->find($key);
-                unset( $this->items[ $found ], $found );
+                unset($this->items[ $found ], $found);
+                $this->measure();
 
                 return true;
             }
@@ -602,7 +685,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function revert()
     {
-        if( $this->booted )
+        if ($this->booted)
         {
             $this->items = $this->clone;
             $this->measure();
@@ -616,7 +699,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * @return $this
      */
-    public function clean()
+    public function clear()
     {
         $this->items  = array();
         $this->length = 0;
@@ -628,11 +711,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param bool $preserve_keys
+     *
      * @return $this
      */
-    public function reverse( $preserve_keys = true )
+    public function reverse($preserve_keys = true)
     {
-        $this->items = array_reverse( $this->items, $preserve_keys );
+        $this->items = array_reverse($this->items, $preserve_keys);
 
         return $this;
     }
@@ -641,29 +725,30 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param string $what
-     * @param bool $with_key
+     * @param bool   $with_key
+     *
      * @return array
      * @throws ContainerException
      */
-    public function pre( $what = 'first', $with_key = false )
+    public function pre($what = 'first', $with_key = false)
     {
-        if( $this->length or $what === 'first' or $what === 'last' )
+        if ($this->length or $what === 'first' or $what === 'last')
         {
             $copy = $this->copy();
 
-            if( $what === 'last' )
+            if ($what === 'last')
             {
                 $copy->reverse();
             }
 
             $i = 0;
 
-            foreach( $copy as $key => $value )
+            foreach ($copy as $key => $value)
             {
-                if( $i++ === 1 )
+                if ($i++ === 1)
                 {
-                    $that = ( $with_key === true ) ? array( $key => $value ) : $value;
-                    unset( $copy );
+                    $that = ($with_key === true) ? array($key => $value) : $value;
+                    unset($copy);
 
                     return $that;
                 }
@@ -690,23 +775,24 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function copy()
     {
-        return new Container( $this );
+        return new Container($this);
     }
 
     // ------------------------------------------------------------------------------
 
     /**
      * @param $key
+     *
      * @throws ContainerException
      * @return $this
      */
-    public function take( $key )
+    public function take($key)
     {
-        if( is_integer($key) or is_numeric($key) or is_string($key) )
+        if (is_integer($key) or is_numeric($key) or is_string($key))
         {
-            foreach( $this->items as $k => $item )
+            foreach ($this->items as $k => $item)
             {
-                if( $k === $key )
+                if ($k === $key)
                 {
                     $this->items = $this->items[ $key ];
                     $this->measure();
@@ -717,7 +803,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
         else
         {
-            throw new ContainerException('Bad key:'. $key .' given');
+            throw new ContainerException('Bad key:' . $key . ' given');
         }
 
         return $this;
@@ -727,26 +813,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param null $nth
+     *
      * @return Container
      * @throws ContainerException
      */
-    public function initial( $nth = null )
+    public function initial($nth = null)
     {
-        if( $this->length > 1 )
+        if ($this->length > 1)
         {
-            if( is_null($nth) )
+            if (is_null($nth))
             {
                 $nth = $this->length - 1;
             }
-            elseif( (int) $nth >= $this->length )
+            elseif ((int)$nth >= $this->length)
             {
                 return false;
             }
 
-            if( $this->hasKey($nth) )
+            if ($this->hasKey($nth))
             {
                 $copy = $this->copy();
-                $copy->forget( $nth );
+                $copy->forget($nth);
 
                 return $copy;
             }
@@ -759,22 +846,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $index
+     *
      * @return bool|Container
      */
-    public function rest( $index )
+    public function rest($index)
     {
-        if( is_numeric($index) and $this->length > $index )
+        if (is_numeric($index) and $this->length > $index)
         {
-            $index = (int) $index;
+            $index = (int)$index;
 
             $copy = $this->copy();
 
             $i = 0;
-            foreach( $copy as $key => $item )
+            foreach ($copy as $key => $item)
             {
-                if( $i++ === $index ) break;
+                if ($i++ === $index)
+                {
+                    break;
+                }
 
-                $copy->forget( $key );
+                $copy->forget($key);
             }
 
             return $copy;
@@ -792,10 +883,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         $flattened = array();
 
-        $this->walk( function ( $value, $key ) use ( &$flattened )
+        $this->walk(function ($value, $key) use (&$flattened)
         {
             $flattened[ $key ] = $value;
+
         }, true);
+
 
         $this->items = $flattened;
         $this->measure();
@@ -806,38 +899,42 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     // --------------------------------------------------------------------------
 
     /**
+     * @param bool $recursive
+     *
      * @return $this
      */
-    public function truly()
+    public function truly( $recursive = false )
     {
-        $this->items = $this->filter( function ( $item )
+        $this->items = $this->filter(function ($item)
         {
-            if( ! empty($item) and $item !== false )
+            if (! empty($item) and $item !== false)
             {
                 return true;
             }
 
             return false;
-        });
+
+        }, $recursive);
 
         $this->measure();
 
         return $this;
     }
-    
+
     // --------------------------------------------------------------------------
 
     /**
      * @param $field
+     *
      * @return $this
      */
-    public function pull( $field )
+    public function pull($field)
     {
         $pulled = array();
 
-        $this->walk( function ( $value, $key ) use ( $field, &$pulled )
+        $this->walk(function ($value, $key) use ($field, &$pulled)
         {
-            if( $key === $field )
+            if ($key === $field)
             {
                 $pulled[] = $value;
             }
@@ -848,57 +945,58 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         return $this;
     }
-    
+
     // --------------------------------------------------------------------------
 
     /**
-     * @param $condition
+     * @param      $condition
      * @param bool $prevent_keys
+     *
      * @throws ContainerException
      * @return $this
      */
-    public function where( $condition, $prevent_keys = false )
+    public function where($condition, $prevent_keys = false)
     {
-        if( is_callable($condition) )
+        if (is_callable($condition))
         {
-            $this->items = $this->flatten()->filter( $condition );
+            $this->items = $this->flatten()->filter($condition);
         }
-        elseif( is_array($condition) )
+        elseif (is_array($condition))
         {
-            if( empty($condition) )
+            if (empty($condition))
             {
                 return $this;
             }
 
-            $condition = new Container( $condition );
+            $condition = new Container($condition);
             $neededKey = $condition->firstKey();
             $neededVal = $condition->shift();
 
-            $where = $this->recursiveIt( $this->items, $neededKey, $neededVal, $prevent_keys );
+            $where = $this->recursiveIt($this->items, $neededKey, $neededVal, $prevent_keys);
 
-            if( $condition->isNotEmpty() )
+            if ($condition->isNotEmpty())
             {
-                foreach( $condition as $key => $value )
+                foreach ($condition as $key => $value)
                 {
                     $neededKey = $condition->firstKey();
                     $neededVal = $condition->shift();
 
-                    $where = $this->recursiveIt( $where, $neededKey, $neededVal, $prevent_keys);
+                    $where = $this->recursiveIt($where, $neededKey, $neededVal, $prevent_keys);
                 }
             }
 
             $this->items = $where;
 
-            unset( $condition );
+            unset($condition);
         }
-        elseif( is_string($condition) )
+        elseif (is_string($condition))
         {
-            if( empty($condition) )
+            if (empty($condition))
             {
                 return $this;
             }
 
-            $this->items = $this->recursiveIt( $this->items, $condition, null,  $prevent_keys );
+            $this->items = $this->recursiveIt($this->items, $condition, null, $prevent_keys);
         }
         else
         {
@@ -914,57 +1012,124 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $condition
+     *
      * @return mixed
      * @throws ContainerException
      */
-    public function findWhere( $condition )
+    public function findWhere($condition)
     {
-        return $this->where( $condition )->first();
-    }
-
-    // --------------------------------------------------------------------------
-
-    public function without( $key )
-    {
-
+        return $this->where($condition)->first();
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param $array
+     * @param      $key
+     * @param bool $recursive
+     *
+     * @return $this
+     */
+    public function without($key, $recursive = true)
+    {
+        if ($recursive === true)
+        {
+            $this->recursiveUnset($key, $this->items);
+        }
+        else
+        {
+            unset($this->items[ $key ]);
+        }
+
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param      $array
      * @param bool $assoc
+     *
      * @return Container
      */
-    public function intersect( $array, $assoc = false )
+    public function intersect($array, $assoc = false)
     {
-        if( $array instanceof Container )
+        if ($array instanceof Container)
         {
             $array = $array->all();
         }
 
-        if( $assoc === true )
+        if ($assoc === true)
         {
-            return new Container( array_intersect_assoc($this->items, $array) );
+            return new Container(array_intersect_assoc($this->items, $array));
         }
 
-        return new Container( array_intersect($this->items, $array) );
+        return new Container(array_intersect($this->items, $array));
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param $array
+     *
      * @return Container
      */
-    public function intersectKey( $array )
+    public function intersectKey($array)
     {
-        if( $array instanceof Container )
+        if ($array instanceof Container)
         {
             $array = $array->all();
         }
 
-        return new Container( array_intersect_key($this->items, $array) );
+        return new Container(array_intersect_key($this->items, $array));
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param $function
+     *
+     * @return $this
+     */
+    public function usort($function)
+    {
+        if (is_string($function))
+        {
+            usort($this->items, $function);
+        }
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return $this
+     */
+    public function lineKeys()
+    {
+        $this->items = array_values($this->items);
+
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function eq($key, $value)
+    {
+        if (! isset($this->items[ $key ]))
+        {
+            ++$this->length;
+        }
+
+        $this->items[ $key ] = $value;
+
+        return $this;
     }
 
     // ------------------------------------------------------------------------------
@@ -1014,7 +1179,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function isEmpty()
     {
-        return ! (bool) $this->length;
+        return ! (bool)$this->length;
     }
 
     // --------------------------------------------------------------------------
@@ -1024,9 +1189,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function isNotEmpty()
     {
-        return (bool) $this->length;
+        return (bool)$this->length;
     }
 
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isChanged()
+    {
+        return ! empty(array_diff_assoc($this->items, $this->clone));
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isNotChanged()
+    {
+        return empty(array_diff_assoc($this->items, $this->clone));
+    }
     // --------------------------------------------------------------------------
 
     /**
@@ -1034,19 +1218,23 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function toArray()
     {
-        return $this->items;
+        return array_map(function ($item)
+        {
+            return $item instanceof ArrayableInterface ? $item->toArray() : $item;
+
+        }, $this->items);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param array $array
+     *
      * @return $this
      */
-    public function fromArray( array $array = array() )
+    public function fromArray(array $array = array())
     {
-        $this->__construct( $array );
-        $this->booted = true;
+        $this->__construct($array);
 
         return $this;
     }
@@ -1055,9 +1243,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param int $options
+     *
      * @return string
      */
-    public function toJson( $options = 0 )
+    public function toJson($options = 0)
     {
         return json_encode($this->items, $options);
     }
@@ -1066,14 +1255,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $json
+     *
      * @return $this
      */
-    public function fromJson( $json )
+    public function fromJson($json)
     {
-        if( $this->isJson($json) )
+        if ($this->isJson($json))
         {
-            $this->items = json_decode( $json, true );
-            $this->clone = $this->items;
+            $this->items  = json_decode($json, true);
+            $this->clone  = $this->items;
+            $this->booted = true;
             $this->measure();
         }
 
@@ -1083,19 +1274,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     // --------------------------------------------------------------------------
 
     /**
-     * @param $path
+     * @param     $path
      * @param int $json_key
+     *
      * @return bool
      */
-    public function toFile( $path, $json_key = 0 )
+    public function toFile($path, $json_key = 0)
     {
-        $source = new Container( explode( DIRECTORY_SEPARATOR, $path ) );
+        $source = new Container(explode(DIRECTORY_SEPARATOR, $path));
 
         $source->pop();
 
-        if( is_dir($source->implode('')) )
+        if (is_dir($source->implode('')))
         {
-            return (bool) file_put_contents( $path, $this->toJson($json_key) );
+            return (bool)file_put_contents($path, $this->toJson($json_key));
         }
 
         return false;
@@ -1105,25 +1297,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $file
+     *
      * @throws ContainerException
      * @return $this
      */
-    public function fromFile( $file )
+    public function fromFile($file)
     {
-        if( is_string($file) and is_file($file) and is_readable($file) )
+        if (is_string($file) and is_file($file) and is_readable($file))
         {
-            $content = file_get_contents( $file );
-            unset( $file );
+            $content = file_get_contents($file);
+            unset($file);
 
-            if( $this->isJson($content) )
+            if ($this->isJson($content))
             {
-                $this->fromJson( $content );
+                $this->fromJson($content);
             }
-            elseif( $this->is_serialized($content) )
+            elseif ($this->isSerialized($content))
             {
-                $this->items  = unserialize( $content );
+                $this->items  = unserialize($content);
                 $this->clone  = $this->items;
                 $this->booted = true;
+                $this->measure();
             }
             else
             {
@@ -1134,8 +1328,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             throw new ContainerException('Not is file: ' . $file);
         }
-
-        $this->measure();
 
         return $this;
     }
@@ -1149,24 +1341,25 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         return $this->implode();
     }
-    
+
     // --------------------------------------------------------------------------
 
     /**
      * @param $function
      * @param $args
+     *
      * @return mixed
      */
-    public function __call( $function, $args )
+    public function __call($function, $args)
     {
-        if ( ! is_callable($function) or substr($function, 0, 6) !== 'array_' )
+        if (! is_callable($function) or substr($function, 0, 6) !== 'array_')
         {
-            throw new \BadMethodCallException(__CLASS__.'->'.$function);
+            throw new \BadMethodCallException(__CLASS__ . '->' . $function);
         }
 
-        return call_user_func_array( $function, array_merge(array($this->items), $args) );
+        return call_user_func_array($function, array_merge(array($this->items), $args));
     }
-    
+
     // --------------------------------------------------------------------------
 
     /**
@@ -1174,7 +1367,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __destruct()
     {
-        unset( $this->items, $this->clone, $this->length, $this->booted );
+        unset($this->items, $this->clone, $this->length, $this->booted);
     }
 
     // --------------------------------------------------------------------------
@@ -1184,7 +1377,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function dump()
     {
-        var_dump( $this );
+        var_dump($this);
     }
 
     // --------------------------------------------------------------------------
@@ -1194,7 +1387,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     private function measure()
     {
-        $this->length = count( $this->items );
+        $this->length = count($this->items);
 
         return $this;
     }
@@ -1203,16 +1396,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param string $what
+     *
      * @return mixed
      * @throws ContainerException
      */
-    private function key( $what = 'first' )
+    private function key($what = 'first')
     {
-        if( $what === 'first' or $what === 'last' )
+        if ($what === 'first' or $what === 'last')
         {
             $copy = $this->copy()->all();
 
-            if( $what === 'first' )
+            if ($what === 'first')
             {
                 reset($copy);
             }
@@ -1221,9 +1415,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
                 end($copy);
             }
 
-            unset( $what );
+            unset($what);
 
-            return key( $copy );
+            return key($copy);
         }
 
         throw new ContainerException('Unavailable $what given (Can be passed "first" or "last")');
@@ -1236,42 +1430,43 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param $key
      * @param $value
      * @param $prevent_keys
+     *
      * @return array
      */
-    private function recursiveIt( $array, $key, $value = null, $prevent_keys = false )
+    private function recursiveIt($array, $key, $value = null, $prevent_keys = false)
     {
         $outputArray = array();
 
-        $arrIt = new \RecursiveIteratorIterator( new \RecursiveArrayIterator($array) );
+        $arrIt = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
 
         foreach ($arrIt as $sub)
         {
             $subArray = $arrIt->getSubIterator();
 
-            if ( $value !== null and isset($subArray[ $key ]) and $subArray[ $key ] === $value )
+            if ($value !== null and isset($subArray[ $key ]) and $subArray[ $key ] === $value)
             {
-                if( $prevent_keys === false )
+                if ($prevent_keys === false)
                 {
-                    $k = $arrIt->getSubIterator( $arrIt->getDepth() - 1 )->key();
+                    $k = $arrIt->getSubIterator($arrIt->getDepth() - 1)->key();
 
-                    $outputArray[ $k ] = iterator_to_array( $subArray );
+                    $outputArray[ $k ] = iterator_to_array($subArray);
                 }
                 else
                 {
-                    $outputArray[] = iterator_to_array( $subArray );
+                    $outputArray[] = iterator_to_array($subArray);
                 }
             }
-            elseif( $value === null and isset($subArray[ $key ]) )
+            elseif ($value === null and isset($subArray[ $key ]))
             {
-                if( $prevent_keys === false )
+                if ($prevent_keys === false)
                 {
-                    $k = $arrIt->getSubIterator( $arrIt->getDepth() - 1 )->key();
+                    $k = $arrIt->getSubIterator($arrIt->getDepth() - 1)->key();
 
-                    $outputArray[ $k ] = iterator_to_array( $subArray );
+                    $outputArray[ $k ] = iterator_to_array($subArray);
                 }
                 else
                 {
-                    $outputArray[] = iterator_to_array( $subArray );
+                    $outputArray[] = iterator_to_array($subArray);
                 }
             }
         }
@@ -1279,17 +1474,79 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $outputArray;
     }
 
+    // ------------------------------------------------------------------------------
+
+    private function traverseStructure(\RecursiveArrayIterator &$iterator, $key, $is_value)
+    {
+        for (; $iterator->valid(); $iterator->next())
+        {
+            if ($iterator->hasChildren())
+            {
+                $this->traverseStructure($iterator->getChildren(), $key, $is_value);
+            }
+            else
+            {
+
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param callable $function
+     * @param          $items
+     *
+     * @return array
+     */
+    private function filterRecursive(callable $function, $items)
+    {
+        foreach ($items as $key => & $item)
+        {
+            if (is_array($item))
+            {
+                $item = $this->filterRecursive($function, $item);
+            }
+            elseif($item instanceof Container)
+            {
+                $item = $this->filterRecursive($function, $item->all());
+            }
+        }
+
+        return array_filter($items, $function);
+    }
+
+    // ------------------------------------------------------------------------------
+
+    /**
+     * @param $key
+     * @param $items
+     */
+    private function recursiveUnset($key, & $items)
+    {
+        unset($items[ $key ]);
+
+        foreach ($items as & $item)
+        {
+            if (is_array($item))
+            {
+                $this->recursiveUnset($key, $item);
+            }
+        }
+    }
+
     // --------------------------------------------------------------------------
 
     /**
      * @param $string
+     *
      * @return bool
      */
     private function isJson($string)
     {
-        if( is_string($string) )
+        if (is_string($string))
         {
-            return is_array( json_decode($string, true) );
+            return is_array(json_decode($string, true));
         }
 
         return false;
@@ -1299,11 +1556,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * @param $string
+     *
      * @return bool
      */
-    private function is_serialized( $string )
+    private function isSerialized($string)
     {
-        if ( $string === 'b:0;' or @unserialize( $string ) !== false )
+        if ($string === 'b:0;' or @unserialize($string) !== false)
         {
             return true;
         }
@@ -1317,7 +1575,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param $a
      * @param $b
      */
-    private function swapVars( &$a, &$b )
+    private function swapVars(&$a, &$b)
     {
         $a ^= $b ^= $a ^= $b;
         // list($a, $b) = array($b, $a);
@@ -1377,7 +1635,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function offsetSet($offset, $value)
     {
-        if( is_null($offset) )
+        if (is_null($offset))
         {
             $this->items[] = $value;
         }
@@ -1385,17 +1643,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             $this->items[ $offset ] = $value;
         }
+
+        $this->measure();
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param mixed $offset
+     *
      * @return bool
      */
     public function offsetExists($offset)
     {
-        return isset( $this->items[ $offset ] );
+        return isset($this->items[ $offset ]);
     }
 
     // --------------------------------------------------------------------------
@@ -1405,17 +1666,25 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function offsetUnset($offset)
     {
-        unset( $this->items[ $offset ] );
+        unset($this->items[ $offset ]);
+        $this->measure();
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * @param mixed $offset
+     *
+     * @throws OffsetNotExistsException
      * @return null
      */
-    public function offsetGet($offset)
+    public function & offsetGet($offset)
     {
-        return isset( $this->items[ $offset ] ) ? $this->items[ $offset ] : null;
+        if (isset($this->items[ $offset ]))
+        {
+            return $this->items[ $offset ];
+        }
+
+        throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
     }
 }

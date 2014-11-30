@@ -3,6 +3,8 @@ Primitive
 
 PHP implementation of array and string in object-oriented style with features
 
+Check [Wiki](https://github.com/imkrimerman/primitive/wiki) for documentation
+
 Installation
 ------------
 Add a dependency to your project's composer.json file if you use [Composer](http://getcomposer.org/) to manage the dependencies of your project:
@@ -14,133 +16,53 @@ Add a dependency to your project's composer.json file if you use [Composer](http
 }
 ```
 Features
-========
-Length
-------
+-----
+Can be constructed from array, JSON, Container or even file (json or serialized array)
+```php
+$json  = '{
+  "item": "someItem",
+  "other": "otherItem",
+  "nested": {
+    "some": "thing"
+  }
+}';
+
+$array = [ 0 => 'someItem',
+          'other'  => 'otherItem'
+          'nested' => 
+                  ['some' => 'thing']
+];
+
+$containerEmpty     = new Container;
+$containerFromArray = new Container($array);
+$containerFromJson  = new Container($json);
+$containerFromFile  = new Container('project/path/to/data.json');
+```
 Container always knows its length
 ```php
 $length = $container->length;
-//Result 3
 ```
-You can check
+Can be reverted to the saved state
 ```php
-$container->isEmpty();
-//or
-$container->isNotEmpty();
-```
-Push
------
-```php
-$container->push('value');
-//or specify key to push 
-$container->push('value', 'nested');
-```
-Pop
-----
-```php
-$pop = $container->pop();
-```
-Unshift
------
-```php
-$container->unshift('value');
-```
-Shift
------
-```php
-$shift = $container->shift();
-```
-Find value
-----
-```php
-$index = $container->find('someValue');
-```
-Has
-----
-```php
-//Check if Container has value
-$bool = $container->has('someItem');
-```
-Has key
-----
-```php
-//Check if Container has key
-$bool = $container->hasKey('item');
-```
-First key
------
-```php
-//Get first key
-$firstKey = $container->firstKey();
-```
-Last key
-----
-```php
-//Get last key
-$lastKey = $container->lastKey();
-```
-First value
-----
-```php
-//Get first value and assign to Container (useful for chaining)
-$container->first()
-//or return first value
-$first = $container->first(true);
-```
-Last value
-----
-```php
-//Get last value and assign to Container (useful for chaining)
-$container->last()
-//or return last value
-$last = $container->last(true);
-```
-Unique
-----
-```php
-//Remove duplicated values
-$container->unique();
-```
-Keys
-----
-```php
-$keys = $container->keys();
-```
-Values
-----
-```php
-$values = $container->values();
-```
-Keys and values divided
------
-```php
-$divided = $container->divide();
-//Result is new Container with keys and values 
-//divided in two arrays with indexes 'keys' and 'values'
-```
-Shuffle
------
-```php
-$container->shuffle();
-```
-Implode
-----
-```php
-//Container will flatten all items and implode them
-$string = $container->implode();
-//You can specify delimiter (whitespace by default)
-$string = $container->implode(',');
-```
-Chunk
-----
-```php
-//Returns split Container into chunks each wrapped with new Container
-$size = 3;
-$chunked = $container->chunk($size);
-```
-Combine
-----
-```php
-//You can specify what to combine 'keys' or 'values' with the second argument
+$array     = ['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz'];
+$container = new Container($array);
 
+$container->forget('bar');
+//`$container`
+//['foo', ['bar' => 'foobar', 'key' => 'value']]
+$container->revert();
+//`$container`
+//['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
+
+$container->where(['key' => 'value']);
+//`$container`
+//[1 => ['bar' => 'foobar', 'key' => 'value']]
+$container->save()->first()->take('bar');
+//`$container`
+//[0 => 'foobar']
+
+$container->revert();
+//`$container`
+//['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
 ```
+[And great amount of other cool methods](https://github.com/imkrimerman/primitive/wiki)

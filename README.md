@@ -52,6 +52,17 @@ $container->forget('bar');
 //['foo', ['bar' => 'foobar', 'key' => 'value']]
 $container->revert();
 //`$container`
-//['foo', ['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']]
+//['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
+
+$container->where(['key' => 'value']);
+//`$container`
+//[1 => ['bar' => 'foobar', 'key' => 'value']]
+$container->save()->first()->take('bar');
+//`$container`
+//[0 => 'foobar']
+
+$container->revert();
+//`$container`
+//['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
 ```
-And great amount of other cool methods
+[And great amount of other cool methods](https://github.com/imkrimerman/primitive/wiki)

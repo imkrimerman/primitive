@@ -13,6 +13,9 @@
         "php": ">=5.5.0"
     },
     "autoload": {
+        "classmap":[
+          "src/Primitive"
+        ],
         "psr-0": {
             "im": "src/"
         },

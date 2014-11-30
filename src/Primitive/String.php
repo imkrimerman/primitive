@@ -92,7 +92,7 @@ class String implements Countable
         if( is_string( $string ) )
         {
             $this->string = $string;
-            $this->clone = $string;
+            $this->clone  = $string;
             $this->measure();
         }
 

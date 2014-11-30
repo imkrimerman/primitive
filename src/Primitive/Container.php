@@ -142,25 +142,28 @@ class Container implements ArrayAccess      , ArrayableInterface , JsonableInter
      */
     public function push($item, $key = null)
     {
-        if ($key === null)
+        if (empty($key))
         {
             $this->items[] = $item;
 
             ++$this->length;
+
+            return $this;
+        }
+
+        if ($key instanceof String)
+        {
+            $key = $key->__toString();
+        }
+
+        if (is_array($this->items[$key]) or $this->items[$key] instanceof Container)
+        {
+            $this->items[$key][] = $item;
         }
         else
         {
-            if ($key instanceof String)
-            {
-                $key = $key->__toString();
-            }
-
-            if(! $this->hasKey($key))
-            {
-                ++$this->length;
-            }
-
             $this->items[$key] = $item;
+            $this->measure();
         }
 
         return $this;
@@ -897,21 +900,21 @@ class Container implements ArrayAccess      , ArrayableInterface , JsonableInter
      * @param $index
      *
      * @param bool $preserve_keys
+     * @throws BadContainerMethodArgumentException
      * @throws EmptyContainerException
-     * @throws OffsetNotExistsException
      * @return bool|Container
      */
     public function rest($index, $preserve_keys = true)
     {
         if (is_numeric($index) and $this->length > (int)$index)
         {
-            $copy  = $this->copy();
+            $copy = $this->copy();
             $copy->cut($copy->firstKey(), (int)$index, $preserve_keys);
 
             return $copy;
         }
 
-        throw new OffsetNotExistsException('$index: ' . $index . ' is not numeric or larger than Container length');
+        throw new BadContainerMethodArgumentException('$index: ' . $index . ' is not numeric or larger than Container length');
     }
 
     // --------------------------------------------------------------------------
@@ -1074,25 +1077,15 @@ class Container implements ArrayAccess      , ArrayableInterface , JsonableInter
     // --------------------------------------------------------------------------
 
     /**
-     * Removes key from Container (by default recursive)
+     * Recursively removes values by key from Container
      *
-     * You can specify second argument to disable recursive call
-     *
-     * @param      $key
-     * @param bool $recursive
+     * @param $key
      *
      * @return $this
      */
-    public function without($key, $recursive = true)
+    public function without($key)
     {
-        if ($recursive === true)
-        {
-            $this->recursiveUnset($key, $this->items);
-        }
-        else
-        {
-            unset($this->items[ $key ]);
-        }
+        $this->recursiveUnset($key, $this->items);
 
         return $this;
     }

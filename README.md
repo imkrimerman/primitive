@@ -3,7 +3,7 @@ Primitive
 
 PHP implementation of array and string in object-oriented style with features
 
-Check [Wiki](https://github.com/imkrimerman/primitive/wiki) for documentation
+Check [Wiki](https://github.com/imkrimerman/primitive/wiki) documentation
 
 Installation
 ------------

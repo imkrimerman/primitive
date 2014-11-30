@@ -17,7 +17,7 @@
             "im": "src/"
         },
         "files": [
-        	"src/Primitive/Functions.php"
+        	"src/Functions.php"
         ]
     }
 }

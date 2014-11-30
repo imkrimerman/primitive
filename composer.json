@@ -2,7 +2,7 @@
     "name": "im/primitive",
     "description": "Implements object-oriented array and string",
     "license": "MIT",
-    "keywords": ["php", "array", "string"]
+    "keywords": ["php", "array", "string"],
     "authors": [
         {
             "name": "Igor Krimerman",

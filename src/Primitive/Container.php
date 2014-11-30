@@ -145,6 +145,8 @@ class Container implements ArrayAccess      , ArrayableInterface , JsonableInter
         if ($key === null)
         {
             $this->items[] = $item;
+
+            ++$this->length;
         }
         else
         {
@@ -153,11 +155,13 @@ class Container implements ArrayAccess      , ArrayableInterface , JsonableInter
                 $key = $key->__toString();
             }
 
-            $this->items[ $key ] = $item;
+            if(! $this->hasKey($key))
+            {
+                ++$this->length;
+            }
+
+            $this->items[$key] = $item;
         }
-
-        ++$this->length;
-
 
         return $this;
     }

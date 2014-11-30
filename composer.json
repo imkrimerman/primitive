@@ -14,10 +14,10 @@
     },
     "autoload": {
         "psr-0": {
-            "im": "src/"
+            "im\\": "src/"
         },
         "files": [
-        	"src/Functions.php"
+        	"src/Primitive/Functions.php"
         ]
     }
 }

@@ -1,11 +1,5 @@
 <?php namespace im\Primitive;
 
-/**
- * Created by Igor Krimerman.
- * Date: 26.10.14
- * Time: 06:56
- */
-
 use \ArrayAccess;
 use im\Primitive\Exceptions\Container\BadContainerMethodArgumentException;
 use im\Primitive\Exceptions\Container\BadSizeGivenException;

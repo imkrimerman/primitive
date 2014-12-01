@@ -65,4 +65,4 @@ $container->revert();
 //`$container`
 //['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
 ```
-[And great amount of other cool methods](https://github.com/imkrimerman/primitive/wiki)
+[And great amount of other cool features](https://github.com/imkrimerman/primitive/wiki)

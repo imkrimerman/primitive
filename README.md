@@ -63,6 +63,6 @@ $container->save()->first()->take('bar');
 
 $container->revert();
 //`$container`
-//['foo', ['bar' => 'foobar', 'key' => 'value'], 'bar' => 'baz']
+//[1 => ['bar' => 'foobar', 'key' => 'value']]
 ```
 [And great amount of other cool features](https://github.com/imkrimerman/primitive/wiki)

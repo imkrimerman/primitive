@@ -1,10 +1,4 @@
-<?php
-/**
- * Author: Igor Krimerman
- * Date: 26.11.2014
- */
-
-namespace im\Primitive\Exceptions\Container;
+<?php namespace im\Primitive\Container\Exceptions;
 
 
 class OffsetNotExistsException extends \Exception

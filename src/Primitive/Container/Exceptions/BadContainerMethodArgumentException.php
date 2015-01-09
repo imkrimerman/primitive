@@ -1,12 +1,4 @@
-<?php
-/**
- * Created by PhpStorm.
- * User: Nastya
- * Date: 29.11.14
- * Time: 09:18
- */
-
-namespace im\Primitive\Exceptions\Container;
+<?php namespace im\Primitive\Container\Exceptions;
 
 
 class BadContainerMethodArgumentException extends  \Exception

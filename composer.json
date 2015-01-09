@@ -1,8 +1,8 @@
 {
     "name": "im/primitive",
-    "description": "Implements object-oriented array and string",
+    "description": "Object-oriented array and string",
     "license": "MIT",
-    "keywords": ["php", "array", "string"],
+    "keywords": ["php", "array", "string", "object", "object-oriented", "primitive"],
     "authors": [
         {
             "name": "Igor Krimerman",
@@ -14,14 +14,11 @@
         "php": ">=5.5.0"
     },
     "autoload": {
-        "classmap":[
-          "src/Primitive"
-        ],
-        "psr-0": {
-            "im": "src/"
+        "psr-4": {
+            "im\\": "src"
         },
         "files": [
-        	"src/Functions.php"
+        	"src/Primitive/Support/Helpers.php"
         ]
     }
 }

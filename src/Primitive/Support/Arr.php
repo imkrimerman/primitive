@@ -1,7 +1,5 @@
-<?php namespace Illuminate\Support;
+<?php namespace im\Primitive\Support;
 
-use Closure;
-use Illuminate\Support\Traits\MacroableTrait;
 
 class Arr {
 
@@ -29,10 +27,10 @@ class Arr {
 	 * Build a new array using a callback.
 	 *
 	 * @param  array     $array
-	 * @param  \Closure  $callback
+	 * @param  \Callable  $callback
 	 * @return array
 	 */
-	public static function build($array, Closure $callback)
+	public static function build($array, Callable $callback)
 	{
 		$results = array();
 
@@ -126,7 +124,7 @@ class Arr {
 	 * Return the first element in an array passing a given truth test.
 	 *
 	 * @param  array     $array
-	 * @param  \Closure  $callback
+	 * @param  \Callable  $callback
 	 * @param  mixed     $default
 	 * @return mixed
 	 */
@@ -144,7 +142,7 @@ class Arr {
 	 * Return the last element in an array passing a given truth test.
 	 *
 	 * @param  array     $array
-	 * @param  \Closure  $callback
+	 * @param  \Callable  $callback
 	 * @param  mixed     $default
 	 * @return mixed
 	 */
@@ -353,25 +351,13 @@ class Arr {
 	}
 
 	/**
-	 * Sort the array using the given Closure.
+	 * Filter the array using the given Callable.
 	 *
 	 * @param  array     $array
-	 * @param  \Closure  $callback
+	 * @param  \Callable  $callback
 	 * @return array
 	 */
-	public static function sort($array, Closure $callback)
-	{
-		return Collection::make($array)->sortBy($callback)->all();
-	}
-
-	/**
-	 * Filter the array using the given Closure.
-	 *
-	 * @param  array     $array
-	 * @param  \Closure  $callback
-	 * @return array
-	 */
-	public static function where($array, Closure $callback)
+	public static function where($array, Callable $callback)
 	{
 		$filtered = array();
 

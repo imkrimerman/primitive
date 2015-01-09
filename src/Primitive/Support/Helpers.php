@@ -48,19 +48,6 @@ function str_replace_array($search, array $replace, $subject)
 }
 
 /**
- * Generate a more truly "random" alpha-numeric string.
- *
- * @param  int  $length
- * @return string
- *
- * @throws \RuntimeException
- */
-function str_random($length = 16)
-{
-    return Str::random($length);
-}
-
-/**
  * Get an item from an object using "dot" notation.
  *
  * @param  object  $object

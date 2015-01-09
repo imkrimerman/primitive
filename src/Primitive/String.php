@@ -5,7 +5,6 @@
  * Date: 26.10.14
  * Time: 13:38
  */
-
 use \Countable;
 use im\Primitive\Container;
 use im\Primitive\Exceptions\String\StringException;

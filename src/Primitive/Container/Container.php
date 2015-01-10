@@ -5,7 +5,6 @@ use \JsonSerializable;
 use \Countable;
 use \ArrayIterator;
 use \IteratorAggregate;
-
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
@@ -17,9 +16,10 @@ use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
-use ReflectionClass;
+
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, RevertableInterface, Countable, IteratorAggregate {
+
     /*
     |--------------------------------------------------------------------------
     | Storing clone of main items, used for reverting
@@ -87,6 +87,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __get($item)
     {
+        if (method_exists($this, $item))
+        {
+            return $this->{$item}();
+        }
+
         if (isset($this->items[$item]))
         {
             return $this->items[$item];
@@ -227,7 +232,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function hasValue($value)
     {
-        return in_array($value, $this->items);
+        foreach ($this->items as $item)
+        {
+            if (is_array($item) || $item instanceof Container)
+            {
+                $result = (new static($item))->hasValue($value);
+
+                if ($result) return true;
+            }
+
+            if ($item == $value)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

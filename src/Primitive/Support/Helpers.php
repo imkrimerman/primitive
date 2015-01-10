@@ -2,7 +2,7 @@
 
 /**
  * @param array $array
- * @return \im\Primitive\Container
+ * @return \im\Primitive\Container\Container
  */
 function a($array = [])
 {
@@ -11,7 +11,7 @@ function a($array = [])
 
 /**
  * @param string $string
- * @return \im\Primitive\String
+ * @return \im\Primitive\String\String
  */
 function s($string = '')
 {

@@ -1,7 +1,6 @@
-<?php namespace Illuminate\Support;
+<?php namespace im\Primitive\Support\Str;
 
-use Patchwork\Utf8;
-use Illuminate\Support\Traits\MacroableTrait;
+use im\Primitive\Support\Traits\MacroableTrait;
 
 class Str {
 
@@ -27,17 +26,6 @@ class Str {
 	 * @var array
 	 */
 	protected static $studlyCache = [];
-
-	/**
-	 * Transliterate a UTF-8 value to ASCII.
-	 *
-	 * @param  string  $value
-	 * @return string
-	 */
-	public static function ascii($value)
-	{
-		return Utf8::toAscii($value);
-	}
 
 	/**
 	 * Convert a value to camel case.

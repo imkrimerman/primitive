@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Container;
 
 use \ArrayAccess;
+use im\Primitive\Support\Str\Str;
 use \JsonSerializable;
 use \Countable;
 use \ArrayIterator;
@@ -45,7 +46,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Constructor
      *
-     * Container can be constructed from array, json, Container or file that contains json or serialized array
+     * Container can be constructed from array, json, Container or file that contains json or serialized
      *
      * @param array|string|Container|String $from
      *
@@ -54,24 +55,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __construct($from = [])
     {
-        if (is_string($from))
+        if (is_array($from) || $from instanceof Container)
+        {
+            return $this->fromArray($this->getArrayable($from));
+        }
+        elseif (is_string($from))
         {
             return $this->fromString($from);
         }
-        elseif ($from instanceof Container)
-        {
-            $from = $from->all();
-        }
-        elseif ( ! is_array($from))
-        {
-            throw new BadContainerMethodArgumentException('Bad constructor argument, expected string, array or Container');
-        }
 
-        $this->items = $from;
-        $this->clone = $from;
-        $this->measure();
-
-        return $this;
+        throw new BadContainerMethodArgumentException('Bad constructor argument, expected string, array or Container');
     }
 
 
@@ -118,9 +111,37 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Pushes items in the Container,
+     * Getter
      *
-     * If $key specified, $item will be pushed to specific $key
+     * @param $key
+     * @param null $default
+     * @return mixed
+     */
+    public function get($key, $default = null)
+    {
+        return Arr::get($this->items, $key, $default);
+    }
+
+    /**
+     * Setter
+     *
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function set($key, $value)
+    {
+        $this->items = Arr::set($this->items, $key, $value);
+
+        return $this;
+    }
+
+
+    /**
+     * Push items in the Container,
+     *
+     * If $key specified, $item will be pushed to specific $key.
      *
      * @param $item
      * @param null $key
@@ -147,7 +168,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Removes last item from Container and returns it
+     * Remove last item from Container and returns it.
      *
      * @return mixed
      */
@@ -165,7 +186,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Adds item to the first index of Container
+     * Adds item to the first index of Container.
      *
      * @param $item
      *
@@ -180,7 +201,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Removes first item from Container and returns it
+     * Removes first item from Container and returns it.
      *
      * @return mixed
      */
@@ -198,7 +219,8 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Searches for specified value, returns index on success, otherwise false
+     * Search for specified value, returns index on success, otherwise false.
+     * Search at the first level.
      *
      * @param $value
      *
@@ -211,7 +233,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Checks if Container has specified values
+     * Check if Container has specified key
      *
      * @param $key
      *
@@ -288,59 +310,36 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Returns first Container value
+     * Return first Container value
      *
-     * @param bool $return
      * @return mixed
-     * @throws EmptyContainerException
+     * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
      */
-    public function first($return = true)
+    public function first()
     {
         if ($this->isEmpty())
         {
             throw new EmptyContainerException('Empty Container');
         }
 
-        $first = first($this->items);
-
-        if ($return == true)
-        {
-            return $first;
-        }
-
-        $this->items = $first;
-
-        $this->measure();
-
-        return $this;
+        return first($this->items);
     }
 
 
     /**
-     * Returns last Container value
+     * Return last Container value
      *
-     * @param bool $return
      * @return mixed
      * @throws EmptyContainerException
      */
-    public function last($return = false)
+    public function last()
     {
         if ($this->isEmpty())
         {
             throw new EmptyContainerException('Empty Container');
         }
 
-        $last = last($this->items);
-
-        if ($return == true)
-        {
-            return $last;
-        }
-
-        $this->items = $last;
-        $this->measure();
-
-        return $this;
+        return last($this->items);
     }
 
 
@@ -1166,33 +1165,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $this;
     }
 
-    /**
-     * Getter
-     *
-     * @param $key
-     * @param null $default
-     * @return mixed
-     */
-    public function get($key, $default = null)
-    {
-        return Arr::get($this->items, $key, $default);
-    }
-
-    /**
-     * Setter
-     *
-     * @param $key
-     * @param $value
-     *
-     * @return $this
-     */
-    public function set($key, $value)
-    {
-        $this->items = Arr::set($this->items, $key, $value);
-
-        return $this;
-    }
-
 
     /**
      * Check if Container items is associative
@@ -1306,7 +1278,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function fromArray(array $array = [])
     {
-        $this->__construct($array);
+        $this->items = [];
+
+        foreach ($array as $key => $value)
+        {
+            $this->set($key, $value);
+        }
+
+        $this->clone = $this->items;
+
+        $this->measure();
 
         return $this;
     }
@@ -1475,14 +1456,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($this->isJson($from))
         {
-            $this->fromJson($from);
-        }
-        else
-        {
-            $this->fromFile($from);
+            return $this->fromJson($from);
         }
 
-        return $this;
+        return $this->fromFile($from);
     }
 
     /**
@@ -1501,9 +1478,13 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
         elseif (is_object($this->items))
         {
-            $this->items = measureObject($this->items);
+            $this->length = measureObject($this->items);
 
             return $this;
+        }
+        elseif (is_string($this->items))
+        {
+            $this->length = Str::length($this->items);
         }
 
         throw new UncountableException('Can\'t count inner items.');

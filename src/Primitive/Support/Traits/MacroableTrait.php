@@ -1,4 +1,4 @@
-<?php namespace Illuminate\Support\Traits;
+<?php namespace im\Primitive\Support\Traits;
 
 trait MacroableTrait {
 

@@ -223,7 +223,196 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromArray($initializer);
 
-        $this->unique->all->shouldBeEqualTo(['foo', 'bar']);
+        $this->unique()->all()->shouldBeEqualTo(['foo', 'bar']);
+    }
+
+    function it_should_return_all_keys_from_Container()
+    {
+        $this->keys()->all()->shouldBe(['name', 'surname', 'email', 'wife']);
+    }
+
+    function it_should_return_all_values_from_Container()
+    {
+        $this->values()->all()->shouldBeEqualTo(
+            [
+                0 => 'John',
+                1 => 'Doe',
+                2 => 'johndoe@example.com',
+                3 => [
+                    'name' => 'Jane',
+                    'surname' => 'Doe',
+                    'email' => 'janedoe@example.com',
+                    'hobby' =>'music'
+                ]
+            ]);
+    }
+
+    function it_should_divide_keys_and_values()
+    {
+        $this->divide()->all()->shouldBeEqualTo(
+            [
+                [
+                    'name',
+                    'surname',
+                    'email',
+                    'wife'
+                ],
+                [
+                    0 => 'John',
+                    1 => 'Doe',
+                    2 => 'johndoe@example.com',
+                    3 => [
+                        'name' => 'Jane',
+                        'surname' => 'Doe',
+                        'email' => 'janedoe@example.com',
+                        'hobby' =>'music'
+                    ]
+                ]
+            ]
+        );
+    }
+
+    function it_should_shuffle_items()
+    {
+        $this->shuffle()->shouldNotBeEqualTo($this->initializer);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_implode_items_even_if_its_multi_dimensional()
+    {
+        $this->implode()->shouldBeEqualTo('John Doe johndoe@example.com Jane Doe janedoe@example.com music');
+    }
+
+    function it_should_join_values_by_key_from_second_level()
+    {
+        $this->fromArray(
+            [
+                [
+                    'name' => 'John',
+                    'surname' => 'Doe',
+                    'email' => 'johndoe@example.com'
+                ],
+                [
+                    'name' => 'Jane',
+                    'surname' => 'Doe',
+                    'email' => 'janedoe@example.com'
+                ]
+            ]
+        );
+
+        $this->join('name')->shouldBeEqualTo('JohnJane');
+    }
+
+    function it_should_find_all_second_level_values_by_key_and_return_array()
+    {
+        $this->lists('hobby')->shouldBe(['music']);
+
+        $this->lists('name')->shouldBe(['Jane']);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_split_items_into_chunks()
+    {
+        $this->chunk()->shouldHaveType('im\Primitive\Container\Container');
+
+        $this->revert();
+
+        $this->chunk(3)->all()->shouldBe(
+            [
+                [
+                    'John',
+                    'Doe',
+                    'johndoe@example.com'
+                ],
+                [
+                    [
+                        'name' => 'Jane',
+                        'surname' => 'Doe',
+                        'email' => 'janedoe@example.com',
+                        'hobby' =>'music'
+                    ]
+                ]
+            ]
+        );
+    }
+
+    function it_should_combine_given_keys_with_inner_values()
+    {
+        $keys = [
+            'first', 'second', 'third', 'forth'
+        ];
+
+        $this->combine($keys)->all()->shouldBe(
+            [
+                'first' => 'John',
+                'second' => 'Doe',
+                'third' => 'johndoe@example.com',
+                'forth' => [
+                    'name' => 'Jane',
+                    'surname' => 'Doe',
+                    'email' => 'janedoe@example.com',
+                    'hobby' =>'music'
+                ]
+            ]
+        );
+
+        $this->revert();
+
+        $keys = [
+            'first', 'second', 'third', 'forth'
+        ];
+
+        $this->combine($keys, 'keys')->all()->shouldBe(
+            [
+                'first' => 'John',
+                'second' => 'Doe',
+                'third' => 'johndoe@example.com',
+                'forth' => [
+                    'name' => 'Jane',
+                    'surname' => 'Doe',
+                    'email' => 'janedoe@example.com',
+                    'hobby' =>'music'
+                ]
+            ]
+        );
+    }
+
+    function it_should_combine_given_values_with_inner_keys()
+    {
+        $values = [
+            'first', 'second', 'third', 'forth'
+        ];
+
+        $this->combine($values, 'values')->all()->shouldBe(
+            [
+                'name' => 'first',
+                'surname' => 'second',
+                'email' => 'third',
+                'wife' => 'forth'
+            ]
+        );
+    }
+
+//    function it_should_throw_exception_if_length_of_give_array_is_not_equal_with_inner_length()
+//    {
+//        $keys = [
+//            'first', 'second', 'third', 'forth', 'fifth'
+//        ];
+//
+//        $this->shouldThrow('im\Primitive\Container\Exceptions\BadLengthException')
+//             ->duringCombine($keys, 'keys');
+//    }
+
+    function it_should_throw_exception_if_given_wrong_second_param()
+    {
+        $keys = [
+            'first', 'second', 'third', 'forth'
+        ];
+
+        $this->shouldThrow('im\Primitive\Container\Exceptions\BadContainerMethodArgumentException')
+             ->duringCombine($keys, 'foo');
     }
 
     protected function lengthCheck()

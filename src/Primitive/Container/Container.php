@@ -435,13 +435,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Concatenate values of a given key as a string.
      *
-     * @param $value
+     * @param $key
      * @param null $glue
+     *
      * @return string
      */
-    public function join($value, $glue = null)
+    public function join($key, $glue = null)
     {
-        return implode($glue, $this->lists($value));
+        return implode($glue, $this->lists($key));
     }
 
     /**
@@ -457,7 +458,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
     /**
-     * Returns split Container items into chunks wrapped with new Container
+     * Return split Container items into chunks wrapped with new Container
      *
      * @param int $size
      *
@@ -488,6 +489,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function combine($array, $what = 'keys')
     {
+        if ( ! count($array) == $this->length)
+        {
+            throw new BadLengthException('Container length should match array length.');
+        }
+
         //TODO check $result
         if ($what == 'keys')
         {
@@ -500,11 +506,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         else
         {
             throw new BadContainerMethodArgumentException('Second argument must be string (keys or values)');
-        }
-
-        if ($result === false)
-        {
-            throw new BadLengthException('Container length should match array length.');
         }
 
         $this->items = $result;

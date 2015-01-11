@@ -424,6 +424,16 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck();
     }
 
+//    function it_should_traverse_through_items()
+//    {
+//        $this->each(function(& $value)
+//        {
+//            if ( ! is_array($value)) $value .= 'ok';
+//
+//        })->first()->shouldBeEqualTo('Johnok');
+//
+//    }
+
     protected function lengthCheck()
     {
         $this->all()->shouldHaveCount(count($this->initializer));

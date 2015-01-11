@@ -541,11 +541,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * Flips Container items keys with values
-     *
      * @return $this
+     * @throws \im\Primitive\Container\Exceptions\ContainerException
      */
     public function flip()
     {
+        if ($this->isMulti())
+        {
+            throw new ContainerException('Can\'t flip in multi-dimensional array.');
+        }
+
         $this->items = array_flip($this->items);
 
         return $this;

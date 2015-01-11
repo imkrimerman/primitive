@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/imkrimerman/primitive.svg?branch=master)](https://travis-ci.org/imkrimerman/primitive)
+
 Primitive
 =========
 

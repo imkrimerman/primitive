@@ -148,6 +148,45 @@ function object_get($object, $key, $default = null)
     return $object;
 }
 
+
+/**
+ * Check if object has method
+ *
+ * @param $object
+ * @param $method
+ *
+ * @return bool
+ */
+function objectHasMethod($object, $method)
+{
+    $reflactor = new ReflectionClass($object);
+
+    foreach ($reflactor->getMethods() as $reflactorMethod)
+    {
+        if ($reflactorMethod->getName() == $method)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function objectMethodHasAcceptableParameters($object, $method)
+{
+    $reflactor = new ReflectionClass($object);
+
+    foreach ($reflactor->getMethods() as $reflactorMethod)
+    {
+        if ($reflactorMethod->getName() == $method && $reflactorMethod->getNumberOfRequiredParameters() == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /**
  * Get an item from an array or object using "dot" notation.
  *

@@ -16,7 +16,7 @@ class ContainerSpec extends ObjectBehavior
             'wife' => ['name' => 'Jane',
                        'surname' => 'Doe',
                        'email' => 'janedoe@example.com',
-                        'hobby' =>'music']
+                       'hobby' =>'music']
         ];
 
         $this->beConstructedWith($this->initializer);
@@ -45,13 +45,76 @@ class ContainerSpec extends ObjectBehavior
         $this->all()->shouldHaveCount(1);
 
         $this->has('key')->shouldBe(true);
+
+        $this->all->shouldBeEqualTo(['key' => 'value']);
+    }
+
+    function it_should_construct_from_file_with_json()
+    {
+        $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'data.json';
+
+        $this->fromString($initializer);
+
+        $this->all->shouldBeEqualTo($this->initializer);
+
+        $this->has('name')->shouldBe(true);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_recognize_and_construct_from_string_with_path_or_json()
+    {
+        /**
+         * Json
+         */
+        $initializer = '{"key": "value"}';
+
+        $this->fromString($initializer);
+
+        $this->all()->shouldHaveCount(1);
+
+        $this->has('key')->shouldBe(true);
+
+        $this->all->shouldBeEqualTo(['key' => 'value']);
+
+        /**
+         * File with Json
+         */
+        $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'data.json';
+
+        $this->fromString($initializer);
+
+        $this->all->shouldBeEqualTo($this->initializer);
+
+        $this->has('name')->shouldBe(true);
+
+        $this->lengthCheck();
+
+        /**
+         * File with serialized data
+         */
+        $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'serialized.data';
+
+        $this->fromString($initializer);
+
+        $this->all->shouldBeEqualTo($this->initializer);
+
+        $this->has('name')->shouldBe(true);
+
+        $this->lengthCheck();
     }
 
     function it_should_call_method_with_magic_get_if_it_looks_like_variable()
     {
         $this->pop;
 
-        $this->minusLengthCheck();
+        $this->shift;
+
+        //$this->shouldThrow('\BadMethodCallException')->during('where');
+
+        $this->has('name')->shouldBe(false);
+
+        $this->minusLengthCheck(2);
     }
 
     function it_should_push_item_without_key_to_Container()
@@ -154,7 +217,16 @@ class ContainerSpec extends ObjectBehavior
                                      'hobby' =>'music']);
     }
 
-    protected function checkLength()
+    function it_should_unique_Container_items()
+    {
+        $initializer = ['foo', 'bar', 'bar', 'bar'];
+
+        $this->fromArray($initializer);
+
+        $this->unique->all->shouldBeEqualTo(['foo', 'bar']);
+    }
+
+    protected function lengthCheck()
     {
         $this->all()->shouldHaveCount(count($this->initializer));
         $this->length->shouldBe(count($this->initializer));

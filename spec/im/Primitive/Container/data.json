@@ -1,0 +1,11 @@
+{
+  "name": "John",
+  "surname": "Doe",
+  "email": "johndoe@example.com",
+  "wife": {
+    "name": "Jane",
+    "surname": "Doe",
+    "email": "janedoe@example.com",
+    "hobby": "music"
+  }
+}

@@ -405,7 +405,7 @@ class ContainerSpec extends ObjectBehavior
 //             ->duringCombine($keys, 'keys');
 //    }
 
-    function it_should_throw_exception_if_given_wrong_second_param()
+    function it_should_throw_exception_if_given_wrong_second_param_to_combine()
     {
         $keys = [
             'first', 'second', 'third', 'forth'
@@ -413,6 +413,15 @@ class ContainerSpec extends ObjectBehavior
 
         $this->shouldThrow('im\Primitive\Container\Exceptions\BadContainerMethodArgumentException')
              ->duringCombine($keys, 'foo');
+    }
+
+    function it_should_filter_items_with_callback_in_Container()
+    {
+        $this->filter('is_int')->all()->shouldBe([]);
+
+        $this->first()->shouldBeEqualTo('John');
+
+        $this->lengthCheck();
     }
 
     protected function lengthCheck()

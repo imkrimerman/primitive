@@ -632,9 +632,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function merge($items, $key = null)
     {
-        if ( ! $items instanceof Container || ! is_array($items))
+        if ( ! $items instanceof Container && ! is_array($items))
         {
-            throw new BadContainerMethodArgumentException('$items must be array or Container');
+            throw new BadContainerMethodArgumentException('1 Argument must be array or Container');
         }
 
         $items = $this->getArrayable($items);
@@ -649,21 +649,23 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
         elseif ($this->has($key))
         {
-            $this->mergeKey($items, $key);
+            $this->mergeWithKey($items, $key);
 
             return $this;
         }
 
-        throw new BadContainerMethodArgumentException('Bad $key given');
+        throw new BadContainerMethodArgumentException('Bad key given');
     }
 
     /**
-     * @param $items
-     * @param $key
+     * @param      $items
+     * @param      $key
      * @param null $default
+     *
+     * @return $this
      * @throws UncountableException
      */
-    public function mergeKey($items, $key, $default = null)
+    public function mergeWithKey($items, $key, $default = null)
     {
         $get = Arr::get($this->items, $key, $default);
 
@@ -671,22 +673,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         Arr::set($this->items, $key, $value);
 
-        $this->measure();
+        return $this;
     }
 
     /**
-     * Pad Container to the specified length with a value
+     * Increase Container to the specified length with a value
      *
-     * @param int $increaseSize
-     * @param int $value
+     * @param int        $increaseSize
+     * @param            $value
      *
      * @return $this
      */
-    public function pad($increaseSize = 1, $value = 0)
+    public function increase($increaseSize = 1, $value = '')
     {
-        $this->items = array_pad($this->items, $increaseSize, $value);
-
-        $this->measure();
+        $this->items = array_pad($this->items, $this->length += $increaseSize, $value);
 
         return $this;
     }
@@ -697,11 +697,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @param int $quantity
      *
+     * @throws BadContainerMethodArgumentException
      * @return mixed
      */
-    public function randKey($quantity = 1)
+    public function randomKey($quantity = 1)
     {
-        return array_rand($this->items, $quantity);
+        if ($this->isNotEmpty() && $this->length >= $quantity && $quantity > 0)
+        {
+            return array_rand($this->items, $quantity);
+        }
+
+        throw new BadContainerMethodArgumentException("1 Argument should be between 1 and the number of elements in the Container, got: {$quantity}");
     }
 
     /**
@@ -710,11 +716,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param int $quantity
      * @return array
      */
-    public function rand($quantity = 1)
+    public function random($quantity = 1)
     {
         while($quantity)
         {
-            $result[] = $this->items[$this->randKey()];
+            $result[] = $this->items[$this->randomKey()];
 
             --$quantity;
         }
@@ -873,26 +879,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
 
-    /**
-     * Take Container key
-     * @param $key
-     *
-     * @throws OffsetNotExistsException
-     * @return $this
-     */
-    public function take($key)
-    {
-        if ($this->has($key))
-        {
-            $this->items = Arr::get($this->items, $key);
-
-            $this->measure();
-
-            return $this;
-        }
-
-        throw new OffsetNotExistsException('Bad key:' . $key . ' given');
-    }
+    ///**
+    // * Take Container key
+    // * @param $key
+    // *
+    // * @throws OffsetNotExistsException
+    // * @return $this
+    // */
+    //public function take($key)
+    //{
+    //    if ($this->has($key))
+    //    {
+    //        $this->items = Arr::get($this->items, $key);
+    //
+    //        $this->measure();
+    //
+    //        return $this;
+    //    }
+    //
+    //    throw new OffsetNotExistsException('Bad key:' . $key . ' given');
+    //}
 
     /**
      * Return copy of Container except given keys
@@ -1010,29 +1016,51 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Pull all items recursively by key
+     * Take all items recursively by key
      *
      * @param $key
      *
      * @return $this
      */
-    public function pull($key)
+    public function take($key)
     {
-        $pulled = [];
+        $take = [];
 
-        $this->walk(function ($value, $key_) use ($key, &$pulled)
+        $this->walk(function ($value, $key_) use ($key, &$take)
         {
-            if ($key_ == $key) $pulled[] = $value;
+            if ($key_ == $key) $take[] = $value;
 
         }, true);
 
-        $this->items = $pulled;
+        $this->items = $take;
 
         $this->measure();
 
         return $this;
     }
 
+    /**
+     * Get a value from the array, and remove it.
+     *
+     * @param $key
+     *
+     * @return mixed
+     * @throws OffsetNotExistsException
+     * @throws UncountableException
+     */
+    public function pull($key)
+    {
+        if ( ! $this->has($key))
+        {
+            throw new OffsetNotExistsException("Key: {$key} not exists");
+        }
+
+        $pulled = Arr::pull($this->items, $key, null);
+
+        $this->measure();
+
+        return $pulled;
+    }
 
     /**
      * Finds all items by key or key value pairs

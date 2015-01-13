@@ -658,6 +658,8 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
     /**
+     * Merge array with specified key in Container
+     *
      * @param      $items
      * @param      $key
      * @param null $default

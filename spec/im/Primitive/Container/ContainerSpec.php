@@ -560,6 +560,10 @@ class ContainerSpec extends ObjectBehavior
         $this->minusLengthCheck(2);
     }
 
+
+    /**
+     * Checks length equal to $this->initializer
+     */
     protected function lengthCheck()
     {
         $this->all()->shouldHaveCount(count($this->initializer));
@@ -567,6 +571,8 @@ class ContainerSpec extends ObjectBehavior
     }
 
     /**
+     * Checks length equal to $this->initializer plus $add
+     *
      * @param $add
      */
     protected function plusLengthCheck($add = 1)
@@ -576,6 +582,8 @@ class ContainerSpec extends ObjectBehavior
     }
 
     /**
+     * Checks length equal to $this->initializer minus $add
+     *
      * @param $add
      */
     protected function minusLengthCheck($add = 1)
@@ -584,9 +592,12 @@ class ContainerSpec extends ObjectBehavior
         $this->length->shouldBe(count($this->initializer) - $add);
     }
 
+    /**
+     * Appends new matchers
+     */
     public function getMatchers()
     {
-        return [
+        return array(
 
             'beInRange' => function($key, $match)
             {
@@ -598,6 +609,6 @@ class ContainerSpec extends ObjectBehavior
                 return is_array($array) && $count === count($array);
             }
 
-        ];
+        );
     }
 }

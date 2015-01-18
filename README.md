@@ -12,7 +12,7 @@ Add a dependency to your project's composer.json file if you use [Composer](http
 ```json
 {
     "require": {
-        "im/primitive": "dev-master"
+        "im/primitive": "1.0"
     }
 }
 ```

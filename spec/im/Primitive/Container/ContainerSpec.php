@@ -424,16 +424,146 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck();
     }
 
-//    function it_should_traverse_through_items()
-//    {
-//        $this->each(function(& $value)
-//        {
-//            if ( ! is_array($value)) $value .= 'ok';
-//
-//        })->first()->shouldBeEqualTo('Johnok');
-//
-//    }
+    function it_should_traverse_through_each_item()
+    {
+        $this->each(function( & $value)
+        {
+            if ( ! is_array($value)) $value .= 'ok';
 
+        })->first()->shouldBeEqualTo('John');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_traverse_through_items_and_map_them()
+    {
+        $this->map(function( & $value)
+        {
+            if ( ! is_array($value)) return $value .= 'Ok';
+
+            return $value;
+
+        })->first()->shouldBe('JohnOk');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_walk_through_all_first_level_items()
+    {
+        $this->walk(function( & $value)
+        {
+            if ( ! is_array($value)) $value .= 'Ok';
+
+        })->first()->shouldBe('JohnOk');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_walk_through_all_items_recursive()
+    {
+        $this->walk(function( & $value)
+        {
+            $value .= 'Ok';
+
+        }, true)->get('wife.hobby')->shouldBe('musicOk');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_walk_through_all_items_recursive_and_take_keys_in_callback()
+    {
+        $this->walk(function( & $value, $key)
+        {
+            $value .= "-{$key}";
+
+        }, true)->get('wife.hobby')->shouldBe('music-hobby');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_walk_through_all_items_and_receive_userdata_in_callback_passed_as_third_param()
+    {
+        $this->walk(function( & $value, $key, $userdata)
+        {
+            $value .= "-{$key}-{$userdata}";
+
+        }, true, 'USERDATA')->get('wife.hobby')->shouldBe('music-hobby-USERDATA');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_merge_items_with_given_array_and_leave_length_the_same()
+    {
+        $this->merge(['name' => 'Mike'])->first()->shouldBe('Mike');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_merge_items_with_given_array_and_recalculateLength()
+    {
+        $this->merge(['name' => 'Mike', 'mother' => 'Linda'])->length->shouldBe(count($this->initializer) + 1);
+    }
+
+    function it_should_merge_items_by_key_with_given_array_and_leave_length_the_same()
+    {
+        $this->merge(['name' => 'Mike'], 'wife')->get('wife.name')->shouldBe('Mike');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_increase_Container_length_and_add_given_value_to_new_indexes()
+    {
+        $this->increase('3', 'foo')->get(2)->shouldBe('foo');
+
+        $this->plusLengthCheck(3);
+    }
+
+    function it_should_return_one_random_key_from_items_keys()
+    {
+        $this->randomKey()->shouldBeInRange($this->keys()->all());
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_array_of_exact_number_of_random_keys_from_item_keys_but_not_larger_than_Container_length()
+    {
+        $this->randomKey(3)->shouldBeArrayAndExactLengthOf(3);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_random_value_from_Container()
+    {
+        $this->random()->shouldBeInRange($this->values()->all());
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_array_of_exact_number_of_random_values_but_not_larger_than_Container_length()
+    {
+        $this->random(3)->shouldBeArrayAndExactLengthOf(3);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_cut_all_items_after_given_offset()
+    {
+        $this->cut(1)->firstKey()->shouldBeEqualTo('surname');
+
+        $this->minusLengthCheck();
+    }
+
+    function it_should_cut_items_between_given_offset_and_length()
+    {
+        $this->cut(1, 2)->lastKey()->shouldBeEqualTo('email');
+
+        $this->minusLengthCheck(2);
+    }
+
+
+    /**
+     * Checks length equal to $this->initializer
+     */
     protected function lengthCheck()
     {
         $this->all()->shouldHaveCount(count($this->initializer));
@@ -441,6 +571,8 @@ class ContainerSpec extends ObjectBehavior
     }
 
     /**
+     * Checks length equal to $this->initializer plus $add
+     *
      * @param $add
      */
     protected function plusLengthCheck($add = 1)
@@ -450,11 +582,33 @@ class ContainerSpec extends ObjectBehavior
     }
 
     /**
+     * Checks length equal to $this->initializer minus $add
+     *
      * @param $add
      */
     protected function minusLengthCheck($add = 1)
     {
         $this->all()->shouldHaveCount(count($this->initializer) - $add);
         $this->length->shouldBe(count($this->initializer) - $add);
+    }
+
+    /**
+     * Appends new matchers
+     */
+    public function getMatchers()
+    {
+        return array(
+
+            'beInRange' => function($key, $match)
+            {
+                return in_array($key, $match);
+            },
+
+            'beArrayAndExactLengthOf' => function($array, $count)
+            {
+                return is_array($array) && $count === count($array);
+            }
+
+        );
     }
 }

@@ -489,7 +489,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function combine($array, $what = 'keys')
     {
-        if ( ! count($array) == $this->length)
+        if (count($array) !== $this->length)
         {
             throw new BadLengthException('Container length should match array length.');
         }
@@ -505,7 +505,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
         else
         {
-            throw new BadContainerMethodArgumentException('Second argument must be string (keys or values)');
+            throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
         }
 
         $this->items = $result;
@@ -748,7 +748,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         if ($set === true)
         {
-            $this->items = $result;
+            $this->items = empty($result) ? [] : $result;
 
             $this->measure();
 
@@ -760,43 +760,42 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Encrypts Container items and assigns to Container
+     * Encrypt Container items and assigns to Container
      *
      * @return string
      */
     public function encrypt()
     {
-        $this->items = base64_encode(gzcompress($this->flip()->toJson()));
+        $this->items = base64_encode(gzcompress($this->toJson()));
 
         return $this;
     }
 
 
     /**
-     * Decrypts Container items and assigns to Container
+     * Decrypt Container items and assigns to Container
      *
      * @return $this
      */
     public function decrypt()
     {
-        $this->fromJson(gzuncompress(base64_decode($this->items)))->flip();
-
-        return $this;
+        return $this->fromJson(gzuncompress(base64_decode($this->items)));
     }
 
 
     /**
-     * Removes keys from Container
+     * Remove key from Container with dot notation
      *
-     * You can specify what to remove value or key
+     * @param $key
      *
-     * @param $keys
      * @return $this
      *
      */
-    public function forget($keys)
+    public function forget($key)
     {
-        $this->items = Arr::forget($this->items, $keys);
+        Arr::forget($this->items, $key);
+
+        $this->measure();
 
         return $this;
     }
@@ -807,7 +806,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return $this
      */
-    public function clean()
+    public function reset()
     {
         $this->items = [];
         $this->length = 0;
@@ -849,96 +848,93 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function copy()
     {
-        return new static($this);
+        return clone $this;
     }
 
-
-    ///**
-    // * Take Container key
-    // * @param $key
-    // *
-    // * @throws OffsetNotExistsException
-    // * @return $this
-    // */
-    //public function take($key)
-    //{
-    //    if ($this->has($key))
-    //    {
-    //        $this->items = Arr::get($this->items, $key);
-    //
-    //        $this->measure();
-    //
-    //        return $this;
-    //    }
-    //
-    //    throw new OffsetNotExistsException('Bad key:' . $key . ' given');
-    //}
 
     /**
      * Return copy of Container except given keys
      *
-     * @param $keys
+     * @param array $keys
+     *
      * @return $this
      */
-    public function except($keys)
+    public function except(array $keys)
     {
-        $this->items = Arr::except($this->items, $keys);
-
-        $this->measure();
-
-        return $this;
+        return new static(Arr::except($this->items, $keys));
     }
 
     /**
      * Return copy of Container except given offset
      *
-     * @param null $nth
+     * @param $nth
      *
-     * @throws BadLengthException
      * @throws OffsetNotExistsException
      * @return Container
      */
-    public function exceptIndex($nth = null)
+    public function exceptIndex($nth)
     {
-        if (is_null($nth) && $this->length > 1)
+        if ($this->isEmpty() || (int) $nth >= $this->length)
         {
-            $nth = $this->length - 1;
-        }
-        elseif ($this->isEmpty() || (int) $nth >= $this->length)
-        {
-            throw new BadLengthException('$nth: ' . $nth . ' is large then Container length: ' . $this->length);
+            throw new OffsetNotExistsException('Offset: '. $nth .' not exist');
         }
 
-        return $this->copy()->forget($nth);
+        return $this->copy()->forget($this->keys()->get($nth));
     }
 
 
     /**
-     * Return sliced copy of Container by index
-     *
-     * You can specify second argument to preserve keys reset
+     * Return rest items after given index
      *
      * @param $index
      *
-     * @param bool $preserveKeys
-     * @throws BadContainerMethodArgumentException
-     * @throws EmptyContainerException
-     * @return bool|Container
+     * @return \im\Primitive\Container\Container
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
+     * @throws \im\Primitive\Container\Exceptions\OffsetNotExistsException
      */
-    public function rest($index, $preserveKeys = true)
+    public function restAfterIndex($index)
     {
-        if (is_numeric($index) && $this->length > (int) $index)
+        if ( ! is_numeric($index))
         {
-            $copy = $this->copy();
-
-            $copy->cut($copy->firstKey(), (int) $index, $preserveKeys);
-
-            return $copy;
+            throw new BadContainerMethodArgumentException('Argument 1: ' . $index . ' is not numeric');
         }
 
-        throw new BadContainerMethodArgumentException('$index: ' . $index . ' is not numeric or larger than Container length');
+        if ($this->length <= (int) $index)
+        {
+            throw new OffsetNotExistsException('Offset: '. $index .' not exists');
+        }
+
+        $index = (int) $index + 1;
+
+        $keys = $this->keys()->cut($index, $this->length - 1)->flip();
+
+        $values = $this->values()->cut($index, $this->length - 1)->all();
+
+        return $keys->combine($values, 'values');
     }
 
+    /**
+     * Return rest items after given key
+     *
+     * @param $key
+     *
+     * @return \im\Primitive\Container\Container
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\ContainerException
+     * @throws \im\Primitive\Container\Exceptions\OffsetNotExistsException
+     */
+    public function restAfterKey($key)
+    {
+        if ( ! array_key_exists($key, $this->items))
+        {
+            throw new OffsetNotExistsException('Key: '. $key .' not exists');
+        }
+
+        $index = $this->keys()->flip()->get($key);
+
+        return $this->restAfterIndex($index);
+    }
 
     /**
      * Flatten Container items
@@ -960,9 +956,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param $key
      * @return array
      */
-    public function fetch($key)
+    public function column($key)
     {
-        return Arr::fetch($this->items, $key);
+        return new static(Arr::fetch($this->items, $key));
     }
 
     /**
@@ -1248,6 +1244,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
+     * Check if Container is encrypted
+     *
+     * @return bool
+     */
+    public function isEncrypted()
+    {
+        return is_string($this->items);
+    }
+
+
+    /**
+     * Check if Container is not encrypted
+     *
+     * @return bool
+     */
+    public function isNotEncrypted()
+    {
+        return ! $this->isEncrypted();
+    }
+
+
+    /**
      * Return converted Container to array
      *
      * @return array
@@ -1362,6 +1380,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
+     * Construct from encrypted Container
+     *
+     * @param $encrypted
+     *
+     * @return \im\Primitive\Container\Container
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     */
+    public function fromEncrypted($encrypted)
+    {
+        if ($this->isEncryptedContainer($encrypted))
+        {
+            $this->items = $encrypted;
+
+            return $this->decrypt();
+        }
+
+        throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
+    }
+
+
+    /**
      * Construct from file
      *
      * Contents can be json or serialized array
@@ -1435,6 +1474,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
+     * Clone
+     */
+    public function __clone()
+    {
+        $this->items = $this->items;
+
+        $this->length = $this->length;
+    }
+
+
+    /**
      * Call standard PHP functions
      *
      * @param $callable
@@ -1484,25 +1534,36 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     protected function measure()
     {
-        if (is_array($this->items) || $this->items instanceof Countable)
+        if (is_array($this->items))
         {
             $this->length = count($this->items);
-
-            return $this;
-        }
-        elseif (is_object($this->items))
-        {
-            $this->length = measureObject($this->items);
-
-            return $this;
         }
         elseif (is_string($this->items))
         {
             $this->length = Str::length($this->items);
         }
 
-        throw new UncountableException('Can\'t count inner items.');
+        return $this;
     }
+
+
+    /**
+     * Check if string is encrypted Container
+     *
+     * @param $encrypted
+     *
+     * @return bool
+     */
+    protected function isEncryptedContainer($encrypted)
+    {
+        if ($this->isJson(gzuncompress(base64_decode($encrypted))))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 
     /**
      * Forget by key

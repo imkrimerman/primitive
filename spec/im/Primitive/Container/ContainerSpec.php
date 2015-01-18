@@ -557,14 +557,201 @@ class ContainerSpec extends ObjectBehavior
         $this->minusLengthCheck(2);
     }
 
+    function it_should_encrypt_items_and_should_be_exact_like_encrypted_initializer()
+    {
+        $encrypted = $this->encrypt()->all();
 
+        $encrypted->shouldBeString();
+
+        $encrypted->shouldBe(
+            base64_encode(
+                gzcompress(json_encode($this->initializer))
+            )
+        );
+    }
+
+    function it_should_decrypt_items_and_should_be_equal_to_initializer()
+    {
+        $this->encrypt();
+
+        $this->decrypt()->all()->shouldBeEqualTo($this->initializer);
+    }
+
+    function it_should_forget_item_by_key()
+    {
+        $initializer = $this->initializer;
+
+        unset($initializer['wife']);
+
+        $this->forget('wife')->all()->shouldBeEqualTo($initializer);
+
+        $this->minusLengthCheck();
+    }
+
+    function it_should_forget_item_by_key_with_dot_notation_syntax()
+    {
+        $initializer = $this->initializer;
+
+        unset($initializer['wife']['hobby']);
+
+        $this->forget('wife.hobby')->all()->shouldBeEqualTo($initializer);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_reset_Container_to_empty_array()
+    {
+        $reset = $this->reset()->all();
+
+        $reset->shouldBeArray();
+        $reset->shouldHaveCount(0);
+    }
+
+    function it_should_reverse_items()
+    {
+        $this->reverse()->all()->shouldBeEqualTo(
+            array_reverse($this->initializer)
+        );
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_all_items()
+    {
+        $this->all()->shouldBeEqualTo($this->initializer);
+    }
+
+    function it_should_return_Container_copy()
+    {
+        $copy = $this->copy();
+
+        $copy->shouldHaveType('im\Primitive\Container\Container');
+        $copy->all()->shouldBeEqualTo($this->initializer);
+        $copy->shouldHaveCount(count($this->initializer));
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_new_Container_except_given_keys()
+    {
+        $except = $this->except(['email', 'wife']);
+
+        $initializer = $this->initializer;
+
+        unset($initializer['email'], $initializer['wife']);
+
+        $except->shouldHaveType('im\Primitive\Container\Container');
+        $except->all()->shouldBe($initializer);
+        $except->shouldHaveCount(count($initializer));
+
+        $this->lengthCheck();
+        $this->all()->shouldBe($this->initializer);
+    }
+
+    function it_should_return_new_Container_except_given_index()
+    {
+        $exceptIndex = $this->exceptIndex(0);
+
+        $initializer = $this->initializer;
+
+        unset($initializer['name']);
+
+        $exceptIndex->shouldHaveType('im\Primitive\Container\Container');
+        $exceptIndex->all()->shouldBe($initializer);
+        $exceptIndex->shouldHaveCount(count($initializer));
+
+        $this->lengthCheck();
+        $this->all()->shouldBe($this->initializer);
+    }
+
+    function it_should_throw_exception_if_given_equal_or_larger_index()
+    {
+        $this->shouldThrow('im\Primitive\Container\Exceptions\OffsetNotExistsException')
+             ->during('exceptIndex', [count($this->initializer)]);
+    }
+
+    function it_should_return_rest_items_after_given_index()
+    {
+        $initializer = $this->initializer;
+
+        unset($initializer['name'], $initializer['surname']);
+
+        $rest = $this->restAfterIndex(1);
+
+        $rest->all()->shouldBeEqualTo($initializer);
+        $rest->shouldHaveType('im\Primitive\Container\Container');
+        $rest->shouldHaveCount(count($initializer));
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_rest_items_after_given_key()
+    {
+        $initializer = $this->initializer;
+
+        unset($initializer['name'], $initializer['surname']);
+
+        $rest = $this->restAfterKey('surname');
+
+        $rest->all()->shouldBeEqualTo($initializer);
+        $rest->shouldHaveType('im\Primitive\Container\Container');
+        $rest->shouldHaveCount(count($initializer));
+
+        $this->lengthCheck();
+    }
+
+    function it_should_flatten_items()
+    {
+        $match = ['John', 'Doe', 'johndoe@example.com', 'Jane', 'Doe', 'janedoe@example.com', 'music'];
+
+        $this->flatten()->all()->shouldBeEqualTo($match);
+    }
+
+    function it_should_take_column_by_key_from_items_arrays()
+    {
+        $initializer = [
+                        ['name' => 'John',
+                         'surname' => 'Doe',
+                         'email' => 'johndoe@example.com'],
+                        ['name' => 'Jane',
+                         'surname' => 'Doe',
+                         'email' => 'janedoe@example.com',
+                         'hobby' =>'music']
+                       ];
+
+        $this->fromArray($initializer);
+
+        $column = $this->column('name');
+
+        $column->all()->shouldBeEqualTo(['John', 'Jane']);
+        $column->shouldHaveType('im\Primitive\Container\Container');
+        $column->shouldHaveCount(2);
+
+        $this->lengthCheck(count($initializer));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
     /**
      * Checks length equal to $this->initializer
+     *
+     * @param null $length
      */
-    protected function lengthCheck()
+    protected function lengthCheck($length = null)
     {
-        $this->all()->shouldHaveCount(count($this->initializer));
-        $this->length->shouldBe(count($this->initializer));
+        if ( ! is_null($length))
+        {
+            $this->all()->shouldHaveCount($length);
+            $this->length->shouldBe($length);
+        }
+        else
+        {
+            $this->all()->shouldHaveCount(count($this->initializer));
+            $this->length->shouldBe(count($this->initializer));
+        }
     }
 
     /**

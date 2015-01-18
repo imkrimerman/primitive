@@ -1,14 +1,8 @@
-<?php namespace im\Primitive;
-
-/**
- * Created by Igor Krimerman.
- * Date: 26.10.14
- * Time: 13:38
- */
+<?php namespace im\Primitive\String;
 
 use \Countable;
-use im\Primitive\Container;
-use im\Primitive\Exceptions\String\StringException;
+use im\Primitive\Container\Container;
+use im\Primitive\String\Exceptions\StringException;
 
 class String implements Countable
 {

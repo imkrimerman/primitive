@@ -17,6 +17,7 @@ use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
+use Symfony\Component\VarDumper\VarDumper;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, RevertableInterface, Countable, IteratorAggregate {
@@ -1472,7 +1473,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function dump()
     {
-        var_dump($this);
+        new Dumper($this);
     }
 
 

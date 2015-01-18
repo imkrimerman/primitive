@@ -17,7 +17,7 @@ use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
-use Primitive\Support\Dump\Dumper;
+use im\Primitive\Support\Dump\Dumper;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -1472,7 +1472,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function dump()
     {
-        new Dumper($this);
+        (new Dumper())->dump($this);
     }
 
 
@@ -1530,6 +1530,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     protected function forgetValue($item)
     {
+        // TODO implement this
         if ($this->hasValue($item))
         {
 //            Arr::pluck($this->items, )

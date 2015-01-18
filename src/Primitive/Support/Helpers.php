@@ -1,6 +1,6 @@
 <?php
 
-use Primitive\Support\Dump\Dumper;
+use im\Primitive\Support\Dump\Dumper;
 
 if ( ! function_exists('a'))
 {

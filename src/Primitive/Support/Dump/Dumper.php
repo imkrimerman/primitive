@@ -1,4 +1,4 @@
-<?php namespace Primitive\Support\Dump;
+<?php namespace im\Primitive\Support\Dump;
 
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Cloner\VarCloner;

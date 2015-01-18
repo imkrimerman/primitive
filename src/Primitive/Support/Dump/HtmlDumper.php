@@ -1,4 +1,4 @@
-<?php namespace Primitive\Support\Dump;
+<?php namespace im\Primitive\Support\Dump;
 
 use Symfony\Component\VarDumper\Dumper\HtmlDumper as SymfonyHtmlDumper;
 
@@ -22,6 +22,6 @@ class HtmlDumper extends SymfonyHtmlDumper {
         'private' => 'color:#795da3',
         'meta' => 'color:#b729d9',
         'key' => 'color:#df5000',
-        'index' => 'color:#a71d5d',
+        'index' => 'color:#a71d5d'
     );
 }

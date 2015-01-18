@@ -1,4 +1,4 @@
-<?php namespace im\Primitive\Support\Str;
+<?php namespace im\Primitive\Support;
 
 use im\Primitive\Support\Traits\MacroableTrait;
 

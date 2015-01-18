@@ -315,10 +315,6 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_split_items_into_chunks()
     {
-        $this->chunk()->shouldHaveType('im\Primitive\Container\Container');
-
-        $this->revert();
-
         $this->chunk(3)->all()->shouldBe(
             [
                 [
@@ -338,7 +334,7 @@ class ContainerSpec extends ObjectBehavior
         );
     }
 
-    function it_should_combine_given_keys_with_inner_values()
+    function it_should_combine_given_keys_with_inner_values_without_second_argument()
     {
         $keys = [
             'first', 'second', 'third', 'forth'
@@ -357,9 +353,10 @@ class ContainerSpec extends ObjectBehavior
                 ]
             ]
         );
+    }
 
-        $this->revert();
-
+    function it_should_combine_given_keys_with_inner_values_with_second_argument_given()
+    {
         $keys = [
             'first', 'second', 'third', 'forth'
         ];

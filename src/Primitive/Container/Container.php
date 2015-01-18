@@ -1,39 +1,34 @@
 <?php namespace im\Primitive\Container;
 
 use \ArrayAccess;
-use im\Primitive\Support\Str\Str;
+use \BadMethodCallException;
 use \JsonSerializable;
 use \Countable;
 use \ArrayIterator;
 use \IteratorAggregate;
 use im\Primitive\Support\Arr;
+use im\Primitive\Support\Str;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
-use im\Primitive\Support\Contracts\RevertableInterface;
 use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
 use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
-use Symfony\Component\VarDumper\VarDumper;
 
 
-class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, RevertableInterface, Countable, IteratorAggregate {
-
-    /*
-    |--------------------------------------------------------------------------
-    | Storing clone of main items, used for reverting
-    |--------------------------------------------------------------------------
-    */
-    protected $clone;
+class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
     /*
     |--------------------------------------------------------------------------
     | Storing main items
     |--------------------------------------------------------------------------
     */
+    /**
+     * @var array
+     */
     protected $items;
 
     /*
@@ -41,6 +36,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     | Storing Container length
     |--------------------------------------------------------------------------
     */
+    /**
+     * @var integer
+     */
     public $length;
 
 
@@ -804,34 +802,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Saves Container state to clone, to revert in future
-     *
-     * @return $this
-     */
-    public function save()
-    {
-        $this->clone = $this->items;
-
-        return $this;
-    }
-
-
-    /**
-     * Reverts Container state from clone
-     *
-     * @return $this
-     */
-    public function revert()
-    {
-        $this->items = $this->clone;
-
-        $this->measure();
-
-        return $this;
-    }
-
-
-    /**
      * Reset Container to empty array
      *
      * @return $this
@@ -1255,7 +1225,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Checks if Container is empty
+     * Check if Container is empty
      *
      * @return bool
      */
@@ -1277,28 +1247,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Check if Container is changed
-     *
-     * @return bool
-     */
-    public function isChanged()
-    {
-        return ! empty(array_diff_assoc($this->items, $this->clone));
-    }
-
-
-    /**
-     * Check if Container is not changed
-     *
-     * @return bool
-     */
-    public function isNotChanged()
-    {
-        return ! $this->isNotChanged();
-    }
-
-
-    /**
      * Return converted Container to array
      *
      * @return array
@@ -1307,7 +1255,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         return array_map(function ($item)
         {
-            return $item instanceof ArrayableInterface ? $item->toArray() : $item;
+            return $this->getArrayable($item);
 
         }, $this->items);
     }
@@ -1328,8 +1276,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             $this->set($key, $value);
         }
-
-        $this->clone = $this->items;
 
         $this->measure();
 
@@ -1363,8 +1309,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             $this->items = json_decode($json, true);
 
-            $this->clone = $this->items;
-
             $this->measure();
         }
 
@@ -1383,7 +1327,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function toFile($path, $jsonOptions = 0)
     {
-        // TODO check pathinfo and make it shorter
         $source = pathinfo($path, PATHINFO_DIRNAME);
 
         if (is_dir($source))
@@ -1392,6 +1335,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
 
         return false;
+    }
+
+
+    /**
+     * @param $content
+     *
+     * @return $this
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\UncountableException
+     */
+    public function fromSerialized($content)
+    {
+        if ($this->isSerialized($content))
+        {
+            $this->items = unserialize($content);
+
+            $this->measure();
+
+            return $this;
+        }
+
+        throw new BadContainerMethodArgumentException('Expected serialized, got: ' . $content);
     }
 
 
@@ -1418,11 +1383,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             }
             elseif ($this->isSerialized($content))
             {
-                $this->items = unserialize($content);
-
-                $this->clone = $this->items;
-
-                $this->measure();
+                $this->fromSerialized($content);
             }
             else
             {
@@ -1471,19 +1432,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Call standard PHP functions
      *
-     * @param $function
+     * @param $callable
      * @param $args
      *
      * @return mixed
      */
-    public function __call($function, $args)
+    public function __call($callable, $args)
     {
-        if (is_callable($function) && substr($function, 0, 6) == 'array_')
+        if ( ! is_callable($callable))
         {
-            return call_user_func_array($function, array_merge([$this->items], $args));
+            throw new BadMethodCallException(__CLASS__ . '->' . $callable);
         }
 
-        throw new \BadMethodCallException(__CLASS__ . '->' . $function);
+        if (substr($callable, 0, 6) == 'array_')
+        {
+            return call_user_func_array($callable, array_merge([$this->items], $args));
+        }
     }
 
 
@@ -1492,7 +1456,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __destruct()
     {
-        unset($this->items, $this->clone, $this->length);
+        unset($this->items, $this->length);
     }
 
 
@@ -1866,6 +1830,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
     }
 
+    /**
+     * Unique items recursively
+     */
     protected function recursiveUnique()
     {
         foreach ($this->items as $key => $item)

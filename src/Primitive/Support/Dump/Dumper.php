@@ -4,6 +4,7 @@ use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 
 class Dumper {
+
     /**
      * Dump a value with elegance.
      *

@@ -17,6 +17,7 @@ use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
+use Primitive\Support\Dump\Dumper;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -45,7 +46,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Constructor
      *
-     * Container can be constructed from array, json, Container or file that contains json or serialized
+     * Container can be constructed from array, json, serialized, Container or file that contains json or serialized
      *
      * @param array|string|Container|String $from
      *
@@ -1412,6 +1413,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         if ($this->isJson($string))
         {
             return $this->fromJson($string);
+        }
+        elseif ($this->isSerialized($string))
+        {
+            return $this->fromSerialized($string);
         }
 
         return $this->fromFile($string);

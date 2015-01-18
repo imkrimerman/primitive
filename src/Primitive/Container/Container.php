@@ -977,7 +977,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             return ! empty($item) && $item !== false ? true : false;
 
-        }, $recursive);
+        }, $recursive)->all();
 
         $this->measure();
 

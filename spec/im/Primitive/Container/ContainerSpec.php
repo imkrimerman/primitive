@@ -730,6 +730,29 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck(count($initializer));
     }
 
+    function it_should_leave_only_truly_items()
+    {
+        $initializer = [
+            'name' => 'Jane',
+            'surname' => 'Doe',
+            'email' => 'janedoe@example.com',
+            'hobby' =>'music',
+            false,
+            0,
+            '',
+            null
+        ];
+
+        $this->fromArray($initializer);
+
+        $this->truly()->all()->shouldBeEqualTo(['name' => 'Jane',
+                                               'surname' => 'Doe',
+                                               'email' => 'janedoe@example.com',
+                                               'hobby' =>'music']);
+
+        $this->lengthCheck(4);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers

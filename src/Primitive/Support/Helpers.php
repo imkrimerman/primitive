@@ -1,16 +1,26 @@
 <?php
 
+use im\Primitive\Container\ContainerType;
 use im\Primitive\Support\Dump\Dumper;
 
 if ( ! function_exists('a'))
 {
     /**
      * @param array $array
+     * @param int   $type
+     *
      * @return \im\Primitive\Container\Container
      */
-    function a($array = [])
+    function a($array = [], $type = ContainerType::SIMPLE)
     {
-        return new im\Primitive\Container\Container($array);
+        if ($type === ContainerType::SIMPLE)
+        {
+            return new im\Primitive\Container\Container($array);
+        }
+        elseif ($type === ContainerType::REVERTABLE)
+        {
+            return new im\Primitive\Container\RevertableContainer($array);
+        }
     }
 }
 

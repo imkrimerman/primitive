@@ -87,7 +87,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         if (isset($this->items[$item]))
         {
-            return $this->items[$item];
+            return value($this->items[$item]);
         }
 
         throw new OffsetNotExistsException('Container item: ' . $item . ' not exists');

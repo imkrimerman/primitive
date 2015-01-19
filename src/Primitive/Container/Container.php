@@ -968,17 +968,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * You can specify second argument to make it recursive
      *
-     * @param bool $recursive
+     * @param bool     $recursive
+     * @param callable $function
      *
      * @return $this
      */
-    public function truly($recursive = false)
+    public function truly($recursive = false, callable $function = null)
     {
-        $this->filter(function ($item)
-        {
-            return ! empty($item) && $item !== false;
+        $function = ! is_null($function) ?: function ($item) {return ! empty($item);};
 
-        }, $recursive);
+        $this->filter($function, $recursive);
 
         return $this;
     }
@@ -995,7 +994,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         $take = [];
 
-        $this->walk(function ($value, $key_) use ($key, &$take)
+        $this->walk(function ($value, $key_) use ($key, & $take)
         {
             if ($key_ == $key) $take[] = $value;
 
@@ -1101,7 +1100,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function without($key)
     {
-        $this->recursiveForget($key, $this->items);
+        $this->forgetRecursive($key, $this->items);
 
         return $this;
     }
@@ -1702,11 +1701,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     protected function filterRecursive(callable $function, $items)
     {
+        if ( ! is_array($items) && ! $items instanceof ArrayableInterface && ! $items instanceof Container)
+        {
+            return $items;
+        }
+
         foreach ($items as $key => $item)
         {
-            $item = $this->getArrayable($item);
-
-            $items[$key] = $this->filterRecursive($function, $item);
+            $items[$key] = $this->filterRecursive($function, $this->getArrayable($item));
         }
 
         return array_filter($items, $function);
@@ -1719,7 +1721,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param $key
      * @param $items
      */
-    protected function recursiveForget($key, & $items)
+    protected function forgetRecursive($key, & $items)
     {
         unset($items[$key]);
 
@@ -1727,7 +1729,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             if (is_array($item))
             {
-                $this->recursiveForget($key, $item);
+                $this->forgetRecursive($key, $item);
             }
         }
     }

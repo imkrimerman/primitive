@@ -254,6 +254,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function hasValue($value)
     {
+        // TODO refactor hasValue
         foreach ($this->items as $item)
         {
             if (is_array($item) || $item instanceof Container)
@@ -317,31 +318,67 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function first()
     {
-        if ($this->isEmpty())
+        if ($this->isNotEmpty())
         {
-            throw new EmptyContainerException('Empty Container');
+            return first($this->items);
         }
 
-        return first($this->items);
+        throw new EmptyContainerException('Empty Container');
     }
 
 
     /**
-     * Return last Container value
+     * Return first value that passes truth test
+     *
+     * @param callable $function
+     *
+     * @return mixed
+     * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
+     */
+    public function firstWhere(callable $function)
+    {
+        if ($this->isNotEmpty())
+        {
+            return Arr::first($this->items, $function);
+        }
+
+        throw new EmptyContainerException('Empty Container');
+    }
+
+
+    /**
+     * Return last value
      *
      * @return mixed
      * @throws EmptyContainerException
      */
     public function last()
     {
-        if ($this->isEmpty())
+        if ($this->isNotEmpty())
         {
-            throw new EmptyContainerException('Empty Container');
+            return last($this->items);
         }
 
-        return last($this->items);
+        throw new EmptyContainerException('Empty Container');
     }
 
+    /**
+     * Return last value that passes truth test
+     *
+     * @param callable $function
+     *
+     * @return mixed
+     * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
+     */
+    public function lastWhere(callable $function)
+    {
+        if ($this->isNotEmpty())
+        {
+            return Arr::last($this->items, $function);
+        }
+
+        throw new EmptyContainerException('Empty Container');
+    }
 
     /**
      * Makes Container items unique
@@ -1023,76 +1060,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             throw new OffsetNotExistsException("Key: {$key} not exists");
         }
 
-        $pulled = Arr::pull($this->items, $key, null);
+        $pulled = Arr::pull($this->items, $key);
 
         $this->measure();
 
         return $pulled;
     }
 
-    /**
-     * Finds all items by key or key value pairs
-     *
-     * You can specify second parameter to preserve keys reset
-     *
-     * @param $condition
-     * @param bool $preserveKeys
-     * @throws ContainerException
-     * @throws EmptyContainerException
-     *
-     * @return $this
-     */
-    public function where($condition, $preserveKeys = true)
-    {
-        if (empty($condition))
-        {
-            return $this;
-        }
-
-        if (is_array($condition))
-        {
-            $this->items = $this->whereArrayCondition($condition, $preserveKeys);
-        }
-        elseif (is_string($condition))
-        {
-            $this->items = $this->recursiveWhere($this->items, $condition, null, $preserveKeys);
-        }
-        else
-        {
-            throw new ContainerException('$condition can be String or Array');
-        }
-
-        $this->measure();
-
-        return $this;
-    }
-
 
     /**
-     * Finds first item by key or key value pairs
-     *
-     * @param $condition
-     *
-     * @param bool $return
-     * @return mixed
-     * @throws ContainerException
-     * @throws EmptyContainerException
-     */
-    public function findWhere($condition, $return = true)
-    {
-        if ($return == true)
-        {
-            return $this->copy()->where($condition)->first();
-        }
-
-        $this->where($condition)->first();
-
-        return $this;
-    }
-
-
-    /**
-     * Recursively removes values by key from Container
+     * Recursively removes values by key
      *
      * @param $key
      *
@@ -1100,14 +1077,15 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function without($key)
     {
-        $this->forgetRecursive($key, $this->items);
+        $this->items = $this->forgetRecursive($key, $this->items);
+
+        $this->measure();
 
         return $this;
     }
 
-
     /**
-     * Returns computed intersection in new Container
+     * Return computed intersection
      *
      * You can specify second argument to with additional index check
      *
@@ -1170,6 +1148,67 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     public function resetKeys()
     {
         $this->items = array_values($this->items);
+
+        return $this;
+    }
+
+
+    /**
+     * Finds all items by key or key value pairs
+     *
+     * You can specify second parameter to preserve keys reset
+     *
+     * @param $condition
+     * @param bool $preserveKeys
+     * @throws ContainerException
+     * @throws EmptyContainerException
+     *
+     * @return $this
+     */
+    public function where($condition, $preserveKeys = true)
+    {
+        if (empty($condition))
+        {
+            return $this;
+        }
+
+        if (is_array($condition))
+        {
+            $this->items = $this->whereArrayCondition($condition, $preserveKeys);
+        }
+        elseif (is_string($condition))
+        {
+            $this->items = $this->recursiveWhere($this->items, $condition, null, $preserveKeys);
+        }
+        else
+        {
+            throw new ContainerException('$condition can be String or Array');
+        }
+
+        $this->measure();
+
+        return $this;
+    }
+
+
+    /**
+     * Finds first item by key or key value pairs
+     *
+     * @param $condition
+     *
+     * @param bool $return
+     * @return mixed
+     * @throws ContainerException
+     * @throws EmptyContainerException
+     */
+    public function findWhere($condition, $return = true)
+    {
+        if ($return == true)
+        {
+            return $this->copy()->where($condition)->first();
+        }
+
+        $this->where($condition)->first();
 
         return $this;
     }
@@ -1287,16 +1326,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function fromArray(array $array = [])
     {
-        $this->items = [];
-
-        foreach ($array as $key => $value)
-        {
-            $this->set($key, $value);
-        }
-
-        $this->measure();
-
-        return $this;
+        return $this->initialize($array);
     }
 
 
@@ -1324,9 +1354,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($this->isJson($json))
         {
-            $this->items = json_decode($json, true);
-
-            $this->measure();
+            $this->initialize(json_decode($json, true));
         }
 
         return $this;
@@ -1354,50 +1382,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return false;
     }
 
-
-    /**
-     * @param $content
-     *
-     * @return $this
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
-     * @throws \im\Primitive\Container\UncountableException
-     */
-    public function fromSerialized($content)
-    {
-        if ($this->isSerialized($content))
-        {
-            $this->items = unserialize($content);
-
-            $this->measure();
-
-            return $this;
-        }
-
-        throw new BadContainerMethodArgumentException('Expected serialized, got: ' . $content);
-    }
-
-
-    /**
-     * Construct from encrypted Container
-     *
-     * @param $encrypted
-     *
-     * @return \im\Primitive\Container\Container
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
-     */
-    public function fromEncrypted($encrypted)
-    {
-        if ($this->isEncryptedContainer($encrypted))
-        {
-            $this->items = $encrypted;
-
-            return $this->decrypt();
-        }
-
-        throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
-    }
-
-
     /**
      * Construct from file
      *
@@ -1417,21 +1401,61 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
             if ($this->isJson($content))
             {
-                $this->fromJson($content);
+                $content = json_decode($content, true);
             }
             elseif ($this->isSerialized($content))
             {
-                $this->fromSerialized($content);
+                $content = unserialize($content);
             }
             else
             {
                 throw new ContainerException('Can\'t convert file to Container');
             }
 
-            return $this;
+            return $this->initialize($content);
         }
 
         throw new NotIsFileException('Not is file: ' . $file);
+    }
+
+
+    /**
+     * @param $content
+     *
+     * @return $this
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\UncountableException
+     */
+    public function fromSerialized($content)
+    {
+        if ($this->isSerialized($content))
+        {
+            return $this->initialize(unserialize($content));
+        }
+
+        throw new BadContainerMethodArgumentException('Expected serialized, got: ' . $content);
+    }
+
+
+    /**
+     * Construct from encrypted Container
+     *
+     * @param $encrypted
+     *
+     * @return \im\Primitive\Container\Container
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     */
+    public function fromEncrypted($encrypted)
+    {
+        if ($this->isEncryptedContainer($encrypted))
+        {
+            // TODO refactor fromEncrypted
+            $this->items = $encrypted;
+
+            return $this->decrypt();
+        }
+
+        throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
     }
 
 
@@ -1441,22 +1465,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param array $string
      *
      * @return $this
-     *
-     * @throws ContainerException
-     * @throws NotIsFileException
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\ContainerException
+     * @throws \im\Primitive\Container\Exceptions\NotIsFileException
      */
-    public function fromString($string)
+    protected function fromString($string)
     {
-        if ($this->isJson($string))
+        if ($this->isFile($string))
         {
-            return $this->fromJson($string);
+            return $this->fromFile($string);
+        }
+        elseif ($this->isJson($string))
+        {
+            return $this->initialize(json_decode($string, true));
         }
         elseif ($this->isSerialized($string))
         {
-            return $this->fromSerialized($string);
+            return $this->initialize(unserialize($string));
         }
 
-        return $this->fromFile($string);
+        throw new BadContainerMethodArgumentException('Argument 1 should be valid json, serialized or file with json or serialized data');
     }
 
 
@@ -1497,7 +1525,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             throw new BadMethodCallException(__CLASS__ . '->' . $callable);
         }
 
-        if (substr($callable, 0, 6) == 'array_')
+        if (Str::startsWith($callable, 'array_'))
         {
             return call_user_func_array($callable, array_merge([$this->items], $args));
         }
@@ -1539,62 +1567,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         elseif (is_string($this->items))
         {
             $this->length = Str::length($this->items);
-        }
-
-        return $this;
-    }
-
-
-    /**
-     * Check if string is encrypted Container
-     *
-     * @param $encrypted
-     *
-     * @return bool
-     */
-    protected function isEncryptedContainer($encrypted)
-    {
-        if ($this->isJson(gzuncompress(base64_decode($encrypted))))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Forget by key
-     *
-     * @param $key
-     * @return $this
-     * @throws UncountableException
-     */
-    protected function forgetKey($key)
-    {
-        if ($this->has($key))
-        {
-            $this->forget($key)->measure();
-        }
-
-        return $this;
-    }
-
-
-    /**
-     * Forgets by value
-     *
-     * @param $item
-     * @return $this
-     */
-    protected function forgetValue($item)
-    {
-        // TODO implement this
-        if ($this->hasValue($item))
-        {
-//            Arr::pluck($this->items, )
-
-            $this->measure();
         }
 
         return $this;
@@ -1720,18 +1692,86 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @param $key
      * @param $items
+     *
+     * @return
      */
-    protected function forgetRecursive($key, & $items)
+    protected function forgetRecursive($key, $items)
     {
-        unset($items[$key]);
+        Arr::forget($items, $key);
 
-        foreach ($items as & $item)
+        foreach ($items as $key => $item)
+        {
+            if ($this->isArrayable($item))
+            {
+                $items[$key] = $this->forgetRecursive($key, $this->getArrayable($item));
+            }
+        }
+
+        return $items;
+    }
+
+
+    /**
+     * Unique items recursively
+     */
+    protected function recursiveUnique()
+    {
+        foreach ($this->items as $key => $item)
         {
             if (is_array($item))
             {
-                $this->forgetRecursive($key, $item);
+                $this->items[$key] = array_unique($item);
             }
         }
+    }
+
+    /**
+     * @param array $array
+     *
+     * @return $this
+     */
+    protected function initialize(array $array)
+    {
+        $this->items = [];
+
+        foreach ($array as $key => $value)
+        {
+            $this->set($key, $value);
+        }
+
+        $this->measure();
+
+        return $this;
+    }
+
+
+    /**
+     * Check if string is encrypted Container
+     *
+     * @param $encrypted
+     *
+     * @return bool
+     */
+    protected function isEncryptedContainer($encrypted)
+    {
+        if ($this->isJson(gzuncompress(base64_decode($encrypted))))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if string is readable file
+     *
+     * @param $string
+     *
+     * @return bool
+     */
+    protected function isFile($string)
+    {
+        return is_file($string) && is_readable($string);
     }
 
 
@@ -1770,6 +1810,18 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return false;
     }
 
+
+    /**
+     * Check if is arrayable
+     *
+     * @param $items
+     *
+     * @return bool
+     */
+    protected function isArrayable($items)
+    {
+        return is_array($items) || $items instanceof Container || $items instanceof ArrayableInterface;
+    }
 
     /**
      * Results array of items from Container or ArrayableInterface.
@@ -1896,19 +1948,5 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
 
         throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
-    }
-
-    /**
-     * Unique items recursively
-     */
-    protected function recursiveUnique()
-    {
-        foreach ($this->items as $key => $item)
-        {
-            if (is_array($item))
-            {
-                $this->items[$key] = array_unique($item);
-            }
-        }
     }
 }

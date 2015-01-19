@@ -53,49 +53,7 @@ class ContainerSpec extends ObjectBehavior
     {
         $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'data.json';
 
-        $this->fromString($initializer);
-
-        $this->all->shouldBeEqualTo($this->initializer);
-
-        $this->has('name')->shouldBe(true);
-
-        $this->lengthCheck();
-    }
-
-    function it_should_recognize_and_construct_from_string_with_path_or_json()
-    {
-        /**
-         * Json
-         */
-        $initializer = '{"key": "value"}';
-
-        $this->fromString($initializer);
-
-        $this->all()->shouldHaveCount(1);
-
-        $this->has('key')->shouldBe(true);
-
-        $this->all->shouldBeEqualTo(['key' => 'value']);
-
-        /**
-         * File with Json
-         */
-        $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'data.json';
-
-        $this->fromString($initializer);
-
-        $this->all->shouldBeEqualTo($this->initializer);
-
-        $this->has('name')->shouldBe(true);
-
-        $this->lengthCheck();
-
-        /**
-         * File with serialized data
-         */
-        $initializer = __DIR__ . DIRECTORY_SEPARATOR . 'serialized.data';
-
-        $this->fromString($initializer);
+        $this->fromFile($initializer);
 
         $this->all->shouldBeEqualTo($this->initializer);
 
@@ -207,6 +165,28 @@ class ContainerSpec extends ObjectBehavior
     function it_should_return_first_value_from_Container()
     {
         $this->first()->shouldReturn('John');
+    }
+
+    function it_should_return_first_value_that_passes_truth_test()
+    {
+        $this->firstWhere(function($key)
+        {
+            return $key == 'surname';
+
+        })->shouldBeEqualTo('Doe');
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_last_value_that_passes_truth_test()
+    {
+        $this->lastWhere(function($key)
+        {
+            return $key == 'surname';
+
+        })->shouldBeEqualTo('Doe');
+
+        $this->lengthCheck();
     }
 
     function it_should_return_last_value_from_Container()
@@ -751,6 +731,30 @@ class ContainerSpec extends ObjectBehavior
                                                'hobby' =>'music']);
 
         $this->lengthCheck(4);
+    }
+
+    function it_should_take_all_items_by_key_recursively()
+    {
+        $take = $this->take('name');
+
+        $take->all()->shouldBe(['John', 'Jane']);
+
+        $this->lengthCheck(2);
+    }
+
+    function it_should_pull_value_and_remove_it()
+    {
+        $pulled = $this->pull('email');
+
+        $pulled->shouldBe($this->initializer['email']);
+
+        $initializer = $this->initializer;
+
+        unset($initializer['email']);
+
+        $this->all()->shouldBeEqualTo($initializer);
+
+        $this->minusLengthCheck();
     }
 
     /*

@@ -416,9 +416,9 @@ class ContainerSpec extends ObjectBehavior
     {
         $this->filter('is_int')->all()->shouldBe([]);
 
-        $this->first()->shouldBeEqualTo('John');
+        $this->shouldThrow('im\Primitive\Container\Exceptions\EmptyContainerException')->duringFirst();
 
-        $this->lengthCheck();
+        $this->lengthCheck(0);
     }
 
     function it_should_traverse_through_each_item()

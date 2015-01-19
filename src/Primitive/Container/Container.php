@@ -494,7 +494,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             throw new BadLengthException('Container length should match array length.');
         }
 
-        //TODO check $result
         if ($what == 'keys')
         {
             $result = array_combine($array, $this->values()->all());
@@ -528,14 +527,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($recursive === false)
         {
-            $newItems = array_filter($this->items, $function);
+            $this->items = array_filter($this->items, $function);
         }
         else
         {
-            $newItems = $this->filterRecursive($function, $this->items);
+            $this->items = $this->filterRecursive($function, $this->items);
         }
 
-        return new static($newItems);
+        $this->measure();
+
+        return $this;
     }
 
 
@@ -973,13 +974,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function truly($recursive = false)
     {
-        $this->items = $this->filter(function ($item)
+        $this->filter(function ($item)
         {
-            return ! empty($item) && $item !== false ? true : false;
+            return ! empty($item) && $item !== false;
 
-        }, $recursive)->all();
-
-        $this->measure();
+        }, $recursive);
 
         return $this;
     }

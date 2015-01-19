@@ -226,7 +226,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return mixed
      */
-    public function index($value)
+    public function search($value)
     {
         return array_search($value, $this->items);
     }
@@ -257,7 +257,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         // TODO refactor hasValue
         foreach ($this->items as $item)
         {
-            if (is_array($item) || $item instanceof Container)
+            if ($this->isArrayable($item))
             {
                 $result = (new static($item))->hasValue($value);
 
@@ -670,7 +670,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function merge($items, $key = null)
     {
-        if ( ! $items instanceof Container && ! is_array($items))
+        if ( ! $this->isArrayable($items))
         {
             throw new BadContainerMethodArgumentException('1 Argument must be array or Container');
         }
@@ -707,11 +707,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function mergeWithKey($items, $key, $default = null)
     {
-        $get = Arr::get($this->items, $key, $default);
+        $get = $this->get($key, $default);
 
         $value = array_merge($get, $items);
 
-        Arr::set($this->items, $key, $value);
+        $this->set($key, $value);
 
         return $this;
     }
@@ -724,7 +724,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return $this
      */
-    public function increase($increaseSize = 1, $value = '')
+    public function increase($increaseSize = 1, $value = null)
     {
         $this->items = array_pad($this->items, $this->length += $increaseSize, $value);
 
@@ -794,6 +794,30 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
 
         return $result;
+    }
+
+
+    /**
+     * Create new Container of all elements that do not pass a given truth test.
+     *
+     * @param $callback
+     *
+     * @return static
+     */
+    public function reject($callback)
+    {
+        if (is_callable($callback))
+        {
+            return $this->copy()->filter(function($item) use ($callback)
+            {
+                return ! $callback($item);
+            });
+        }
+
+        return $this->copy()->filter(function($item) use ($callback)
+        {
+            return $item != $callback;
+        });
     }
 
 
@@ -988,6 +1012,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $this;
     }
 
+
+    /**
+     * Calculate difference of Container and given Arrayable
+     *
+     * @param $items
+     *
+     * @return static
+     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     */
+    public function difference($items)
+    {
+        if ( ! $this->isArrayable($items))
+        {
+            throw new BadContainerMethodArgumentException('Argument 1 should be array, Container or implement ArrayableInterface');
+        }
+
+        return new static(array_diff($this->items, $this->getArrayable($items)));
+    }
+
+
     /**
      * Fetch a flattened array of a nested array element.
      *
@@ -999,9 +1043,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return new static(Arr::fetch($this->items, $key));
     }
 
+
+    /**
+     * Create a new Container instance if the value isn't one already.
+     *
+     * @param array $data
+     *
+     * @return static
+     */
+    public function make($data = [])
+    {
+        if ($data instanceof Container)
+        {
+            return $data;
+        }
+
+        return new static($data);
+    }
+
+
     /**
      * Remove all not true items from Container
-     * (null, '', false, 0)
+     * (null, '', false, 0, [])
      *
      * You can specify second argument to make it recursive
      *
@@ -1077,11 +1140,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function without($key)
     {
-        $this->items = $this->forgetRecursive($key, $this->items);
-
-        $this->measure();
-
-        return $this;
+        return new static($this->forgetRecursive($key, $this->items));
     }
 
     /**
@@ -1699,11 +1758,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         Arr::forget($items, $key);
 
-        foreach ($items as $key => $item)
+        foreach ($items as $key_ => $item)
         {
             if ($this->isArrayable($item))
             {
-                $items[$key] = $this->forgetRecursive($key, $this->getArrayable($item));
+                $items[$key_] = $this->forgetRecursive($key, $this->getArrayable($item));
             }
         }
 

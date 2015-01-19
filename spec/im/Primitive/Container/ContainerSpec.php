@@ -131,10 +131,10 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_find_index_of_given_key()
     {
-        $this->index('John')->shouldBe('name');
-        $this->index('Doe')->shouldBe('surname');
+        $this->search('John')->shouldBe('name');
+        $this->search('Doe')->shouldBe('surname');
 
-        $this->index('fake')->shouldBe(false);
+        $this->search('fake')->shouldBe(false);
     }
 
     function it_should_return_true_if_Container_has_key()
@@ -755,6 +755,33 @@ class ContainerSpec extends ObjectBehavior
         $this->all()->shouldBeEqualTo($initializer);
 
         $this->minusLengthCheck();
+    }
+
+    function it_should_pull_value_with_dot_notation_and_remove_it()
+    {
+        $pulled = $this->pull('wife.name');
+
+        $pulled->shouldBe($this->initializer['wife']['name']);
+
+        $initializer = $this->initializer;
+
+        unset($initializer['wife']['name']);
+
+        $this->all()->shouldBeEqualTo($initializer);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_recursively_remove_all_items_by_key()
+    {
+        $without = $this->without('name');
+
+        $without->shouldHaveType('im\Primitive\Container\Container');
+        $without->has('name')->shouldBe(false);
+        $without->has('wife.name')->shouldBe(false);
+        $without->shouldHaveCount(count($this->initializer) - 1);
+
+        $this->lengthCheck();
     }
 
     /*

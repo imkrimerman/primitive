@@ -197,6 +197,37 @@ class ContainerSpec extends ObjectBehavior
                                      'hobby' =>'music']);
     }
 
+    function it_should_assign_keys_by_inner_arrays_key_value()
+    {
+        $this->fromArray([
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'email' => 'johndoe@example.com'
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com'
+            ]
+        ]);
+
+        $keysBy = $this->keysByField('name');
+
+        $keysBy->all()->shouldBeEqualTo([
+            'John' => [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'email' => 'johndoe@example.com'
+            ],
+            'Jane' => [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com'
+            ]
+        ]);
+    }
+
     function it_should_unique_Container_items()
     {
         $initializer = ['foo', 'bar', 'bar', 'bar'];
@@ -401,14 +432,29 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck();
     }
 
-    function it_should_traverse_through_items_and_map_them()
+    function it_should_map_items_them_and_return_new_Container()
     {
-        $this->map(function( & $value)
+        $map = $this->map(function( & $value)
         {
             if ( ! is_array($value)) return $value .= 'Ok';
 
             return $value;
+        });
 
+        $map->shouldHaveType('im\Primitive\Container\Container');
+        $map->first()->shouldBe('JohnOk');
+
+        $this->all()->shouldBeEqualTo($this->initializer);
+        $this->lengthCheck();
+    }
+
+    function it_should_transform_items_with_callback()
+    {
+        $this->transform(function( & $value)
+        {
+            if ( ! is_array($value)) return $value .= 'Ok';
+
+            return $value;
         })->first()->shouldBe('JohnOk');
 
         $this->lengthCheck();
@@ -524,6 +570,29 @@ class ContainerSpec extends ObjectBehavior
         $this->cut(1, 2)->lastKey()->shouldBeEqualTo('email');
 
         $this->minusLengthCheck(2);
+    }
+
+    function it_should_return_new_Container_without_rejected_values_by_given_value()
+    {
+        $reject = $this->reject('John');
+
+        $reject->first()->shouldBe('Doe');
+        $reject->length->shouldBe(count($this->initializer) - 1);
+
+        $this->lengthCheck();
+    }
+
+    function it_should_return_new_Container_without_rejected_values_by_given_callback()
+    {
+        $reject = $this->reject(function($value)
+        {
+            return $value == 'John';
+        });
+
+        $reject->first()->shouldBe('Doe');
+        $reject->length->shouldBe(count($this->initializer) - 1);
+
+        $this->lengthCheck();
     }
 
     function it_should_encrypt_items_and_should_be_exact_like_encrypted_initializer()

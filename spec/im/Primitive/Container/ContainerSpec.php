@@ -98,7 +98,7 @@ class ContainerSpec extends ObjectBehavior
     {
         $this->push('newItem', 'new.key');
 
-        $this->has('new')->shouldBe(true);
+        $this->has('new.key')->shouldBe(true);
         $this->hasValue('newItem')->shouldBe(true);
 
         $this->plusLengthCheck();
@@ -295,23 +295,12 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_split_items_into_chunks()
     {
-        $this->chunk(3)->all()->shouldBe(
-            [
-                [
-                    'John',
-                    'Doe',
-                    'johndoe@example.com'
-                ],
-                [
-                    [
-                        'name' => 'Jane',
-                        'surname' => 'Doe',
-                        'email' => 'janedoe@example.com',
-                        'hobby' =>'music'
-                    ]
-                ]
-            ]
-        );
+        $chunks = $this->flatten()->chunk(2)->all();
+
+        foreach ($chunks as $chunk)
+        {
+            $chunk->shouldHaveType('im\Primitive\Container\Container');
+        }
     }
 
     function it_should_combine_given_keys_with_inner_values_without_second_argument()

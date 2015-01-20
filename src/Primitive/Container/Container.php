@@ -159,13 +159,33 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             return $this;
         }
 
-        $this->items = Arr::add($this->items, $key, $item);
+        return $this->put($key, $item);
+    }
+
+
+    /**
+     * Put value into Container
+     *
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function put($key, $value)
+    {
+        if ($this->has($key))
+        {
+            $this->items = Arr::set($this->items, $key, $value);
+        }
+        else
+        {
+            $this->items = Arr::add($this->items, $key, $value);
+        }
 
         $this->measure();
 
         return $this;
     }
-
 
     /**
      * Remove last item from Container and returns it.
@@ -246,7 +266,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Checks if Container has specified key
+     * Checks if Container has specified value
      *
      * @param $value
      *
@@ -254,7 +274,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function hasValue($value)
     {
-        // TODO refactor hasValue
         foreach ($this->items as $item)
         {
             if ($this->isArrayable($item))
@@ -262,6 +281,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
                 $result = (new static($item))->hasValue($value);
 
                 if ($result) return true;
+            }
+
+            if (is_callable($value))
+            {
+                return ! is_null($this->firstWhere($value));
             }
 
             if ($item == $value)
@@ -307,6 +331,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         }
 
         throw new EmptyContainerException('Empty Container');
+    }
+
+
+    /**
+     * Key an associative array by a field.
+     *
+     * @param  string  $keyBy
+     * @return static
+     */
+    public function keyBy($keyBy)
+    {
+        $results = [];
+
+        foreach ($this->items as $item)
+        {
+            $key = dataGet($item, $keyBy);
+
+            $results[$key] = $item;
+        }
+
+        return new static($results);
     }
 
 
@@ -497,19 +542,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Return split Container items into chunks wrapped with new Container
      *
-     * @param int $size
+     * @param int  $size
      *
-     * @throws BadLengthException
-     * @return bool|Container
+     * @param bool $preserveKeys
+     *
+     * @return bool|\im\Primitive\Container\Container
+     * @throws \im\Primitive\Container\Exceptions\BadLengthException
      */
-    public function chunk($size = 2)
+    public function chunk($size = 2, $preserveKeys = false)
     {
         if ( ! is_integer($size) || $size > $this->length)
         {
             throw new BadLengthException('Chunk size is larger than container length');
         }
 
-        return new static(array_chunk($this->items, $size));
+        $chunks = new static;
+
+        foreach (array_chunk($this->items, $size, $preserveKeys) as $value)
+        {
+            $chunks->push(new static($value));
+        }
+
+        return $chunks;
     }
 
 
@@ -613,13 +667,26 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Applies the callback to the Container items
+     * Run a map on each Container item
      *
      * @param callable $function
      *
      * @return $this
      */
     public function map(callable $function)
+    {
+        return new static(array_map($function, $this->items, $this->keys()->all()));
+    }
+
+
+    /**
+     * Transform each item with the callback
+     *
+     * @param callable $function
+     *
+     * @return $this
+     */
+    public function transform(callable $function)
     {
         $this->items = array_map($function, $this->items);
 
@@ -911,6 +978,25 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     public function copy()
     {
         return clone $this;
+    }
+
+
+    /**
+     * Group an associative array by a field or Closure value.
+     *
+     * @param  callable|string  $groupBy
+     * @return static
+     */
+    public function groupBy($groupBy)
+    {
+        $results = array();
+
+        foreach ($this->items as $key => $value)
+        {
+            $results[$this->getGroupByKey($groupBy, $key, $value)][] = $value;
+        }
+
+        return new static($results);
     }
 
 
@@ -1719,6 +1805,25 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 //        unset($conditions);
 
         return $where;
+    }
+
+
+    /**
+     * Get the "group by" key value.
+     *
+     * @param  callable|string  $groupBy
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function getGroupByKey($groupBy, $key, $value)
+    {
+        if ( ! is_string($groupBy) && is_callable($groupBy))
+        {
+            return $groupBy($value, $key);
+        }
+
+        return dataGet($value, $groupBy);
     }
 
 

@@ -340,7 +340,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param  string  $keyBy
      * @return static
      */
-    public function keyBy($keyBy)
+    public function keysByField($keyBy)
     {
         $results = [];
 

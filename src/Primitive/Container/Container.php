@@ -197,7 +197,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return $this
      */
-    public function unshift($item)
+    public function prepend($item)
     {
         array_unshift($this->items, $item);
 
@@ -226,6 +226,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function search($value)
     {
+        // TODO make recursive search (return dot.notation)
         return array_search($value, $this->items);
     }
 
@@ -961,9 +962,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function groupBy($groupBy)
     {
-        // TODO make test for groupBy
-        $results = array();
-
         foreach ($this->items as $key => $value)
         {
             $results[$this->getGroupByKey($groupBy, $key, $value)][] = $value;
@@ -1199,7 +1197,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
     /**
-     * Return computed intersection
+     * Return intersection with Arrayable
      *
      * You can specify second argument to with additional index check
      *
@@ -1220,7 +1218,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Returns computed intersection by keys in new Container
+     * Returns intersection by keys with Arrayable
      *
      * @param $array
      *
@@ -1239,7 +1237,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return $this
      */
-    public function usort(callable $function)
+    public function sort(callable $function)
     {
         if (is_callable($function))
         {

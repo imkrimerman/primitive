@@ -117,7 +117,7 @@ class ContainerSpec extends ObjectBehavior
 
         array_unshift($match, 'newItem');
 
-        $this->unshift('newItem')->all()->shouldBe($match);
+        $this->prepend('newItem')->all()->shouldBe($match);
 
         $this->plusLengthCheck();
     }

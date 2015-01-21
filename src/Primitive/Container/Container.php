@@ -882,10 +882,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @return $this
      */
-    public function decrypt()
-    {
-        return $this->fromJson(gzuncompress(base64_decode($this->items)));
-    }
+//    public function decrypt($items)
+//    {
+//        return $this->fromJson(gzuncompress(base64_decode($items)));
+//    }
 
 
     /**
@@ -1296,29 +1296,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Finds first item by key or key value pairs
-     *
-     * @param $condition
-     *
-     * @param bool $return
-     * @return mixed
-     * @throws ContainerException
-     * @throws EmptyContainerException
-     */
-    public function findWhere($condition, $return = true)
-    {
-        if ($return == true)
-        {
-            return $this->copy()->where($condition)->first();
-        }
-
-        $this->where($condition)->first();
-
-        return $this;
-    }
-
-
-    /**
      * Check if Container items is associative
      *
      * @return bool
@@ -1347,7 +1324,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function isMulti()
     {
-        return $this->filter('is_scalar')->length() !== $this->length();
+        return $this->values()->filter('is_scalar')->length() !== $this->length();
     }
 
 
@@ -1381,28 +1358,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     public function isNotEmpty()
     {
         return (bool) $this->length();
-    }
-
-
-    /**
-     * Check if Container is encrypted
-     *
-     * @return bool
-     */
-    public function isEncrypted()
-    {
-        return is_string($this->items);
-    }
-
-
-    /**
-     * Check if Container is not encrypted
-     *
-     * @return bool
-     */
-    public function isNotEncrypted()
-    {
-        return ! $this->isEncrypted();
     }
 
 
@@ -1553,10 +1508,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($this->isEncryptedContainer($encrypted))
         {
-            // TODO refactor fromEncrypted
-            $this->items = $encrypted;
-
-            return $this->decrypt();
+            return $this->fromJson(gzuncompress(base64_decode($encrypted)));
         }
 
         throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
@@ -1608,7 +1560,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __clone()
     {
-        $this->items = $this->items;
+        return new static($this->items);
     }
 
 

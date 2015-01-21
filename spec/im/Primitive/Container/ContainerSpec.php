@@ -1024,6 +1024,176 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck(3);
     }
 
+    function it_should_intersect_items_keys_with_given_array_keys()
+    {
+        $keys = ['name' => 'foo'];
+
+        $this->fromArray(['name' => 'John',
+                          'surname' => 'Doe',
+                          'email' => 'johndoe@example.com']);
+
+        $intersectKeys = $this->intersectKey($keys);
+        $intersectKeys->shouldHaveType('im\Primitive\Container\Container');
+        $intersectKeys->all()->shouldBe(['name' => 'John']);
+
+        $this->lengthCheck(3);
+    }
+
+    function it_should_sort_items_in_Container()
+    {
+        $initializer = [
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'email' => 'johndoe@example.com',
+                'order' => 1
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com',
+                'order' => 2
+            ],
+            [
+                'name' => 'John',
+                'surname' => 'McDonald',
+                'email' => 'johnmc@example.com',
+                'order' => 0
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'McDonald',
+                'email' => 'janemc@example.com',
+                'order' => 4
+            ]
+        ];
+
+        $this->fromArray($initializer);
+
+        $this->sort(function($a, $b)
+        {
+            $a = $a['order'];
+            $b = $b['order'];
+
+            if ($a > $b) return 1;
+            if ($a < $b) return -1;
+
+            return 0;
+        });
+
+        $this->first()->shouldBe([
+            'name' => 'John',
+            'surname' => 'McDonald',
+            'email' => 'johnmc@example.com',
+            'order' => 0
+        ]);
+
+        $this->last()->shouldBe([
+            'name' => 'Jane',
+            'surname' => 'McDonald',
+            'email' => 'janemc@example.com',
+            'order' => 4
+        ]);
+    }
+
+    function it_should_reset_keys_in_Container()
+    {
+        $this->resetKeys()->keys()->all()->shouldBe([0, 1, 2, 3]);
+    }
+
+    function it_should_check_if_Container_is_associative()
+    {
+        $this->isAssoc()->shouldBe(true);
+    }
+
+    function it_should_check_if_Container_is_not_associative()
+    {
+        $this->isNotAssoc()->shouldBe(false);
+    }
+
+    function it_should_check_if_Container_is_multi_dimension()
+    {
+        $this->isMulti()->shouldBe(true);
+    }
+
+    function it_should_check_if_Container_is_not_multi_dimension()
+    {
+        $this->isNotMulti()->shouldBe(false);
+    }
+
+    function it_should_check_if_Container_is_empty()
+    {
+        $this->isEmpty()->shouldBe(false);
+    }
+
+    function it_should_check_if_Container_is_not_empty()
+    {
+        $this->isNotEmpty()->shouldBe(true);
+    }
+
+    function it_should_convert_Container_to_array()
+    {
+        $this->fromArray([
+            a(['John']), a(['Jane'])
+        ]);
+
+        $array = $this->toArray();
+        $array->shouldBe([
+            ['John'], ['Jane']
+        ]);
+
+        $this->lengthCheck(2);
+    }
+
+    function it_should_convert_Container_to_json()
+    {
+        $initializer = [
+            'name' => 'Jane',
+            'surname' => 'McDonald'
+        ];
+
+        $this->fromArray($initializer);
+
+        $json = $this->toJson();
+        $json->shouldBeString();
+        $json->shouldBe('{"name":"Jane","surname":"McDonald"}');
+    }
+
+    function it_should_write_items_to_file()
+    {
+        $file = __DIR__.'/container.cdata';
+
+        $this->toFile($file);
+
+        $this->fromFile($file)->all()->shouldBe($this->initializer);
+    }
+
+    function it_should_construct_from_encrypted_Container()
+    {
+        $encrypted = $this->encrypt();
+
+        $this->fromArray([]);
+
+        $this->fromEncrypted($encrypted)->all()->shouldBe($this->initializer);
+    }
+
+    function it_should_call_magic_to_string_and_return_json()
+    {
+        $match = $this->toJson();
+
+        $this->__toString()->shouldBe($match);
+    }
+
+//    function it_should_clone_Container_without_references()
+//    {
+//        $clone = clone $this;
+//
+//        $clone->push(1);
+//
+//        $this->all()->shouldBe($this->initializer);
+//        $this->lengthCheck();
+//    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers

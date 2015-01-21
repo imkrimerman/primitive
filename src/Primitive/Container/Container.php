@@ -1210,14 +1210,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function intersect($array, $assoc = false)
     {
-        $array = $this->getArrayable($array);
-
         if ($assoc === true)
         {
-            return new static(array_intersect_assoc($this->items, $array));
+            return new static(array_intersect_assoc($this->items, $this->getArrayable($array)));
         }
 
-        return new static(array_intersect($this->items, $array));
+        return new static(array_intersect($this->items, $this->getArrayable($array)));
     }
 
 
@@ -1230,22 +1228,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function intersectKey($array)
     {
-        $array = $this->getArrayable($array);
-
-        return new static(array_intersect_key($this->items, $array));
+        return new static(array_intersect_key($this->items, $this->getArrayable($array)));
     }
 
 
     /**
      * User sort
      *
-     * @param $function
+     * @param callable $function
      *
      * @return $this
      */
-    public function usort($function)
+    public function usort(callable $function)
     {
-        if (is_string($function))
+        if (is_callable($function))
         {
             usort($this->items, $function);
         }

@@ -748,6 +748,77 @@ class ContainerSpec extends ObjectBehavior
                 ]
             ]
         );
+
+        $this->lengthCheck();
+    }
+
+    function it_should_group_items_by_key_with_callback()
+    {
+        $initializer = [
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'email' => 'johndoe@example.com',
+                'order' => 'first'
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com',
+                'order' => 'first'
+            ],
+            [
+                'name' => 'John',
+                'surname' => 'McDonald',
+                'email' => 'johnmc@example.com',
+                'order' => 'second'
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'McDonald',
+                'email' => 'janemc@example.com',
+                'order' => 'second'
+            ]
+        ];
+
+        $groupBy = $this->fromArray($initializer)->groupBy(function($value, $key)
+        {
+            return $value['order'];
+        });
+
+        $groupBy->shouldHaveType('im\Primitive\Container\Container');
+        $groupBy->all()->shouldBe(
+            [
+                'first' => [
+                    [
+                        'name' => 'John',
+                        'surname' => 'Doe',
+                        'email' => 'johndoe@example.com',
+                        'order' => 'first'
+                    ],
+                    [
+                        'name' => 'Jane',
+                        'surname' => 'Doe',
+                        'email' => 'janedoe@example.com',
+                        'order' => 'first'
+                    ]
+                ],
+                'second' => [
+                    [
+                        'name' => 'John',
+                        'surname' => 'McDonald',
+                        'email' => 'johnmc@example.com',
+                        'order' => 'second'
+                    ],
+                    [
+                        'name' => 'Jane',
+                        'surname' => 'McDonald',
+                        'email' => 'janemc@example.com',
+                        'order' => 'second'
+                    ]
+                ]
+            ]
+        );
     }
 
     function it_should_return_new_Container_except_given_keys()

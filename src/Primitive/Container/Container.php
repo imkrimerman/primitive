@@ -955,7 +955,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Group an associative array by a field or Closure value.
+     * Group an associative array by a field or callback value.
      *
      * @param  callable|string  $groupBy
      * @return static
@@ -1090,7 +1090,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Fetch a flattened array of a nested array element.
+     * Get gathered column of a nested array element.
      *
      * @param $key
      * @return array
@@ -1163,7 +1163,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
     /**
-     * Get a value from the array, and remove it.
+     * Get a value from the Container, and remove it.
      *
      * @param $key
      *
@@ -1178,9 +1178,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             throw new OffsetNotExistsException("Key: {$key} not exists");
         }
 
-        $pulled = Arr::pull($this->items, $key);
-
-        return $pulled;
+        return Arr::pull($this->items, $key);
     }
 
 

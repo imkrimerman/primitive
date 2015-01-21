@@ -981,7 +981,7 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck();
     }
 
-    function it_should_recursively_remove_all_items_by_key()
+    function it_should_recursively_remove_all_items_by_key_and_return_new_Container_without_this_key()
     {
         $without = $this->without('name');
 
@@ -991,6 +991,37 @@ class ContainerSpec extends ObjectBehavior
         $without->shouldHaveCount(count($this->initializer) - 1);
 
         $this->lengthCheck();
+    }
+
+    function it_should_intersect_items_values_with_given_array_values()
+    {
+        $this->fromArray(['name' => 'John',
+                          'surname' => 'Doe',
+                          'email' => 'johndoe@example.com']);
+
+        $intersect = $this->intersect(['John', 'johndoe@example.com']);
+        $intersect->shouldHaveType('im\Primitive\Container\Container');
+        $intersect->all()->shouldBe(['name' => 'John', 'email' => 'johndoe@example.com']);
+
+        $this->lengthCheck(3);
+    }
+
+    function it_should_intersect_items_values_with_given_array_values_with_key_check()
+    {
+        $with = [
+            'John',
+            'email' => 'johndoe@example.com'
+        ];
+
+        $this->fromArray(['name' => 'John',
+                          'surname' => 'Doe',
+                          'email' => 'johndoe@example.com']);
+
+        $intersect = $this->intersect($with, true);
+        $intersect->shouldHaveType('im\Primitive\Container\Container');
+        $intersect->all()->shouldBe(['email' => 'johndoe@example.com']);
+
+        $this->lengthCheck(3);
     }
 
     /*

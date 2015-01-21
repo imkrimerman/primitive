@@ -597,7 +597,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_encrypt_items_and_should_be_exact_like_encrypted_initializer()
     {
-        $encrypted = $this->encrypt()->all();
+        $encrypted = $this->encrypt();
 
         $encrypted->shouldBeString();
 
@@ -608,11 +608,25 @@ class ContainerSpec extends ObjectBehavior
         );
     }
 
+    function it_should_reduce_items_to_one_value()
+    {
+        $initializer = [1,2,3,4,5];
+
+        $reduce = $this->fromArray($initializer)->reduce(function($carry, $item)
+        {
+            return $carry += $item;
+        });
+
+        $reduce->shouldBeInteger();
+
+        $reduce->shouldBe(15);
+    }
+
     function it_should_decrypt_items_and_should_be_equal_to_initializer()
     {
-        $this->encrypt();
+        $encrypted = $this->encrypt();
 
-        $this->decrypt()->all()->shouldBeEqualTo($this->initializer);
+        $this->fromEncrypted($encrypted)->all()->shouldBeEqualTo($this->initializer);
     }
 
     function it_should_forget_item_by_key()
@@ -668,6 +682,72 @@ class ContainerSpec extends ObjectBehavior
         $copy->shouldHaveCount(count($this->initializer));
 
         $this->lengthCheck();
+    }
+
+    function it_should_group_items_by_similar_key()
+    {
+        $initializer = [
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'email' => 'johndoe@example.com',
+                'order' => 'first'
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com',
+                'order' => 'first'
+            ],
+            [
+                'name' => 'John',
+                'surname' => 'McDonald',
+                'email' => 'johnmc@example.com',
+                'order' => 'second'
+            ],
+            [
+                'name' => 'Jane',
+                'surname' => 'McDonald',
+                'email' => 'janemc@example.com',
+                'order' => 'second'
+            ]
+        ];
+
+        $groupBy = $this->fromArray($initializer)->groupBy('order');
+
+        $groupBy->shouldHaveType('im\Primitive\Container\Container');
+        $groupBy->all()->shouldBe(
+            [
+                'first' => [
+                    [
+                        'name' => 'John',
+                        'surname' => 'Doe',
+                        'email' => 'johndoe@example.com',
+                        'order' => 'first'
+                    ],
+                    [
+                        'name' => 'Jane',
+                        'surname' => 'Doe',
+                        'email' => 'janedoe@example.com',
+                        'order' => 'first'
+                    ]
+                ],
+                'second' => [
+                    [
+                        'name' => 'John',
+                        'surname' => 'McDonald',
+                        'email' => 'johnmc@example.com',
+                        'order' => 'second'
+                    ],
+                    [
+                        'name' => 'Jane',
+                        'surname' => 'McDonald',
+                        'email' => 'janemc@example.com',
+                        'order' => 'second'
+                    ]
+                ]
+            ]
+        );
     }
 
     function it_should_return_new_Container_except_given_keys()

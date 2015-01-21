@@ -851,6 +851,19 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         });
     }
 
+    /**
+     * Reduce items to one value
+     *
+     * @param callable $callback
+     * @param null     $initial
+     *
+     * @return mixed
+     */
+    public function reduce(callable $callback, $initial = null)
+    {
+        return array_reduce($this->items, $callback, $initial);
+    }
+
 
     /**
      * Encrypt Container items and assigns to Container
@@ -859,9 +872,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function encrypt()
     {
-        $this->items = base64_encode(gzcompress($this->toJson()));
-
-        return $this;
+        return base64_encode(gzcompress($this->toJson()));
     }
 
 
@@ -1071,12 +1082,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function difference($items)
     {
-        if ( ! $this->isArrayable($items))
+        if ($this->isArrayable($items))
         {
-            throw new BadContainerMethodArgumentException('Argument 1 should be array, Container or implement ArrayableInterface');
+            return new static(array_diff($this->items, $this->getArrayable($items)));
         }
 
-        return new static(array_diff($this->items, $this->getArrayable($items)));
+        throw new BadContainerMethodArgumentException('Argument 1 should be array, Container or implement ArrayableInterface');
     }
 
 
@@ -1610,6 +1621,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
+     * Dump the Container.
+     *
+     * Var dump
+     */
+    public function dump()
+    {
+        (new Dumper())->dump($this);
+    }
+
+
+    /**
      * Call standard PHP functions
      *
      * @param $callable
@@ -1641,17 +1663,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Dump the Container.
-     *
-     * Var dump
-     */
-    public function dump()
-    {
-        (new Dumper())->dump($this);
-    }
-
-
-    /**
      * Measure Container length
      *
      * @param int $default
@@ -1663,14 +1674,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         if (is_array($this->items))
         {
             return count($this->items);
-        }
-        elseif (is_string($this->items))
-        {
-            return Str::length($this->items);
-        }
-        elseif (is_object($this->items))
-        {
-            return measureObject($this->items);
         }
 
         return $default;

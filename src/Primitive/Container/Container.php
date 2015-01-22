@@ -416,13 +416,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function unique($recursive = false)
     {
-        // TODO unique recursive
         if ($recursive)
         {
-            $this->recursiveUnique();
+            $this->items = $this->uniqueRecursive($this->items);
         }
-
-        $this->items = array_unique($this->items);
+        else
+        {
+            $this->items = array_unique($this->items);
+        }
 
         return $this;
     }
@@ -1556,22 +1557,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Clone
-     */
-    public function __clone()
-    {
-        return new static($this->items);
-    }
-
-
-    /**
      * Dump the Container.
      *
      * Var dump
+     *
+     * @param bool $die
      */
-    public function dump()
+    public function dump($die = false)
     {
         (new Dumper())->dump($this);
+
+        if ($die) die;
     }
 
 
@@ -1685,7 +1681,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     protected function whereArrayCondition(array $conditions, $preserveKeys)
     {
-//        $conditions = new static($conditions);
         $where = [];
 
         foreach ($conditions as $conditionKey => $conditionValue)
@@ -1694,21 +1689,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
             $where = array_merge($where, $found);
         }
-
-//        $where = $this->recursiveWhere($this->items, $neededKey, $neededVal, $preserveKeys);
-//
-//        if ($conditions->isNotEmpty())
-//        {
-//            foreach ($conditions as $key => $value)
-//            {
-//                $neededKey = $conditions->firstKey();
-//                $neededVal = $conditions->shift();
-//
-//                $where = $this->recursiveWhere($where, $neededKey, $neededVal, $preserveKeys);
-//            }
-//        }
-//
-//        unset($conditions);
 
         return $where;
     }
@@ -1743,7 +1723,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     protected function filterRecursive(callable $function, $items)
     {
-        if ( ! is_array($items) && ! $items instanceof ArrayableInterface && ! $items instanceof Container)
+        if ( ! $this->isArrayable($items))
         {
             return $items;
         }
@@ -1760,20 +1740,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Recursive unset
      *
-     * @param $key
+     * @param $forgetKey
      * @param $items
      *
      * @return
      */
-    protected function forgetRecursive($key, $items)
+    protected function forgetRecursive($forgetKey, $items)
     {
-        Arr::forget($items, $key);
+        Arr::forget($items, $forgetKey);
 
-        foreach ($items as $key_ => $item)
+        foreach ($items as $key => $item)
         {
             if ($this->isArrayable($item))
             {
-                $items[$key_] = $this->forgetRecursive($key, $this->getArrayable($item));
+                $items[$key] = $this->forgetRecursive($forgetKey, $this->getArrayable($item));
             }
         }
 
@@ -1783,16 +1763,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * Unique items recursively
+     *
+     * @param $items
+     *
+     * @return array
      */
-    protected function recursiveUnique()
+    protected function uniqueRecursive($items)
     {
-        foreach ($this->items as $key => $item)
+        foreach ($items as $key => $item)
         {
-            if (is_array($item))
+            if ($this->isArrayable($item))
             {
-                $this->items[$key] = array_unique($item);
+                $this->items[$key] = $this->uniqueRecursive($this->getArrayable($item));
             }
         }
+
+        return array_unique($this->items);
     }
 
     /**
@@ -2002,7 +1988,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @throws OffsetNotExistsException
      * @return null
      */
-    public function & offsetGet($offset)
+    public function offsetGet($offset)
     {
         if ($this->has($offset))
         {

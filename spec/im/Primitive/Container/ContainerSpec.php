@@ -99,7 +99,6 @@ class ContainerSpec extends ObjectBehavior
         $this->push('newItem', 'new.key');
 
         $this->has('new.key')->shouldBe(true);
-        $this->hasValue('newItem')->shouldBe(true);
 
         $this->plusLengthCheck();
     }
@@ -317,9 +316,9 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_find_all_second_level_values_by_key_and_return_array()
     {
-        $this->lists('hobby')->shouldBe(['music']);
+        $this->lists('hobby')->all()->shouldBe(['music']);
 
-        $this->lists('name')->shouldBe(['Jane']);
+        $this->lists('name')->all()->shouldBe(['Jane']);
 
         $this->lengthCheck();
     }
@@ -540,7 +539,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_return_array_of_exact_number_of_random_keys_from_item_keys_but_not_larger_than_Container_length()
     {
-        $this->randomKey(3)->shouldBeArrayAndExactLengthOf(3);
+        $this->randomKey(3)->all()->shouldBeArrayAndExactLengthOf(3);
 
         $this->lengthCheck();
     }
@@ -554,7 +553,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_return_array_of_exact_number_of_random_values_but_not_larger_than_Container_length()
     {
-        $this->random(3)->shouldBeArrayAndExactLengthOf(3);
+        $this->random(3)->shouldHaveCount(3);
 
         $this->lengthCheck();
     }

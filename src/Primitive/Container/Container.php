@@ -88,12 +88,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * For support of object style set
      *
-     * @param $item
+     * @param $key
      * @param $value
      */
-    public function __set($item, $value)
+    public function __set($key, $value)
     {
-        $this->{$item} = $value;
+        $this->set($key, $value);
     }
 
 
@@ -218,7 +218,8 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
     /**
      * Search for specified value, returns index on success, otherwise false.
-     * Search at the first level.
+     *
+     * First level search.
      *
      * @param $value
      *
@@ -247,31 +248,17 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     /**
      * Checks if Container has specified value
      *
+     * First level search
+     *
      * @param $value
      *
      * @return bool
      */
     public function hasValue($value)
     {
-        // TODO may be not recursive
         foreach ($this->items as $item)
         {
-            if ($this->isArrayable($item))
-            {
-                $result = (new static($item))->hasValue($value);
-
-                if ($result) return true;
-            }
-
-            if (is_callable($value))
-            {
-                return ! is_null($this->firstWhere($value));
-            }
-
-            if ($item == $value)
-            {
-                return true;
-            }
+            if ($item === $value) return true;
         }
 
         return false;
@@ -418,14 +405,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($recursive)
         {
-            $this->items = $this->uniqueRecursive($this->items);
-        }
-        else
-        {
-            $this->items = array_unique($this->items);
+            return new static($this->uniqueRecursive($this->items));
         }
 
-        return $this;
+        return new static(array_unique($this->items));
     }
 
 
@@ -504,11 +487,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function join($key, $glue = null)
     {
-        return implode($glue, $this->lists($key));
+        return implode($glue, $this->lists($key)->all());
     }
 
     /**
-     * Get an array with the values of a given key.
+     * Get new Container with the values of a given key.
      *
      * @param  string $value
      * @param  string $key
@@ -516,7 +499,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function lists($value, $key = null)
     {
-        return Arr::pluck($this->items, $value, $key);
+        return new static(Arr::pluck($this->items, $value, $key));
     }
 
     /**
@@ -567,20 +550,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         if ($what == 'keys')
         {
-            $result = array_combine($array, $this->values()->all());
+            return new static(array_combine($array, $this->values()->all()));
         }
         elseif ($what == 'values')
         {
-            $result = array_combine($this->keys()->all(), $array);
-        }
-        else
-        {
-            throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
+            return new static(array_combine($this->keys()->all(), $array));
         }
 
-        $this->items = $result;
-
-        return $this;
+        throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
     }
 
 
@@ -598,19 +575,16 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($recursive === false)
         {
-            $items = array_filter($this->items, $function);
-        }
-        else
-        {
-            $items = $this->filterRecursive($function, $this->items);
+            return new static(array_filter($this->items, $function));
         }
 
-        return new static($items);
+        return new static($this->filterRecursive($function, $this->items));
     }
 
 
     /**
-     * Flips Container items keys with values
+     * Flips keys with values
+     *
      * @return $this
      * @throws \im\Primitive\Container\Exceptions\ContainerException
      */
@@ -621,9 +595,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             throw new ContainerException('Can\'t flip in multi-dimensional array.');
         }
 
-        $this->items = array_flip($this->items);
-
-        return $this;
+        return new static(array_flip($this->items));
     }
 
 
@@ -701,30 +673,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * You can specify exact key to merge with the second argument
      *
-     * @param $items
+     * @param      $items
      * @param null $key
+     *
+     * @param null $default
      *
      * @throws BadContainerMethodArgumentException
      * @return $this
      */
-    public function merge($items, $key = null)
+    public function merge($items, $key = null, $default = null)
     {
         if ( ! $this->isArrayable($items))
         {
             throw new BadContainerMethodArgumentException('1 Argument must be array or Container');
         }
 
-        if ($key === null)
+        if (is_null($key))
         {
-            $this->items = array_merge($this->items, $this->getArrayable($items));
-
-            return $this;
+            return new static(array_merge($this->items, $this->getArrayable($items)));
         }
         elseif ($this->has($key))
         {
-            $this->mergeWithKey($this->getArrayable($items), $key);
-
-            return $this;
+            return $this->mergeWithKey($this->getArrayable($items), $key, $default);
         }
 
         throw new BadContainerMethodArgumentException('Bad key given');
@@ -746,9 +716,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         $value = array_merge($get, $items);
 
-        $this->set($key, $value);
-
-        return $this;
+        return $this->copy()->set($key, $value);
     }
 
     /**
@@ -779,7 +747,9 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($this->isNotEmpty() && $this->length() >= $quantity && $quantity > 0)
         {
-            return array_rand($this->items, $quantity);
+            $random = array_rand($this->items, $quantity);
+
+            return is_array($random) ? new static($random) : $random;
         }
 
         throw new BadContainerMethodArgumentException("1 Argument should be between 1 and the number of elements in the Container, got: {$quantity}");
@@ -793,14 +763,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function random($quantity = 1)
     {
-        while($quantity)
-        {
-            $result[] = $this->items[$this->randomKey()];
+        $result = new static;
 
-            --$quantity;
+        while($quantity--)
+        {
+            $result->push($this->items[$this->randomKey()]);
         }
 
-        return count($result) == 1 ? first($result) : $result;
+        return $result->length() === 1 ? $result->first() : $result;
     }
 
     /**

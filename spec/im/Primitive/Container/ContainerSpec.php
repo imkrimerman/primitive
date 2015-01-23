@@ -414,11 +414,12 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_filter_items_with_callback_in_Container()
     {
-        $this->filter('is_int')->all()->shouldBe([]);
+        $filtered = $this->filter('is_int');
+        $filtered->all()->shouldBe([]);
 
-        $this->shouldThrow('im\Primitive\Container\Exceptions\EmptyContainerException')->duringFirst();
+        $filtered->shouldHaveCount(0);
 
-        $this->lengthCheck(0);
+        $this->lengthCheck();
     }
 
     function it_should_traverse_through_each_item()
@@ -934,12 +935,14 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromArray($initializer);
 
-        $this->truly()->all()->shouldBeEqualTo(['name' => 'Jane',
-                                               'surname' => 'Doe',
-                                               'email' => 'janedoe@example.com',
-                                               'hobby' =>'music']);
+        $truly = $this->truly();
+        $truly->all()->shouldBeEqualTo(['name' => 'Jane',
+                                        'surname' => 'Doe',
+                                        'email' => 'janedoe@example.com',
+                                        'hobby' =>'music']);
+        $truly->shouldHaveCount(4);
 
-        $this->lengthCheck(4);
+        $this->lengthCheck(count($initializer));
     }
 
     function it_should_take_all_items_by_key_recursively()
@@ -947,8 +950,9 @@ class ContainerSpec extends ObjectBehavior
         $take = $this->take('name');
 
         $take->all()->shouldBe(['John', 'Jane']);
+        $take->shouldHaveCount(2);
 
-        $this->lengthCheck(2);
+        $this->lengthCheck();
     }
 
     function it_should_pull_value_and_remove_it()

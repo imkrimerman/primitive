@@ -598,14 +598,14 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($recursive === false)
         {
-            $this->items = array_filter($this->items, $function);
+            $items = array_filter($this->items, $function);
         }
         else
         {
-            $this->items = $this->filterRecursive($function, $this->items);
+            $items = $this->filterRecursive($function, $this->items);
         }
 
-        return $this;
+        return new static($items);
     }
 
 
@@ -1135,9 +1135,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         $function = ! is_null($function) ?: function ($item) {return ! empty($item);};
 
-        $this->filter($function, $recursive);
-
-        return $this;
+        return new static($this->filter($function, $recursive));
     }
 
 
@@ -1146,7 +1144,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @param $key
      *
-     * @return $this
+     * @return static
      */
     public function take($key)
     {
@@ -1158,9 +1156,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         }, true);
 
-        $this->items = $take;
-
-        return $this;
+        return new static($take);
     }
 
     /**

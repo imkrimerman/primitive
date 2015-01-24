@@ -110,6 +110,20 @@ if ( ! function_exists('lastKey'))
     }
 }
 
+if ( ! function_exists('flipInt'))
+{
+    /**
+     * Flips 2 integers
+     *
+     * @param $a
+     * @param $b
+     */
+    function flipInt(& $a, & $b)
+    {
+        $a ^= $b ^= $a ^= $b;
+    }
+}
+
 if ( ! function_exists('flipVars'))
 {
     /**
@@ -117,10 +131,12 @@ if ( ! function_exists('flipVars'))
      *
      * @param $a
      * @param $b
+     *
+     * @return array
      */
-    function flipVars(& $a, & $b)
+    function flipVars($a, $b)
     {
-        $a ^= $b ^= $a ^= $b;
+        return [$b, $a];
     }
 }
 

@@ -2,6 +2,7 @@
 
 use \ArrayAccess;
 use \BadMethodCallException;
+use Iterator;
 use \JsonSerializable;
 use \Countable;
 use \ArrayIterator;
@@ -18,6 +19,8 @@ use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Support\Dump\Dumper;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -1035,9 +1038,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function flatten()
     {
-        $this->items = Arr::flatten($this->items);
-
-        return $this;
+        return new static(Arr::flatten($this->items));
     }
 
 
@@ -1231,34 +1232,21 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * You can specify second parameter to preserve keys reset
      *
-     * @param $condition
+     * @param array $condition
      * @param bool $preserveKeys
      * @throws ContainerException
      * @throws EmptyContainerException
      *
      * @return $this
      */
-    public function where($condition, $preserveKeys = true)
+    public function where(array $condition, $preserveKeys = true)
     {
         if (empty($condition))
         {
             return $this;
         }
 
-        if (is_array($condition))
-        {
-            $this->items = $this->whereArrayCondition($condition, $preserveKeys);
-        }
-        elseif (is_string($condition))
-        {
-            $this->items = $this->recursiveWhere($this->items, $condition, null, $preserveKeys);
-        }
-        else
-        {
-            throw new ContainerException('$condition can be String or Array');
-        }
-
-        return $this;
+        return new static($this->whereCondition($condition, $preserveKeys));
     }
 
 
@@ -1587,50 +1575,54 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
+     * @param $conditions
+     * @param $preserveKeys
+     *
+     * @return array
+     * @throws EmptyContainerException
+     */
+    protected function whereCondition(array $conditions, $preserveKeys)
+    {
+        $key = firstKey($conditions);
+        $value = array_shift($conditions);
+
+        $where = $this->whereRecursive($this->items, $key, $value, $preserveKeys);
+
+        foreach ($conditions as $key => $value)
+        {
+            $where = $this->whereRecursive($where, $key, $value, $preserveKeys);
+        }
+
+        return $where;
+    }
+
+
+    /**
      * Recursively traversing tree
      *
      * @param $array
      * @param $key
      * @param $value
-     * @param $prevent_keys
+     * @param $preventKeys
      *
      * @return array
      */
-    protected function recursiveWhere($array, $key, $value = null, $prevent_keys = false)
+    protected function whereRecursive($array, $key, $value = null, $preventKeys = false)
     {
         $outputArray = [];
 
-        $arrIt = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($array));
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveContainerIterator($array),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
 
-        foreach ($arrIt as $sub)
+        foreach ($iterator as $sub)
         {
-            $subArray = $arrIt->getSubIterator();
-            //TODO Refactor this
-            if ($value !== null and isset($subArray[$key]) and $subArray[$key] === $value)
-            {
-                if ($prevent_keys === false)
-                {
-                    $k = $arrIt->getSubIterator($arrIt->getDepth() - 1)->key();
+            $subIterator = $iterator->getSubIterator();
 
-                    $outputArray[$k] = iterator_to_array($subArray);
-                }
-                else
-                {
-                    $outputArray[] = iterator_to_array($subArray);
-                }
-            }
-            elseif ($value === null and isset($subArray[$key]))
+            if (isset($subIterator[$key]) && (( ! is_null($value) && $subIterator[$key] == $value ) || is_null($value)))
             {
-                if ($prevent_keys === false)
-                {
-                    $k = $arrIt->getSubIterator($arrIt->getDepth() - 1)->key();
-
-                    $outputArray[$k] = iterator_to_array($subArray);
-                }
-                else
-                {
-                    $outputArray[] = iterator_to_array($subArray);
-                }
+                $outputArray += $this->iteratorToArray($iterator, $subIterator, $outputArray, $preventKeys);
             }
         }
 
@@ -1639,24 +1631,27 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * @param $conditions
-     * @param $preserveKeys
+     * @param Iterator $iterator
+     * @param Iterator $subIterator
+     * @param array $outputArray
+     * @param $preventKeys
      *
      * @return array
-     * @throws EmptyContainerException
      */
-    protected function whereArrayCondition(array $conditions, $preserveKeys)
+    protected function iteratorToArray(Iterator $iterator, Iterator $subIterator, array $outputArray, $preventKeys = false)
     {
-        $where = [];
-
-        foreach ($conditions as $conditionKey => $conditionValue)
+        if ($preventKeys === false)
         {
-            $found = $this->recursiveWhere($this->items, $conditionKey, $conditionValue, $preserveKeys);
+            $key = $iterator->getSubIterator($iterator->getDepth() - 1)->key();
 
-            $where = array_merge($where, $found);
+            $outputArray[$key] = iterator_to_array($subIterator);
+        }
+        else
+        {
+            $outputArray[] = iterator_to_array($subIterator);
         }
 
-        return $where;
+        return $outputArray;
     }
 
 
@@ -1900,11 +1895,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     */
 
     /**
-     * @return ArrayIterator
+     * @return RecursiveContainerIterator
      */
     public function getIterator()
     {
-        return new ArrayIterator($this->items);
+        return new RecursiveContainerIterator($this->items);
     }
 
     /*

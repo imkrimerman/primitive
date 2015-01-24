@@ -33,7 +33,7 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromArray($initializer);
 
-        $this->all()->shouldHaveCount(3);
+        $this->all()->shouldHaveCount(count($initializer));
     }
 
     function it_should_construct_from_json()
@@ -42,7 +42,7 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromJson($initializer);
 
-        $this->all()->shouldHaveCount(1);
+        $this->all()->shouldHaveCount(count(json_decode($initializer, true)));
 
         $this->has('key')->shouldBe(true);
 
@@ -55,7 +55,7 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromFile($initializer);
 
-        $this->all->shouldBeEqualTo($this->initializer);
+        $this->all()->shouldBeEqualTo($this->initializer);
 
         $this->has('name')->shouldBe(true);
 
@@ -67,8 +67,6 @@ class ContainerSpec extends ObjectBehavior
         $this->pop;
 
         $this->shift;
-
-        //$this->shouldThrow('\BadMethodCallException')->during('where');
 
         $this->has('name')->shouldBe(false);
 

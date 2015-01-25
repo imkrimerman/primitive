@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Int;
 
+use im\Primitive\Bool\Bool;
 use UnexpectedValueException;
 
 
@@ -67,9 +68,44 @@ class Int {
     /**
      * @return int
      */
+    public function value()
+    {
+        return $this->value;
+    }
+
+    /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public function set($value)
+    {
+        $this->value = $this->getInteger($value);
+
+        return $value;
+    }
+
+    /**
+     * @param $value
+     *
+     * @return static
+     */
+    public function make($value)
+    {
+        return new static($value);
+    }
+
+    /**
+     * @return int
+     */
     public function length()
     {
         return strlen((string) $this->value);
+    }
+
+    public function toBool()
+    {
+        return new Bool($this->value);
     }
 
     /**
@@ -90,7 +126,7 @@ class Int {
      */
     public function __toString()
     {
-        return ''.$this->value;
+        return (string) $this->value;
     }
 
     /**

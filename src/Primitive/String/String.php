@@ -1,657 +1,516 @@
 <?php namespace im\Primitive\String;
 
-use \Countable;
+use ArrayAccess;
+use Countable;
+use im\Primitive\Support\Str;
+use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Container\Container;
 use im\Primitive\String\Exceptions\StringException;
+use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
+use Symfony\Component\Yaml\Dumper;
 
-class String implements Countable
-{
+class String implements Countable, ArrayAccess {
 
-    private $clone;
     protected $string;
-    public $length;
 
-    // --------------------------------------------------------------------------
 
     /**
      * @param string $string
      */
-    public function __construct( $string = '' )
+    public function __construct($string = '')
     {
-        if( is_string( $string ) )
-        {
-            $this->string = $string;
-        }
-        else
+        if ( ! is_string($string))
         {
             $this->string = '';
         }
 
-        $this->clone = $this->string;
-        $this->measure();
+        $this->string = $string;
+    }
+
+    public function set($string)
+    {
+        $this->string = $this->getStringable($string);
 
         return $this;
     }
 
-    // --------------------------------------------------------------------------
+    public function get()
+    {
+        return $this->string;
+    }
 
     /**
-     * @param $string
+     * @param        $string
      * @param string $delimiter
+     *
      * @return $this
      */
-    public function append( $string, $delimiter = ' ' )
+    public function append($string, $delimiter = ' ')
     {
-        if( $string instanceof String )
-        {
-            $string = $string->__toString();
-        }
+        $string = $this->getStringable($string);
 
-        if( is_string( $string ) and is_string( $delimiter ) )
+        if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
             $this->string .= "{$delimiter}{$string}";
-            $this->measure();
         }
 
         return $this;
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
-     * @param $string
+     * @param        $string
      * @param string $delimiter
+     *
      * @return $this
      */
-    public function prepand( $string, $delimiter = ' ' )
+    public function prepend($string, $delimiter = ' ')
     {
-        if( $string instanceof String )
-        {
-            $string = $string->__toString();
-        }
+        $string = $this->getStringable($string);
 
-        if( is_string( $string ) and is_string( $delimiter ) )
+        if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
             $this->string = "{$string}{$delimiter}{$this->string}";
-            $this->measure();
         }
 
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
-
-    public function eq( $string )
+    /**
+     * @param bool $firstLetter
+     *
+     * @return $this
+     */
+    public function lower($firstLetter = false)
     {
-        if( is_string( $string ) )
+        if ($firstLetter)
         {
-            $this->string = $string;
-            $this->clone  = $string;
-            $this->measure();
+            return new static(lcfirst($this->string));
         }
 
-        return $this;
+        return new static(mb_strtolower($this->string));
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * @param null $what
+     *
      * @return $this
      */
-    public function lower( $what = null )
+    public function upper($what = null)
     {
-        if( $what === 'first' )
+        if ($what === 'first')
         {
-            $this->string = lcfirst( $this->string );
+            return new static(ucfirst($this->string));
         }
-        else
+        elseif ($what === 'words')
         {
-            $this->string = mb_strtolower( $this->string );
+            return new static(ucwords($this->string));
         }
 
-        return $this;
+        return new static(mb_strtoupper($this->string));
     }
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * @param null $what
-     * @return $this
-     */
-    public function upper( $what = null )
+    public function title()
     {
-        if( $what === 'first' )
-        {
-            $this->string = ucfirst( $this->string );
-        }
-        elseif( $what === 'words' )
-        {
-            $this->string = ucwords( $this->string );
-        }
-        else
-        {
-            $this->string = mb_strtoupper( $this->string );
-        }
-
-        return $this;
+        return new static(Str::title($this->string));
     }
-
-    // --------------------------------------------------------------------------
 
     /**
      * @return $this
      */
     public function camel()
     {
-        return $this->studly()->lower( 'first' );
+        return new static(Str::camel($this->string));
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * @return $this
      */
     public function dashed()
     {
-        $this->string = preg_replace( '/([a-zA-Z])(?=[A-Z])/', '$1-', $this->string );
-        $this->lower();
+        $string = preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $this->string);
 
-        return $this;
+        return (new static($string))->lower();
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
      * @param string $delimiter
+     *
      * @return $this
      */
-    public function snake( $delimiter = '_' )
+    public function snake($delimiter = '_')
     {
-        if( ctype_lower( $this->string ) )
-        {
-            return $this;
-        }
-
-        $replace = '$1' . $delimiter . '$2';
-        $this->string = preg_replace( '/(.)([A-Z])/', $replace, $this->string );
-        $this->lower();
-
-        return $this;
+        return new static(Str::snake($this->string, $delimiter));
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return $this
      */
     public function studly()
     {
-        $this->string = ucwords( str_replace( array( '-', '_' ), ' ', $this->string ) );
-        $this->string = str_replace( ' ', '', $this->string );
-
-        return $this;
+        return new static(Str::studly($this->value));
     }
 
-    // --------------------------------------------------------------------------
-
-    public function find( $string )
-    {
-
-    }
-
-    // --------------------------------------------------------------------------
 
     /**
-     * @param $string
-     * @param bool $caseSensitive
+     * @param      $string
+     *
      * @return bool
      */
-    public function has( $string, $caseSensitive = true )
+    public function has($string)
     {
-        if( $caseSensitive === true )
-        {
-            return strpos( $this->string, $string ) !== false;
-        }
-        else
-        {
-            return stripos( $this->string, $string ) !== false;
-        }
+        return Str::contains($this->string, $string);
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * @param $search
      * @param $replace
-     * @return $this
+     *
+     * @return static
+     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
      */
-    public function replace( $search, $replace )
+    public function replace($search, $replace)
     {
-        if( is_string( $replace ) and ( is_string( $search ) or is_array( $search ) or $search instanceof Container ) )
+        if ($this->isStringable($search) || $this->isArrayable($search) && $this->isStringable($replace))
         {
-            if( $search instanceof Container )
-            {
-                $search = $search->all();
-            }
-
-            $this->string = str_replace( $search, $replace, $this->string );
-            $this->measure();
+            return new static(
+                str_replace($this->getSearchable($search), $this->getStringable($replace), $this->string)
+            );
         }
 
-        return $this;
+        throw new UnexpectedArgumentValueException('Unexpected arguments');
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
      * @param $needles
+     *
      * @return bool
      */
-    public function startsWith( $needles )
+    public function startsWith($needles)
     {
-        foreach( (array)$needles as $needle )
-        {
-            if( $needle != '' and strpos( $this->string, $needle ) === 0 )
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return Str::startsWith($this->string, $needles);
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
      * @param $needles
+     *
      * @return bool
      */
-    public function endsWith( $needles )
+    public function endsWith($needles)
     {
-        foreach( (array)$needles as $needle )
-        {
-            if( (string)$needle === substr( $this->string, -strlen( $needle ) ) )
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return Str::endsWith($this->string, $needles);
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * @param $delimiter
-     * @return array|Container
+     *
+     * @return \im\Primitive\Container\Container
      */
-    public function explode( $delimiter )
+    public function explode($delimiter)
     {
-        if( class_exists( 'Container' ) )
-        {
-            return new Container( explode( $delimiter, $this->string ) );
-        }
-
-        return explode( $delimiter, $this->string );
+        return a(explode($delimiter, $this->string));
     }
 
-    // --------------------------------------------------------------------------
 
     /**
-     * @param $delimiter
+     * @param       $delimiter
      * @param array $array
-     * @throws StringException
+     *
      * @return $this
+     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
      */
-    public function implode( $delimiter, $array )
+    public function implode($delimiter, $array)
     {
-        if( $array instanceof Container )
+        if ($this->isArrayable($array))
         {
-            $array = $array->all();
-        }
-        elseif( !is_array( $array ) )
-        {
-            throw new StringException( 'Unavailable $array is given' );
+            $this->string = implode($delimiter, $this->getArrayable($array));
+
+            return $this;
         }
 
-        $this->string = implode( $delimiter, $array );
-        $this->measure();
-
-        return $this;
+        throw new UnexpectedArgumentValueException('Argument 2 should be array, Container or instance of Arrayable');
     }
 
-    // --------------------------------------------------------------------------
 
-    /**
-     * @param null $what
-     * @return $this
-     */
-    public function trim( $what = null )
+
+
+    public function trim($what = null)
     {
-        if( $what === 'front' )
+        if ($what === 'front')
         {
-            $this->string = ltrim( $this->string );
+            return new static(ltrim($this->string));
         }
-        elseif( $what === 'back' )
+        elseif ($what === 'back')
         {
-            $this->string = rtrim( $this->string );
+            return new static(rtrim($this->string));
         }
-        elseif( $what === 'all' )
+        elseif ($what === 'all')
         {
-            $this->replace(' ', '');
-        }
-        else
-        {
-            $this->string = trim( $this->string );
+            return $this->replace(' ', '');
         }
 
-        $this->measure();
-
-        return $this;
+        return new static(trim($this->string));
     }
 
-    // --------------------------------------------------------------------------
 
-    /**
-     * @param int $quantity
-     * @return $this
-     */
-    public function repeat( $quantity = 2 )
+
+
+    public function repeat($quantity = 2)
     {
-        $this->string = str_repeat( $this->string, (int)$quantity );
-        $this->measure();
-
-        return $this;
+        return new static(str_repeat($this->string, (int) $quantity));
     }
 
-    // --------------------------------------------------------------------------
 
-    /**
-     * @return $this
-     */
+
     public function shuffle()
     {
-        $this->string = str_shuffle( $this->string );
-
-        return $this;
+        return new static(str_shuffle($this->string));
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * @param int $length
-     * @return array|Container
+     *
+     * @return \im\Primitive\Container\Container
      */
-    public function split( $length = 1 )
+    public function split($length = 1)
     {
-        if( class_exists( 'Container' ) )
-        {
-            return new Container( str_split( $this->string, $length ) );
-        }
-
-        return str_split( $this->string, $length );
+        return a(str_split($this->string, $length));
     }
 
-    // --------------------------------------------------------------------------
 
-    /**
-     * @return Container|mixed
-     */
     public function wordSplit()
     {
-        if( class_exists( 'Container' ) )
-        {
-            return new Container( str_word_count( $this->string, 2 ) );
-        }
-
-        return str_word_count( $this->string, 2 );
+        return a(str_word_count($this->string, 2));
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
-     * @return $this
+     * @return static
      */
     public function strip()
     {
-        $this->string = strip_tags( $this->string );
-        $this->measure();
-
-        return $this;
+        return new static(strip_tags($this->string));
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
-     * @return $this
+     * @return static
      */
     public function base64()
     {
-        $this->string = base64_encode( $this->string );
-        $this->measure();
-
-        return $this;
+        return new static(base64_encode($this->string));
     }
 
-    // ------------------------------------------------------------------------------
 
     /**
+     * @param string $base
+     *
      * @return $this
      */
-    public function unbase64()
+    public function fromBase64($base)
     {
-        $this->string = base64_decode( $this->string );
-        $this->measure();
+        $this->string = base64_decode($base);
 
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
-     * @param int $flags
+     * @param int    $flags
      * @param string $encoding
-     * @return $this
+     *
+     * @return static
      */
-    public function toEntities( $flags = ENT_QUOTES, $encoding = 'UTF-8' )
+    public function toEntities($flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        $this->string = htmlentities( $this->string, $flags, $encoding );
-        $this->measure();
-
-        return $this;
+        return new static(htmlentities($this->string, $flags, $encoding));
     }
 
-    // ------------------------------------------------------------------------------
 
     /**
-     * @param int $flags
+     * @param string $entities
+     * @param int    $flags
      * @param string $encoding
+     *
      * @return $this
      */
-    public function fromEntities( $flags = ENT_QUOTES, $encoding = 'UTF-8' )
+    public function fromEntities($entities, $flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        $this->string = html_entity_decode( $this->string, $flags, $encoding );
-        $this->measure();
+        $this->string = html_entity_decode($entities, $flags, $encoding);
 
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
 
-    /**
-     * @param bool $return
-     * @return string
-     */
-    public function md5( $return = false )
+    public function md5()
     {
-        if( $return === false )
-        {
-            return md5( $this->string );
-        }
-
-        $this->string = md5( $this->string );
-        $this->measure();
-
-        return $this;
-
+        return new static(md5($this->string));
     }
 
-    // --------------------------------------------------------------------------
 
     /**
      * Echo string
+     *
      * @param string $before
      * @param string $after
+     *
      * @return $this
      */
-    public function say( $before = '', $after = '' )
+    public function say($before = '', $after = '')
     {
-        if( !is_string( $before ) )
+        if ( ! $this->isStringable($before))
         {
             $before = '';
         }
 
-        if( !is_string( $after ) )
+        if ( ! $this->isStringable($after))
         {
             $after = '';
         }
 
-        echo $before, $this->string, $after;
+        echo $this->getStringable($before), $this->string, $this->isStringable($after);
 
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
+    public function dump($die = false)
+    {
+        (new Dumper())->dump($this->string);
+
+        if ($die) die;
+    }
 
     /**
-     * @param $offset
-     * @param $length
+     * @param        $offset
+     * @param        $length
      * @param string $encoding
-     * @return $this
+     *
+     * @return static
      */
-    public function cut( $offset, $length, $encoding = 'UTF-8' )
+    public function cut($offset, $length, $encoding = 'UTF-8')
     {
-        $this->string = mb_substr( $this->string, $offset, $length, $encoding );
-        $this->measure();
-
-        return $this;
+        return new static(mb_substr($this->string, $offset, $length, $encoding));
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
-     * @param int $limit
+     * @param int    $limit
      * @param string $end
-     * @return $this
+     *
+     * @return static
      */
-    public function limit( $limit = 100, $end = '...' )
+    public function limit($limit = 100, $end = '...')
     {
-        if( $this->length <= $limit )
-        {
-            return $this;
-        }
-
-        $this->cut( 0, $limit, 'UTF-8' )->trim( 'back' )->append( $end );
-
-        return $this;
+        return new static(Str::limit($this->string, $limit, $end));
     }
 
-    // --------------------------------------------------------------------------
 
-    /**
-     * @return array
-     */
     public function toVars()
     {
-        $vars = array();
-        parse_str( $this->string, $vars );
+        $vars = [];
 
-        return $vars;
+        parse_str($this->string, $vars);
+
+        return a($vars);
     }
-
-    // ------------------------------------------------------------------------------
 
     /**
      * @return $this
      */
     public function clean()
     {
-        $this->strip()->toEntities()->trim();
-
-        return $this;
+        return $this->strip()->toEntities()->trim();
     }
 
-    // ------------------------------------------------------------------------------
+    public function reset()
+    {
+        $this->string = '';
+    }
 
     /**
-     * @param int $decimals
+     * @param int    $decimals
      * @param string $decimal_delimiter
      * @param string $thousands_delimiter
+     *
      * @return $this
+     * @throws \im\Primitive\String\Exceptions\StringException
      */
-    public function float( $decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ' )
+    public function float($decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ')
     {
-        if( is_numeric( $this->string ) )
+        if (is_numeric($this->string))
         {
-            $this->string = number_format( (float)$this->string, $decimals, $decimal_delimiter, $thousands_delimiter );
-            $this->measure();
+            return new static(
+                number_format((float) $this->string, $decimals, $decimal_delimiter, $thousands_delimiter)
+            );
         }
 
-        return $this;
+        throw new StringException('String is not numeric');
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
-     * @return $this
+     * @return static
      */
     public function compress()
     {
-        $this->string = gzcompress( $this->string );
-        $this->measure();
-
-        return $this;
+        return new static(gzcompress($this->string));
     }
 
-    // ------------------------------------------------------------------------------
 
     /**
+     * @param $string
+     *
      * @return $this
      */
-    public function uncompress()
+    public function uncompress($string)
     {
-        $this->string = gzuncompress( $this->string );
-        $this->measure();
+        $this->string = gzuncompress($this->getStringable($string));
 
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return $this
      */
     public function encrypt()
     {
-        $this->compress()->base64();
-
-        return $this;
+        return $this->compress()->base64();
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return $this
      */
-    public function decrypt()
+    public function decrypt($string)
     {
-        $this->unbase64()->uncompress();
+        $this->string = $this->fromBase64($string)->uncompress();
 
         return $this;
     }
 
-    // --------------------------------------------------------------------------
+
 
     /**
      * @return $this
@@ -663,7 +522,7 @@ class String implements Countable
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return $this
@@ -676,71 +535,71 @@ class String implements Countable
         return $this;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @param null $string
+     *
      * @return int|String
      */
-    private function measure( $string = null )
+    private function measure($string = null)
     {
-        if( $string === null )
+        if ($string === null)
         {
-            $this->length = mb_strlen( $this->string );
+            $this->length = mb_strlen($this->string);
         }
 
-        return ( $string === null ) ? $this : mb_strlen( $string );
+        return ($string === null) ? $this : mb_strlen($string);
     }
 
-    // ------------------------------------------------------------------------------
+
 
     public function all()
     {
         return $this->string;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return bool
      */
     public function isEmpty()
     {
-        return !(bool)$this->length;
+        return ! (bool) $this->length;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @return bool
      */
     public function isNotEmpty()
     {
-        return (bool)$this->length;
+        return (bool) $this->length;
     }
 
-    // ------------------------------------------------------------------------------
+
 
     /**
      * @param $string
+     *
      * @return bool
      */
-    public function isJson( $string = '' )
+    public function isJson($string = '')
     {
-        if( empty($string) )
+        if (empty($string))
         {
             $string = $this->string;
         }
 
-        if( is_string($string) )
+        if (is_string($string))
         {
-            return is_array( json_decode($string, true) );
+            return is_array(json_decode($string, true));
         }
 
         return false;
     }
-
-    // ------------------------------------------------------------------------------
 
     /**
      * @return string
@@ -748,6 +607,108 @@ class String implements Countable
     public function __toString()
     {
         return $this->string;
+    }
+
+    protected function isStringable($value)
+    {
+        return is_string($value) || $value instanceof String;
+    }
+
+    protected function getStringable($string)
+    {
+        if ($string instanceof String)
+        {
+            return $string->all();
+        }
+
+        return $string;
+    }
+
+    protected function isArrayable($value)
+    {
+        return is_array($value) || $value instanceof Container || $value instanceof ArrayableInterface;
+    }
+
+    protected function getArrayable($value)
+    {
+        if ($value instanceof Container)
+        {
+            $value = $value->all();
+        }
+        elseif ($value instanceof ArrayableInterface)
+        {
+            $value = $value->toArray();
+        }
+
+        return $value;
+    }
+
+    protected function getSearchable($value)
+    {
+        if ($this->isStringable($value))
+        {
+            return $this->getStringable($value);
+        }
+
+        return $this->getArrayable($value);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ArrayAccess
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
+    public function offsetSet($offset, $value)
+    {
+        if (is_null($offset))
+        {
+            $this->string = $value;
+        }
+        // TODO implement assign by offset
+//        $this->set($offset, $value);
+    }
+
+
+    /**
+     * @param mixed $offset
+     *
+     * @return bool
+     */
+    public function offsetExists($offset)
+    {
+        return $this->has($offset);
+    }
+
+
+    /**
+     * @param mixed $offset
+     */
+    public function offsetUnset($offset)
+    {
+        //TODO implement unset by offset
+//        $this->forget($offset);
+    }
+
+
+    /**
+     * @param mixed $offset
+     *
+     * @throws OffsetNotExistsException
+     * @return null
+     */
+    public function offsetGet($offset)
+    {
+        if ($this->has($offset))
+        {
+            return $this->string[$offset];
+        }
+
+        throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
     }
 
     /*

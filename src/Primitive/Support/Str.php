@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Support;
 
+use Stringy\StaticStringy;
 use im\Primitive\Support\Traits\MacroableTrait;
 
 class Str {
@@ -26,6 +27,17 @@ class Str {
 	 * @var array
 	 */
 	protected static $studlyCache = [];
+
+	/**
+	 * Transliterate a UTF-8 value to ASCII.
+	 *
+	 * @param  string  $value
+	 * @return string
+	 */
+	public static function ascii($value)
+	{
+		return StaticStringy::toAscii($value);
+	}
 
 	/**
 	 * Convert a value to camel case.
@@ -251,7 +263,6 @@ class Str {
 	 */
 	public static function slug($title, $separator = '-')
 	{
-		// TODO ascii
 		$title = static::ascii($title);
 
 		// Convert all dashes/underscores into separator

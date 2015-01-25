@@ -19,12 +19,7 @@ class String implements Countable, ArrayAccess {
      */
     public function __construct($string = '')
     {
-        if ( ! is_string($string))
-        {
-            $this->string = '';
-        }
-
-        $this->string = $string;
+        $this->initialize($string);
     }
 
     public function set($string)
@@ -39,6 +34,11 @@ class String implements Countable, ArrayAccess {
         return $this->string;
     }
 
+    public function length()
+    {
+        return $this->measure();
+    }
+
     /**
      * @param        $string
      * @param string $delimiter
@@ -47,10 +47,12 @@ class String implements Countable, ArrayAccess {
      */
     public function append($string, $delimiter = ' ')
     {
-        $string = $this->getStringable($string);
-
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
+            $string = $this->getStringable($string);
+
+            $delimiter = $this->getStringable($delimiter);
+
             $this->string .= "{$delimiter}{$string}";
         }
 
@@ -67,10 +69,12 @@ class String implements Countable, ArrayAccess {
      */
     public function prepend($string, $delimiter = ' ')
     {
-        $string = $this->getStringable($string);
-
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
+            $string = $this->getStringable($string);
+
+            $delimiter = $this->getStringable($delimiter);
+
             $this->string = "{$string}{$delimiter}{$this->string}";
         }
 
@@ -213,6 +217,40 @@ class String implements Countable, ArrayAccess {
         return Str::endsWith($this->string, $needles);
     }
 
+    public function is($pattern)
+    {
+        return Str::is($pattern, $this->string);
+    }
+
+    public function finish($cap)
+    {
+        return new static(Str::finish($this->string, $cap));
+    }
+
+    public function words($limit, $end = '...')
+    {
+        return new static(Str::words($this->string, $limit, $end));
+    }
+
+    public function parseCallback($callback, $default = '')
+    {
+        return a(Str::parseCallback($callback, $default));
+    }
+
+    public function random($length = 16)
+    {
+        return new static(Str::random($length));
+    }
+
+    public function quickRandom($length = 16)
+    {
+        return new static(Str::quickRandom($length));
+    }
+
+    public function slug($delimiter = '-')
+    {
+        return new static(Str::slug($this->string, $delimiter));
+    }
 
     /**
      * @param $delimiter
@@ -302,7 +340,7 @@ class String implements Countable, ArrayAccess {
     /**
      * @return static
      */
-    public function strip()
+    public function stripTags()
     {
         return new static(strip_tags($this->string));
     }
@@ -325,9 +363,7 @@ class String implements Countable, ArrayAccess {
      */
     public function fromBase64($base)
     {
-        $this->string = base64_decode($base);
-
-        return $this;
+        return $this->initialize(base64_decode($base));
     }
 
 
@@ -472,18 +508,18 @@ class String implements Countable, ArrayAccess {
      */
     public function compress()
     {
-        return new static(gzcompress($this->string));
+        $this->string = gzcompress($this->string);
+
+        return $this;
     }
 
 
     /**
-     * @param $string
-     *
      * @return $this
      */
-    public function uncompress($string)
+    public function uncompress()
     {
-        $this->string = gzuncompress($this->getStringable($string));
+        $this->string = gzuncompress($this->string);
 
         return $this;
     }
@@ -499,87 +535,46 @@ class String implements Countable, ArrayAccess {
     }
 
 
-
     /**
-     * @return $this
-     */
-    public function decrypt($string)
-    {
-        $this->string = $this->fromBase64($string)->uncompress();
-
-        return $this;
-    }
-
-
-
-    /**
-     * @return $this
-     */
-    public function save()
-    {
-        $this->clone = $this->string;
-
-        return $this;
-    }
-
-
-
-    /**
-     * @return $this
-     */
-    public function revert()
-    {
-        $this->string = $this->clone;
-        $this->measure();
-
-        return $this;
-    }
-
-
-
-    /**
-     * @param null $string
+     * @param string $encrypted
      *
-     * @return int|String
+     * @return $this
      */
-    private function measure($string = null)
+    public function fromEncrypted($encrypted)
     {
-        if ($string === null)
-        {
-            $this->length = mb_strlen($this->string);
-        }
+        $this->string = $this->fromBase64($this->getStringable($encrypted))->uncompress();
 
-        return ($string === null) ? $this : mb_strlen($string);
+        return $this;
     }
 
-
+    /**
+     * @return int
+     */
+    protected function measure()
+    {
+        return Str::length($this->string);
+    }
 
     public function all()
     {
         return $this->string;
     }
 
-
-
     /**
      * @return bool
      */
     public function isEmpty()
     {
-        return ! (bool) $this->length;
+        return ! (bool) $this->length();
     }
-
-
 
     /**
      * @return bool
      */
     public function isNotEmpty()
     {
-        return (bool) $this->length;
+        return (bool) $this->length();
     }
-
-
 
     /**
      * @param $string
@@ -593,7 +588,7 @@ class String implements Countable, ArrayAccess {
             $string = $this->string;
         }
 
-        if (is_string($string))
+        if ($this->isStringable($string))
         {
             return is_array(json_decode($string, true));
         }
@@ -607,6 +602,23 @@ class String implements Countable, ArrayAccess {
     public function __toString()
     {
         return $this->string;
+    }
+
+    /**
+     * @param $string
+     *
+     * @return $this
+     */
+    protected function initialize($string)
+    {
+        if ( ! is_string($string))
+        {
+            $this->string = '';
+        }
+
+        $this->string = $string;
+
+        return $this;
     }
 
     protected function isStringable($value)

@@ -31,6 +31,19 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public function __get($value)
+    {
+        if (method_exists($this, $value))
+        {
+            return $this->{$value}();
+        }
+    }
+
+    /**
      * @param $string
      *
      * @return $this
@@ -48,6 +61,14 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     public function get()
     {
         return (string) $this->string;
+    }
+
+    /**
+     * @return string
+     */
+    public function value()
+    {
+        return $this->get();
     }
 
     /**

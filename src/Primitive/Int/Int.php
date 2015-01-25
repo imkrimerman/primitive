@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Int;
 
 use im\Primitive\Bool\Bool;
+use im\Primitive\Support\Str;
 use UnexpectedValueException;
 
 
@@ -17,7 +18,7 @@ class Int {
      */
     function __construct($value, $default = 0)
     {
-        $this->value = $this->getInteger($value, $default);
+        $this->value = $this->getIntegerable($value, $default);
     }
 
     /**
@@ -27,7 +28,7 @@ class Int {
      */
     public function plus($plus)
     {
-        return new static($this->value + $this->getInteger($plus));
+        return new static($this->value + $this->getIntegerable($plus));
     }
 
     /**
@@ -37,7 +38,7 @@ class Int {
      */
     public function minus($minus)
     {
-        return new static($this->value - $this->getInteger($minus));
+        return new static($this->value - $this->getIntegerable($minus));
     }
 
     /**
@@ -47,7 +48,7 @@ class Int {
      */
     public function multiply($multiply)
     {
-        return new static($this->value * $this->getInteger($multiply));
+        return new static($this->value * $this->getIntegerable($multiply));
     }
 
     /**
@@ -62,7 +63,7 @@ class Int {
             throw new UnexpectedValueException('Division by zero is unacceptable');
         }
 
-        return new static($this->value / $this->getInteger($divide));
+        return new static($this->value / $this->getIntegerable($divide));
     }
 
     /**
@@ -70,19 +71,27 @@ class Int {
      */
     public function value()
     {
-        return $this->value;
+        return $this->get();
     }
 
     /**
      * @param $value
      *
-     * @return mixed
+     * @return $this
      */
     public function set($value)
     {
-        $this->value = $this->getInteger($value);
+        $this->value = $this->getIntegerable($value);
 
-        return $value;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function get()
+    {
+        return (int) $this->value;
     }
 
     /**
@@ -100,12 +109,31 @@ class Int {
      */
     public function length()
     {
-        return strlen((string) $this->value);
+        return Str::length((string) $this->value);
     }
 
+    /**
+     * @return \im\Primitive\Bool\Bool
+     */
     public function toBool()
     {
-        return new Bool($this->value);
+        return bool($this->value);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTrue()
+    {
+        return $this->toBool()->isTrue();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFalse()
+    {
+        return $this->toBool()->isFalse();
     }
 
     /**
@@ -117,7 +145,7 @@ class Int {
     {
         if (method_exists($this, $value))
         {
-            return $value();
+            return $this->{$value}();
         }
     }
 
@@ -143,8 +171,13 @@ class Int {
      *
      * @return int
      */
-    protected function getInteger($value, $default = 0)
+    protected function getIntegerable($value, $default = 0)
     {
-        return is_numeric($value) ? (int) $value : $default;
+        if ($value instanceof Bool)
+        {
+            $value = $value->toInt();
+        }
+
+        return (int) (is_numeric($value)) ? $value : $default;
     }
 }

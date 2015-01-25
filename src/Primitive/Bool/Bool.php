@@ -1,6 +1,8 @@
 <?php namespace im\Primitive\Bool;
 
 
+use im\Primitive\Int\Int;
+
 class Bool {
 
     /**
@@ -25,7 +27,7 @@ class Bool {
     {
         if (method_exists($this, $value))
         {
-            return $value();
+            return $this->{$value}();
         }
     }
 
@@ -34,7 +36,7 @@ class Bool {
      */
     public function value()
     {
-        return $this->value;
+        return $this->get();
     }
 
     /**
@@ -50,16 +52,35 @@ class Bool {
     }
 
     /**
+     * @return bool
+     */
+    public function get()
+    {
+        return (bool) $this->value;
+    }
+
+    /**
      * @return int
      */
     public function toInt()
     {
-        return int((int) $this->value);
+        return int($this->value);
     }
 
+    /**
+     * @return bool
+     */
     public function isTrue()
     {
         return $this->value;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFalse()
+    {
+        return ! $this->isTrue();
     }
 
     /**
@@ -103,6 +124,10 @@ class Bool {
         elseif (is_numeric($value))
         {
             return (bool) ((int) $value);
+        }
+        elseif ($value instanceof Int)
+        {
+            return $value->toBool();
         }
 
         return $default;

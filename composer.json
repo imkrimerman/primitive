@@ -1,8 +1,8 @@
 {
     "name": "im/primitive",
-    "description": "Object-oriented array and string",
+    "description": "Object-oriented PHP primitives",
     "license": "MIT",
-    "keywords": ["php", "array", "string", "object", "object-oriented", "primitive"],
+    "keywords": ["php", "array", "string", "object", "int", "integer", "bool", "strict typing", "object-oriented", "primitive", "laravel"],
     "authors": [
         {
             "name": "Igor Krimerman",
@@ -14,6 +14,7 @@
         "php": ">=5.5.9",
         "ext-mbstring": "*",
         "danielstjules/stringy": "~1.5",
+        "firebase/php-jwt": "1.0.0",
         "symfony/var-dumper": "3.0.*@dev"
     },
     "require-dev": {

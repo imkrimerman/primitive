@@ -1,5 +1,6 @@
 <?php namespace spec\im\Primitive\Container;
 
+use JWT;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -595,15 +596,19 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_encrypt_items_and_should_be_exact_like_encrypted_initializer()
     {
-        $encrypted = $this->encrypt();
+        $key = 'cypher';
+        $expires = time() + 3600;
+
+        $encrypted = $this->encrypt($key, $expires);
 
         $encrypted->shouldBeString();
 
-        $encrypted->shouldBe(
-            base64_encode(
-                gzcompress(json_encode($this->initializer))
-            )
-        );
+        $payload = [
+            'exp' => $expires,
+            'container' => json_encode($this->initializer, 0)
+        ];
+
+        $encrypted->shouldBeEqualTo(JWT::encode($payload, $key));
     }
 
     function it_should_reduce_items_to_one_value()
@@ -622,9 +627,12 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_decrypt_items_and_should_be_equal_to_initializer()
     {
-        $encrypted = $this->encrypt();
+        $key = 'cypher';
+        $expires = time() + 3600;
 
-        $this->fromEncrypted($encrypted)->all()->shouldBeEqualTo($this->initializer);
+        $encrypted = $this->encrypt($key, $expires);
+
+        $this->fromEncrypted($encrypted, $key)->all()->shouldBeEqualTo($this->initializer);
     }
 
     function it_should_forget_item_by_key()
@@ -1171,11 +1179,14 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_construct_from_encrypted_Container()
     {
-        $encrypted = $this->encrypt();
+        $key = 'cypher';
+        $expires = time() + 3600;
+
+        $encrypted = $this->encrypt($key, $expires);
 
         $this->fromArray([]);
 
-        $this->fromEncrypted($encrypted)->all()->shouldBe($this->initializer);
+        $this->fromEncrypted($encrypted, $key)->all()->shouldBe($this->initializer);
     }
 
     function it_should_call_magic_to_string_and_return_json()

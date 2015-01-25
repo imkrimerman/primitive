@@ -19,8 +19,10 @@ use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Support\Dump\Dumper;
+use JWT;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
+use UnexpectedValueException;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -547,21 +549,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function combine($array, $what = 'keys')
     {
+        $array = $this->getArrayable($array);
+
         if (count($array) !== $this->length())
         {
             throw new BadLengthException('Container length should match array length.');
         }
 
-        if ($what == 'keys')
+        switch ($what)
         {
-            return new static(array_combine($array, $this->values()->all()));
+            case 'keys':
+                return new static(array_combine($array, $this->values()->all()));
+            case 'values':
+                return new static(array_combine($this->keys()->all(), $array));
+            default:
+                throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
         }
-        elseif ($what == 'values')
-        {
-            return new static(array_combine($this->keys()->all(), $array));
-        }
-
-        throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
     }
 
 
@@ -842,15 +845,32 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Encrypt Container items and assigns to Container
+     * Encrypt Container items to JWT Token
+     *
+     * @param string|String $key
+     * @param int $expires
      *
      * @return string
      */
-    public function encrypt()
+    public function encrypt($key, $expires)
     {
-        return base64_encode(gzcompress($this->toJson()));
+        $payload = [
+            'exp' => $expires,
+            'container' => $this->toJson()
+        ];
+
+        return JWT::encode($payload, $key);
     }
 
+    /**
+     * Returns base64 representation of Container
+     *
+     * @return string
+     */
+    public function base64()
+    {
+        return base64_encode($this->toJson());
+    }
 
     /**
      * Remove key from Container with dot notation
@@ -1442,18 +1462,21 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Construct from encrypted Container
+     * Construct from Encrypted Container
      *
      * @param $encrypted
+     * @param $key
      *
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
      */
-    public function fromEncrypted($encrypted)
+    public function fromEncrypted($encrypted, $key)
     {
-        if ($this->isEncryptedContainer($encrypted))
+        if ($this->isEncryptedContainer($encrypted, $key))
         {
-            return $this->fromJson(gzuncompress(base64_decode($encrypted)));
+            $data = JWT::decode($encrypted, $key);
+
+            return $this->fromJson($data->container);
         }
 
         throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
@@ -1461,7 +1484,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Construct Container from string
+     * Construct from string
      *
      * @param array $string
      *
@@ -1516,7 +1539,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
 
     /**
-     * Call standard PHP functions
+     * Call magic
      *
      * @param $callable
      * @param $args
@@ -1525,15 +1548,28 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function __call($callable, $args)
     {
-        if ( ! is_callable($callable))
+        $callable = string($callable);
+
+        if ($callable->startsWith('array_'))
         {
-            throw new BadMethodCallException(__CLASS__ . '->' . $callable);
+            return call_user_func_array($callable->value, array_merge([$this->items], $args));
         }
 
-        if (Str::startsWith($callable, 'array_'))
+        if ($callable->startsWith('where'))
         {
-            return call_user_func_array($callable, array_merge([$this->items], $args));
+            $key = $callable->cut(Str::length('where'), Str::length($callable))->lower();
+
+            return $this->where([(string)$key => $args[0]]);
         }
+
+        if ($callable->startsWith('combine'))
+        {
+            $what = $callable->removeLeft('combine')->lower->value;
+
+            return $this->combine($args[0], $what);
+        }
+
+        throw new BadMethodCallException(__CLASS__ . '->' . $callable);
     }
 
 
@@ -1755,16 +1791,22 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      *
      * @param $encrypted
      *
+     * @param $key
+     *
      * @return bool
      */
-    protected function isEncryptedContainer($encrypted)
+    protected function isEncryptedContainer($encrypted, $key)
     {
-        if ($this->isJson(gzuncompress(base64_decode($encrypted))))
+        try
         {
-            return true;
+            $data = JWT::decode($encrypted, $key);
+        }
+        catch(UnexpectedValueException $e)
+        {
+            return false;
         }
 
-        return false;
+        return $this->isJson($data->container);
     }
 
     /**

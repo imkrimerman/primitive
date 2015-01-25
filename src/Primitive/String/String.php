@@ -1,18 +1,26 @@
 <?php namespace im\Primitive\String;
 
-use ArrayAccess;
 use Countable;
+use Traversable;
+use ArrayAccess;
+use ArrayIterator;
+use IteratorAggregate;
+use InvalidArgumentException;
+
+use Stringy\StaticStringy;
 use im\Primitive\Support\Str;
+use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Container\Container;
 use im\Primitive\String\Exceptions\StringException;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
-use Symfony\Component\Yaml\Dumper;
 
-class String implements Countable, ArrayAccess {
+class String implements Countable, ArrayAccess, IteratorAggregate {
 
+    /**
+     * @var string
+     */
     protected $string;
-
 
     /**
      * @param string $string
@@ -22,6 +30,11 @@ class String implements Countable, ArrayAccess {
         $this->initialize($string);
     }
 
+    /**
+     * @param $string
+     *
+     * @return $this
+     */
     public function set($string)
     {
         $this->string = $this->getStringable($string);
@@ -29,18 +42,32 @@ class String implements Countable, ArrayAccess {
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function get()
     {
-        return $this->string;
+        return (string) $this->string;
     }
 
+    /**
+     * @return int
+     */
     public function length()
     {
         return $this->measure();
     }
 
     /**
-     * @param        $string
+     * @return \im\Primitive\Container\Container
+     */
+    public function chars()
+    {
+        return a(StaticStringy::chars($this->string));
+    }
+
+    /**
+     * @param string $string
      * @param string $delimiter
      *
      * @return $this
@@ -49,20 +76,14 @@ class String implements Countable, ArrayAccess {
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
-            $string = $this->getStringable($string);
-
-            $delimiter = $this->getStringable($delimiter);
-
-            $this->string .= "{$delimiter}{$string}";
+            $this->string .= $this->getStringable($delimiter) . $this->getStringable($string);
         }
 
         return $this;
     }
 
-
-
     /**
-     * @param        $string
+     * @param string $string
      * @param string $delimiter
      *
      * @return $this
@@ -71,201 +92,434 @@ class String implements Countable, ArrayAccess {
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
-            $string = $this->getStringable($string);
-
-            $delimiter = $this->getStringable($delimiter);
-
-            $this->string = "{$string}{$delimiter}{$this->string}";
+            $this->string = $this->getStringable($string) . $this->getStringable($delimiter) . $this->string;
         }
 
         return $this;
     }
 
     /**
-     * @param bool $firstLetter
-     *
-     * @return $this
+     * @return static
      */
-    public function lower($firstLetter = false)
+    public function lower()
     {
-        if ($firstLetter)
-        {
-            return new static(lcfirst($this->string));
-        }
-
         return new static(mb_strtolower($this->string));
     }
 
+    /**
+     * @return static
+     */
+    public function lowerFirst()
+    {
+        return new static(StaticStringy::lowerCaseFirst($this->string));
+    }
 
     /**
-     * @param null $what
-     *
-     * @return $this
+     * @return static
      */
-    public function upper($what = null)
+    public function upper()
     {
-        if ($what === 'first')
-        {
-            return new static(ucfirst($this->string));
-        }
-        elseif ($what === 'words')
-        {
-            return new static(ucwords($this->string));
-        }
-
         return new static(mb_strtoupper($this->string));
     }
 
-    public function title()
+    /**
+     * @return static
+     */
+    public function upperFirst()
     {
-        return new static(Str::title($this->string));
+        return new static(StaticStringy::upperCaseFirst($this->string));
     }
 
     /**
-     * @return $this
+     * @return static
+     */
+    public function upperCamel()
+    {
+        return $this->camel()->upperFirst();
+    }
+
+    /**
+     * @return static
+     */
+    public function title()
+    {
+        return new static(StaticStringy::toTitleCase($this->string));
+    }
+
+    /**
+     * @return static
      */
     public function camel()
     {
         return new static(Str::camel($this->string));
     }
 
-
     /**
-     * @return $this
+     * @return static
      */
     public function dashed()
     {
-        $string = preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $this->string);
-
-        return (new static($string))->lower();
+        return new static(Str::dashed($this->string));
     }
 
-
+    /**
+     * @return static
+     */
+    public function underscore()
+    {
+        return new static(Str::underscore($this->string));
+    }
 
     /**
      * @param string $delimiter
      *
-     * @return $this
+     * @return static
      */
     public function snake($delimiter = '_')
     {
         return new static(Str::snake($this->string, $delimiter));
     }
 
-
-
     /**
-     * @return $this
+     * @return static
      */
     public function studly()
     {
         return new static(Str::studly($this->value));
     }
 
+    /**
+     * @return static
+     */
+    public function swapCase()
+    {
+        return new static(StaticStringy::swapCase($this->string));
+    }
 
     /**
-     * @param      $string
+     * @return static
+     */
+    public function humanize()
+    {
+        return new static(StaticStringy::humanize($this->string));
+    }
+
+    /**
+     * @param null $ignore
+     *
+     * @return static
+     */
+    public function titleize($ignore = null)
+    {
+        return new static(StaticStringy::titleize($this->string, $ignore));
+    }
+
+    /**
+     * @param string $string
+     * @param bool $caseSensitive
      *
      * @return bool
      */
-    public function has($string)
+    public function has($string, $caseSensitive = true)
     {
-        return Str::contains($this->string, $string);
+        return StaticStringy::contains($this->string, $this->getStringable($string), $caseSensitive);
     }
 
+    /**
+     * @param array|Container|ArrayableInterface $strings
+     * @param bool $caseSensitive
+     *
+     * @return bool
+     */
+    public function hasAny($strings, $caseSensitive = true)
+    {
+        return StaticStringy::containsAny($this->string, $this->getArrayable($strings), $caseSensitive);
+    }
 
     /**
-     * @param $search
-     * @param $replace
+     * @param array|Container|ArrayableInterface $strings
+     * @param bool $caseSensitive
+     *
+     * @return bool
+     */
+    public function hasAll($strings, $caseSensitive = true)
+    {
+        return StaticStringy::containsAll($this->string, $this->getArrayable($strings), $caseSensitive);
+    }
+
+    /**
+     * @return static
+     */
+    public function collapseWhitespace()
+    {
+        return new static(StaticStringy::collapseWhitespace($this->string));
+    }
+
+    /**
+     * @return static
+     */
+    public function toAscii()
+    {
+        return new static(StaticStringy::toAscii($this->string));
+    }
+
+    /**
+     * @param int $tabLength
      *
      * @return static
-     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
+     */
+    public function toSpaces($tabLength = 4)
+    {
+        return new static(StaticStringy::toSpaces($this->string, $tabLength));
+    }
+
+    /**
+     * @param int $tabLength
+     *
+     * @return static
+     */
+    public function toTabs($tabLength = 1)
+    {
+        return new static(StaticStringy::toTabs($tabLength));
+    }
+
+    /**
+     * @param string $surround
+     *
+     * @return static
+     */
+    public function surround($surround)
+    {
+        return new static(StaticStringy::surround($this->string, $surround));
+    }
+
+    /**
+     * @param string $insert
+     * @param int $index
+     *
+     * @return static
+     */
+    public function insert($insert, $index)
+    {
+        return new static(StaticStringy::insert($this->string, $insert, $index));
+    }
+
+    /**
+     * @return static
+     */
+    public function reverse()
+    {
+        return new static(StaticStringy::reverse($this->string));
+    }
+
+    /**
+     * @param int $index
+     *
+     * @return static
+     */
+    public function at($index)
+    {
+        return new static(StaticStringy::at($this->string, $index));
+    }
+
+    /**
+     * @param int $length
+     *
+     * @return static
+     */
+    public function first($length)
+    {
+        return new static(StaticStringy::first($this->string, $length));
+    }
+
+    /**
+     * @param int $length
+     *
+     * @return static
+     */
+    public function last($length)
+    {
+        return new static(StaticStringy::last($this->string, $length));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return static
+     */
+    public function ensureLeft($string)
+    {
+        return new static(StaticStringy::ensureLeft($this->string, $this->getStringable($string)));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return static
+     */
+    public function ensureRight($string)
+    {
+        return new static(StaticStringy::ensureRight($this->string, $this->getStringable($string)));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return static
+     */
+    public function removeLeft($string)
+    {
+        return new static(StaticStringy::removeLeft($this->string, $this->getStringable($string)));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return static
+     */
+    public function removeRight($string)
+    {
+        return new static(StaticStringy::removeRight($this->string, $this->getStringable($string)));
+    }
+
+    /**
+     * @param string $search
+     * @param string $replace
+     *
+     * @return static
      */
     public function replace($search, $replace)
     {
-        if ($this->isStringable($search) || $this->isArrayable($search) && $this->isStringable($replace))
+        $string = $this->string;
+
+        $replace = $this->getStringable($replace);
+
+        if ($search == ' ') $search = '\s*';
+
+        foreach ((array) $this->getSearchable($search) as $find)
         {
-            return new static(
-                str_replace($this->getSearchable($search), $this->getStringable($replace), $this->string)
-            );
+            $string = StaticStringy::replace($string, $find, $replace);
         }
 
-        throw new UnexpectedArgumentValueException('Unexpected arguments');
+        return new static($string);
     }
 
-
+    /**
+     * @param string $pattern
+     * @param string $replace
+     *
+     * @return static
+     */
+    public function replaceRegex($pattern, $replace)
+    {
+        return new static(StaticStringy::regexReplace($this->string, $pattern, $this->getStringable($replace)));
+    }
 
     /**
-     * @param $needles
+     * @param array|Container|ArrayableInterface $needles
      *
      * @return bool
      */
     public function startsWith($needles)
     {
-        return Str::startsWith($this->string, $needles);
+        return Str::startsWith($this->string, $this->getArrayable($needles));
     }
 
-
-
     /**
-     * @param $needles
+     * @param array|Container|ArrayableInterface $needles
      *
      * @return bool
      */
     public function endsWith($needles)
     {
-        return Str::endsWith($this->string, $needles);
+        return Str::endsWith($this->string, $this->getArrayable($needles));
     }
 
+    /**
+     * @param string $pattern
+     *
+     * @return bool
+     */
     public function is($pattern)
     {
-        return Str::is($pattern, $this->string);
+        return Str::is($this->getStringable($pattern), $this->string);
     }
 
+    /**
+     * @param string $cap
+     *
+     * @return static
+     */
     public function finish($cap)
     {
-        return new static(Str::finish($this->string, $cap));
+        return new static(Str::finish($this->string, $this->getStringable($cap)));
     }
 
+    /**
+     * @param int    $limit
+     * @param string $end
+     *
+     * @return static
+     */
     public function words($limit, $end = '...')
     {
         return new static(Str::words($this->string, $limit, $end));
     }
 
+    /**
+     * @param string $callback
+     * @param string $default
+     *
+     * @return \im\Primitive\Container\Container
+     */
     public function parseCallback($callback, $default = '')
     {
-        return a(Str::parseCallback($callback, $default));
+        return a(Str::parseCallback($this->getStringable($callback), $default));
     }
 
+    /**
+     * @param int $length
+     *
+     * @return static
+     */
     public function random($length = 16)
     {
         return new static(Str::random($length));
     }
 
+    /**
+     * @param int $length
+     *
+     * @return static
+     */
     public function quickRandom($length = 16)
     {
         return new static(Str::quickRandom($length));
     }
 
+    /**
+     * @param string $delimiter
+     *
+     * @return static
+     */
     public function slug($delimiter = '-')
     {
-        return new static(Str::slug($this->string, $delimiter));
+        return new static(Str::slug($this->string, $this->getStringable($delimiter)));
     }
 
     /**
-     * @param $delimiter
+     * @param string $delimiter
      *
      * @return \im\Primitive\Container\Container
      */
     public function explode($delimiter)
     {
-        return a(explode($delimiter, $this->string));
+        return a(explode($this->getStringable($delimiter), $this->string));
     }
 
-
     /**
-     * @param       $delimiter
-     * @param array $array
+     * @param string $delimiter
+     * @param array  $array
      *
      * @return $this
      * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
@@ -274,7 +528,7 @@ class String implements Countable, ArrayAccess {
     {
         if ($this->isArrayable($array))
         {
-            $this->string = implode($delimiter, $this->getArrayable($array));
+            $this->string = implode($this->getStringable($delimiter), $this->getArrayable($array));
 
             return $this;
         }
@@ -282,60 +536,61 @@ class String implements Countable, ArrayAccess {
         throw new UnexpectedArgumentValueException('Argument 2 should be array, Container or instance of Arrayable');
     }
 
-
-
-
+    /**
+     * @param null|string $what
+     *
+     * @return static
+     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
+     */
     public function trim($what = null)
     {
-        if ($what === 'front')
+        switch ($what)
         {
-            return new static(ltrim($this->string));
+            case 'front':
+                return new static(ltrim($this->string));
+            case 'back':
+                return new static(rtrim($this->string));
+            case 'all':
+                return $this->replace(' ', '');
+            default:
+                return new static(trim($this->string));
         }
-        elseif ($what === 'back')
-        {
-            return new static(rtrim($this->string));
-        }
-        elseif ($what === 'all')
-        {
-            return $this->replace(' ', '');
-        }
-
-        return new static(trim($this->string));
     }
 
-
-
-
+    /**
+     * @param int $quantity
+     *
+     * @return static
+     */
     public function repeat($quantity = 2)
     {
         return new static(str_repeat($this->string, (int) $quantity));
     }
 
-
-
-    public function shuffle()
+    /**
+     * @param bool $quick
+     *
+     * @return static
+     */
+    public function shuffle($quick = true)
     {
-        return new static(str_shuffle($this->string));
+        if ($quick)
+        {
+            return new static(str_shuffle($this->string));
+        }
+
+        return new static(StaticStringy::shuffle($this->string));
     }
 
-
     /**
-     * @param int $length
+     * @param null|array|Container|ArrayableInterface $charsAsWords
      *
      * @return \im\Primitive\Container\Container
      */
-    public function split($length = 1)
+    public function wordSplit($charsAsWords = null)
     {
-        return a(str_split($this->string, $length));
+        return a(str_word_count($this->string, 2, $this->getArrayable($charsAsWords)));
     }
-
-
-    public function wordSplit()
-    {
-        return a(str_word_count($this->string, 2));
-    }
-
-
 
     /**
      * @return static
@@ -345,8 +600,6 @@ class String implements Countable, ArrayAccess {
         return new static(strip_tags($this->string));
     }
 
-
-
     /**
      * @return static
      */
@@ -355,7 +608,6 @@ class String implements Countable, ArrayAccess {
         return new static(base64_encode($this->string));
     }
 
-
     /**
      * @param string $base
      *
@@ -363,10 +615,8 @@ class String implements Countable, ArrayAccess {
      */
     public function fromBase64($base)
     {
-        return $this->initialize(base64_decode($base));
+        return $this->initialize(base64_decode($this->getStringable($base)));
     }
-
-
 
     /**
      * @param int    $flags
@@ -379,7 +629,6 @@ class String implements Countable, ArrayAccess {
         return new static(htmlentities($this->string, $flags, $encoding));
     }
 
-
     /**
      * @param string $entities
      * @param int    $flags
@@ -389,17 +638,18 @@ class String implements Countable, ArrayAccess {
      */
     public function fromEntities($entities, $flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        $this->string = html_entity_decode($entities, $flags, $encoding);
+        $this->string = html_entity_decode($this->getStringable($entities), $flags, $encoding);
 
         return $this;
     }
 
-
+    /**
+     * @return static
+     */
     public function md5()
     {
         return new static(md5($this->string));
     }
-
 
     /**
      * Echo string
@@ -426,6 +676,9 @@ class String implements Countable, ArrayAccess {
         return $this;
     }
 
+    /**
+     * @param bool $die
+     */
     public function dump($die = false)
     {
         (new Dumper())->dump($this->string);
@@ -434,8 +687,8 @@ class String implements Countable, ArrayAccess {
     }
 
     /**
-     * @param        $offset
-     * @param        $length
+     * @param int    $offset
+     * @param int    $length
      * @param string $encoding
      *
      * @return static
@@ -445,8 +698,6 @@ class String implements Countable, ArrayAccess {
         return new static(mb_substr($this->string, $offset, $length, $encoding));
     }
 
-
-
     /**
      * @param int    $limit
      * @param string $end
@@ -455,10 +706,23 @@ class String implements Countable, ArrayAccess {
      */
     public function limit($limit = 100, $end = '...')
     {
-        return new static(Str::limit($this->string, $limit, $end));
+        return new static(Str::limit($this->string, $limit, $this->getStringable($end)));
     }
 
+    /**
+     * @param int    $limit
+     * @param string $end
+     *
+     * @return static
+     */
+    public function limitSafe($limit = 100, $end = '...')
+    {
+        return new static(StaticStringy::safeTruncate($this->string, $limit).$this->getStringable($end));
+    }
 
+    /**
+     * @return \im\Primitive\Container\Container
+     */
     public function toVars()
     {
         $vars = [];
@@ -476,9 +740,14 @@ class String implements Countable, ArrayAccess {
         return $this->strip()->toEntities()->trim();
     }
 
+    /**
+     * @return $this
+     */
     public function reset()
     {
         $this->string = '';
+
+        return $this;
     }
 
     /**
@@ -486,22 +755,25 @@ class String implements Countable, ArrayAccess {
      * @param string $decimal_delimiter
      * @param string $thousands_delimiter
      *
-     * @return $this
+     * @return static
      * @throws \im\Primitive\String\Exceptions\StringException
      */
-    public function float($decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ')
+    public function number($decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ')
     {
         if (is_numeric($this->string))
         {
             return new static(
-                number_format((float) $this->string, $decimals, $decimal_delimiter, $thousands_delimiter)
+                number_format(
+                    (float) $this->string,
+                    $decimals,
+                    $this->getStringable($decimal_delimiter),
+                    $this->getStringable($thousands_delimiter)
+                )
             );
         }
 
         throw new StringException('String is not numeric');
     }
-
-
 
     /**
      * @return static
@@ -513,7 +785,6 @@ class String implements Countable, ArrayAccess {
         return $this;
     }
 
-
     /**
      * @return $this
      */
@@ -524,16 +795,13 @@ class String implements Countable, ArrayAccess {
         return $this;
     }
 
-
-
     /**
-     * @return $this
+     * @return static
      */
     public function encrypt()
     {
         return $this->compress()->base64();
     }
-
 
     /**
      * @param string $encrypted
@@ -552,12 +820,15 @@ class String implements Countable, ArrayAccess {
      */
     protected function measure()
     {
-        return Str::length($this->string);
+        return mb_strlen($this->string);
     }
 
+    /**
+     * @return string
+     */
     public function all()
     {
-        return $this->string;
+        return $this->get();
     }
 
     /**
@@ -577,23 +848,67 @@ class String implements Countable, ArrayAccess {
     }
 
     /**
-     * @param $string
-     *
      * @return bool
      */
-    public function isJson($string = '')
+    public function isAlpha()
     {
-        if (empty($string))
-        {
-            $string = $this->string;
-        }
+        return StaticStringy::isAlpha($this->string);
+    }
 
-        if ($this->isStringable($string))
-        {
-            return is_array(json_decode($string, true));
-        }
+    /**
+     * @return bool
+     */
+    public function isAlphanumeric()
+    {
+        return StaticStringy::isAlphanumeric($this->string);
+    }
 
-        return false;
+    /**
+     * @return bool
+     */
+    public function isWhitespaces()
+    {
+        return StaticStringy::isBlank($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHex()
+    {
+        return StaticStringy::isHexadecimal($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSerialized()
+    {
+        return StaticStringy::isSerialized($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isJson()
+    {
+        return is_array(json_decode($this->string, true));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLower()
+    {
+        return StaticStringy::isLowerCase($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUpper()
+    {
+        return StaticStringy::isUpperCase($this->string);
     }
 
     /**
@@ -601,7 +916,7 @@ class String implements Countable, ArrayAccess {
      */
     public function __toString()
     {
-        return $this->string;
+        return $this->get();
     }
 
     /**
@@ -611,36 +926,67 @@ class String implements Countable, ArrayAccess {
      */
     protected function initialize($string)
     {
-        if ( ! is_string($string))
+        if ( ! $this->isStringable($string))
         {
-            $this->string = '';
+            throw new InvalidArgumentException('Argument 1 should be string or object implementing __toString');
         }
 
-        $this->string = $string;
+        $this->string = $this->getStringable($string);
 
         return $this;
     }
 
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
     protected function isStringable($value)
     {
-        return is_string($value) || $value instanceof String;
+        return is_string($value) ||
+               $value instanceof String ||
+               is_array($value) ||
+               (is_object($value) && method_exists($value, '__toString'));
     }
 
+    /**
+     * @param $string
+     *
+     * @return mixed
+     */
     protected function getStringable($string)
     {
         if ($string instanceof String)
         {
-            return $string->all();
+            return $string->get();
+        }
+        elseif (is_array($string))
+        {
+            return (string) a($string)->implode();
+        }
+        elseif (is_object($string) && method_exists($string, '__toString'))
+        {
+            return (string) $string;
         }
 
         return $string;
     }
 
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
     protected function isArrayable($value)
     {
         return is_array($value) || $value instanceof Container || $value instanceof ArrayableInterface;
     }
 
+    /**
+     * @param $value
+     *
+     * @return array
+     */
     protected function getArrayable($value)
     {
         if ($value instanceof Container)
@@ -655,6 +1001,11 @@ class String implements Countable, ArrayAccess {
         return $value;
     }
 
+    /**
+     * @param $value
+     *
+     * @return array|mixed
+     */
     protected function getSearchable($value)
     {
         if ($this->isStringable($value))
@@ -679,12 +1030,14 @@ class String implements Countable, ArrayAccess {
     {
         if (is_null($offset))
         {
-            $this->string = $value;
+            $this->append($value, '');
         }
-        // TODO implement assign by offset
-//        $this->set($offset, $value);
-    }
 
+        if ($this->offsetExists($offset))
+        {
+            $this->string = (string) $this->chars()->set($offset, $value)->implode();
+        }
+    }
 
     /**
      * @param mixed $offset
@@ -693,19 +1046,26 @@ class String implements Countable, ArrayAccess {
      */
     public function offsetExists($offset)
     {
-        return $this->has($offset);
-    }
+        $length = $this->length();
+        $offset = (int) $offset;
 
+        if ($offset >= 0) {
+            return ($length > $offset);
+        }
+
+        return ($length >= abs($offset));
+    }
 
     /**
      * @param mixed $offset
      */
     public function offsetUnset($offset)
     {
-        //TODO implement unset by offset
-//        $this->forget($offset);
+        if ($this->offsetExists($offset))
+        {
+            $this->string = (string) $this->chars()->forget($offset)->implode();
+        }
     }
-
 
     /**
      * @param mixed $offset
@@ -715,12 +1075,14 @@ class String implements Countable, ArrayAccess {
      */
     public function offsetGet($offset)
     {
-        if ($this->has($offset))
-        {
-            return $this->string[$offset];
+        $offset = (int) $offset;
+        $length = $this->length();
+
+        if (($offset >= 0 && $length <= $offset) || $length < abs($offset)) {
+            throw new \OutOfBoundsException('No character exists at the index');
         }
 
-        throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
+        return mb_substr($this->str, $offset, 1, $this->encoding);
     }
 
     /*
@@ -734,6 +1096,24 @@ class String implements Countable, ArrayAccess {
      */
     public function count()
     {
-        return $this->length;
+        return $this->measure();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | IteratorAggregate
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Retrieve an external iterator
+     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
+     * @return Traversable An instance of an object implementing <b>Iterator</b> or
+     * <b>Traversable</b>
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->chars()->all());
     }
 }

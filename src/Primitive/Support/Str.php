@@ -29,6 +29,20 @@ class Str {
 	protected static $studlyCache = [];
 
 	/**
+	 * The cache of dashed-cased words.
+	 *
+	 * @var array
+	 */
+	protected static $dashedCache = [];
+
+	/**
+	 * The cache of underscore-cased words.
+	 *
+	 * @var array
+	 */
+	protected static $underscoreCache = [];
+
+	/**
 	 * Transliterate a UTF-8 value to ASCII.
 	 *
 	 * @param  string  $value
@@ -58,18 +72,44 @@ class Str {
 	/**
 	 * Determine if a given string contains a given substring.
 	 *
-	 * @param  string  $haystack
-	 * @param  string|array  $needles
+	 * @param string       $haystack
+	 * @param string|array $needles
+	 * @param bool         $caseSensitive
+	 *
 	 * @return bool
 	 */
-	public static function contains($haystack, $needles)
+	public static function contains($haystack, $needles, $caseSensitive = false)
 	{
+		$function = 'mb_stripos';
+
+		if ($caseSensitive)
+		{
+			$function = 'mb_strpos';
+		}
+
 		foreach ((array) $needles as $needle)
 		{
-			if ($needle != '' && strpos($haystack, $needle) !== false) return true;
+			if ($needle != '' && $function($haystack, $needle) !== false) return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Convert value to dashed case
+	 *
+	 * @param $value
+	 *
+	 * @return string
+	 */
+    public static function dashed($value)
+	{
+		if (isset(static::$dashedCache[$value]))
+		{
+			return static::$dashedCache[$value];
+		}
+
+		return static::$dashedCache[$value] = StaticStringy::dasherize($value);
 	}
 
 	/**
@@ -83,7 +123,7 @@ class Str {
 	{
 		foreach ((array) $needles as $needle)
 		{
-			if ((string) $needle === substr($haystack, -strlen($needle))) return true;
+			if ((string) $needle === mb_substr($haystack, -strlen($needle))) return true;
 		}
 
 		return false;
@@ -306,15 +346,24 @@ class Str {
 	/**
 	 * Determine if a given string starts with a given substring.
 	 *
-	 * @param  string  $haystack
-	 * @param  string|array  $needles
+	 * @param  string       $haystack
+	 * @param  string|array $needles
+	 * @param bool          $caseSensitive
+	 *
 	 * @return bool
 	 */
-	public static function startsWith($haystack, $needles)
+	public static function startsWith($haystack, $needles, $caseSensitive = true)
 	{
+		$function = 'mb_stripos';
+
+		if ($caseSensitive)
+		{
+			$function = 'mb_strpos';
+		}
+
 		foreach ((array) $needles as $needle)
 		{
-			if ($needle != '' && strpos($haystack, $needle) === 0) return true;
+			if ($needle != '' && $function($haystack, $needle) === 0) return true;
 		}
 
 		return false;
@@ -338,4 +387,18 @@ class Str {
 		return static::$studlyCache[$value] = str_replace(' ', '', $value);
 	}
 
+	/**
+	 * @param $value
+	 *
+	 * @return string
+	 */
+    public static function underscore($value)
+	{
+		if (isset(static::$underscoreCache[$value]))
+		{
+			return static::$underscoreCache[$value];
+		}
+
+		return static::$underscoreCache[$value] = StaticStringy::underscored($value);
+	}
 }

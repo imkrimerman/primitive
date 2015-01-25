@@ -466,7 +466,8 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * Returns joined Container items with whitespace by default
      *
      * @param string $glue
-     * @return string
+     *
+     * @return \im\Primitive\String\String
      */
     public function implode($glue = ' ')
     {
@@ -477,20 +478,20 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
             $object = $this->getArrayable($object);
         }
 
-        return implode($glue, $copy);
+        return string(implode($glue, $copy));
     }
 
     /**
      * Concatenate values of a given key as a string.
      *
-     * @param $key
+     * @param      $key
      * @param null $glue
      *
-     * @return string
+     * @return \im\Primitive\String\String
      */
     public function join($key, $glue = null)
     {
-        return implode($glue, $this->lists($key)->all());
+        return string(implode($glue, $this->lists($key)->all()));
     }
 
     /**
@@ -849,17 +850,6 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         return base64_encode(gzcompress($this->toJson()));
     }
-
-
-    /**
-     * Decrypt Container items and assigns to Container
-     *
-     * @return $this
-     */
-//    public function decrypt($items)
-//    {
-//        return $this->fromJson(gzuncompress(base64_decode($items)));
-//    }
 
 
     /**

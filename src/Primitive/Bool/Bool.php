@@ -1,6 +1,5 @@
 <?php namespace im\Primitive\Bool;
 
-use im\Primitive\Int\Int;
 
 class Bool {
 
@@ -14,7 +13,7 @@ class Bool {
      */
     public function __construct($value)
     {
-        $this->value = $this->getBool($value);
+        $this->value = $this->getBoolable($value);
     }
 
     /**
@@ -45,7 +44,7 @@ class Bool {
      */
     public function set($value)
     {
-        $this->value = $this->getBool($value);
+        $this->value = $this->getBoolable($value);
 
         return $this;
     }
@@ -55,7 +54,12 @@ class Bool {
      */
     public function toInt()
     {
-        return new Int((int) $this->value);
+        return int((int) $this->value);
+    }
+
+    public function isTrue()
+    {
+        return $this->value;
     }
 
     /**
@@ -90,7 +94,7 @@ class Bool {
      *
      * @return bool
      */
-    protected function getBool($value, $default = false)
+    protected function getBoolable($value, $default = false)
     {
         if (is_bool($value))
         {

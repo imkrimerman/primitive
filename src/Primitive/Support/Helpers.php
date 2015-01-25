@@ -1,7 +1,7 @@
 <?php
 
-use im\Primitive\Container\ContainerType;
 use im\Primitive\Support\Dump\Dumper;
+use im\Primitive\Container\ContainerType;
 
 if ( ! function_exists('a'))
 {
@@ -24,15 +24,43 @@ if ( ! function_exists('a'))
     }
 }
 
-if ( ! function_exists('s'))
+if ( ! function_exists('string'))
 {
     /**
      * @param string $string
      * @return \im\Primitive\String\String
      */
-    function s($string = '')
+    function string($string = '')
     {
         return new im\Primitive\String\String($string);
+    }
+}
+
+if ( ! function_exists('int'))
+{
+    /**
+     * @param     $value
+     * @param int $default
+     *
+     * @return \im\Primitive\String\String
+     */
+    function int($value, $default = 0)
+    {
+        return new im\Primitive\Int\Int($value, $default);
+    }
+}
+
+if ( ! function_exists('bool'))
+{
+    /**
+     * @param      $value
+     * @param bool $default
+     *
+     * @return \im\Primitive\Bool\Bool
+     */
+    function bool($value, $default = false)
+    {
+        return new im\Primitive\Bool\Bool($value, $default);
     }
 }
 

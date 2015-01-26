@@ -15,12 +15,11 @@ class Int extends Number {
     protected $value;
 
     /**
-     * @param     $value
-     * @param int $default
+     * @param $value
      */
-    function __construct($value, $default = 0)
+    function __construct($value)
     {
-        $this->value = $this->retrieveValue($value, $default);
+        $this->initialize($value);
     }
 
     /**
@@ -29,6 +28,14 @@ class Int extends Number {
     public function toFloat()
     {
         return float($this->value);
+    }
+
+    /**
+     * @param $value
+     */
+    protected function initialize($value)
+    {
+        $this->value = $this->retrieveValue($value);
     }
 
     /**
@@ -43,14 +50,15 @@ class Int extends Number {
             case is_numeric($value):
             case is_bool($value):
                 return (int) $value;
+
             case $value instanceof Int:
-                return $value->value();
+            case $value instanceof String:
+                return (int) $value->value();
+
             case $value instanceof Float:
-                return $value->toInt()->value();
             case $value instanceof Bool:
                 return $value->toInt()->value();
-            case $value instanceof String:
-                return (int) $value->all();
+
             default:
                 return $this->getDefault();
         }

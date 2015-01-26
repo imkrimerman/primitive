@@ -1,23 +1,23 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
-use im\Primitive\Support\Contracts\TypeInterface;
-use OutOfBoundsException;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
 use IteratorAggregate;
+use OutOfBoundsException;
 use InvalidArgumentException;
 
 use Stringy\StaticStringy;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Dump\Dumper;
+use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Container\Container;
 use im\Primitive\String\Exceptions\StringException;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 
-class String implements TypeInterface, Countable, ArrayAccess, IteratorAggregate {
+class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
 
     /**
      * @var string
@@ -931,15 +931,23 @@ class String implements TypeInterface, Countable, ArrayAccess, IteratorAggregate
      */
     public function __toString()
     {
-        return $this->get();
+        return $this->value();
+    }
+
+    /**
+     * @return void
+     */
+    public function __destruct()
+    {
+        unset($this->string);
     }
 
     /**
      * @return string
      */
-    public function __invoke()
+    protected function getDefault()
     {
-        return $this->get();
+        return '';
     }
 
     /**

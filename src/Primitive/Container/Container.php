@@ -1,31 +1,31 @@
 <?php namespace im\Primitive\Container;
 
-use \ArrayAccess;
-use \BadMethodCallException;
-use im\Primitive\Support\Contracts\TypeInterface;
+use im\Primitive\Support\Abstracts\Type;
 use \Iterator;
-use \JsonSerializable;
 use \Countable;
+use \ArrayAccess;
+use \JsonSerializable;
 use \IteratorAggregate;
-use \RecursiveIteratorIterator;
+use \BadMethodCallException;
 use \UnexpectedValueException;
+use \RecursiveIteratorIterator;
 
 use JWT;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
-use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
+use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Container\Exceptions\ContainerException;
+use im\Primitive\Container\Exceptions\BadLengthException;
+use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
 use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
-use im\Primitive\Container\Exceptions\BadLengthException;
-use im\Primitive\Container\Exceptions\NotIsFileException;
-use im\Primitive\Support\Dump\Dumper;
 
 
-class Container implements TypeInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
+class Container extends Type implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
     /*
     |--------------------------------------------------------------------------
@@ -1589,14 +1589,6 @@ class Container implements TypeInterface, ArrayAccess, ArrayableInterface, Jsona
     }
 
     /**
-     * @return array
-     */
-    public function __invoke()
-    {
-        return $this->all();
-    }
-
-    /**
      * Measure Container length
      *
      * @param int $default
@@ -1785,15 +1777,15 @@ class Container implements TypeInterface, ArrayAccess, ArrayableInterface, Jsona
     /**
      * Initialize items from array
      *
-     * @param array $array
+     * @param $array
      *
      * @return $this
      */
-    protected function initialize(array $array)
+    protected function initialize($array)
     {
-        $this->items = [];
+        $this->reset();
 
-        foreach ($array as $key => $value)
+        foreach ((array) $array as $key => $value)
         {
             $this->set($key, $value);
         }
@@ -1904,6 +1896,16 @@ class Container implements TypeInterface, ArrayAccess, ArrayableInterface, Jsona
         }
 
         return $items;
+    }
+
+    /**
+     * Default value
+     *
+     * @return array
+     */
+    protected function getDefault()
+    {
+        return [];
     }
 
     /*

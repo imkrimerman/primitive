@@ -15,7 +15,7 @@ class Float extends Number {
      */
     public function __construct($value)
     {
-        $this->value = $this->retrieveValue($value);
+        $this->initialize($value);
     }
 
     /**
@@ -24,6 +24,14 @@ class Float extends Number {
     public function toInt()
     {
         return int((int) $this->value);
+    }
+
+    /**
+     * @param $value
+     */
+    protected function initialize($value)
+    {
+        $this->value = $this->retrieveValue($value);
     }
 
     /**
@@ -38,14 +46,15 @@ class Float extends Number {
             case is_numeric($value):
             case is_bool($value):
                 return (float) $value;
+
             case $value instanceof Float:
-                return $value->value();
+            case $value instanceof String:
+                return (float) $value->value();
+
             case $value instanceof Int:
-                return $value->toFloat()->value();
             case $value instanceof Bool:
                 return $value->toFloat()->value();
-            case $value instanceof String:
-                return (float) $value->all();
+
             default:
                 return $this->getDefault();
         }

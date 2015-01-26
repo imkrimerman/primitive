@@ -16,17 +16,15 @@ class RevertableContainer extends Container implements RevertableInterface {
     /**
      * Initialize items from array
      *
-     * @param array $array
+     * @param $array
      *
      * @return $this
      */
-    protected function initialize(array $array)
+    protected function initialize($array)
     {
         parent::initialize($array);
 
-        $this->clone = $this->items;
-
-        return $this;
+        return $this->assignClone();
     }
 
     /**
@@ -36,9 +34,7 @@ class RevertableContainer extends Container implements RevertableInterface {
      */
     public function save()
     {
-        $this->clone = $this->items;
-
-        return $this;
+        return $this->assignClone();
     }
 
 
@@ -50,6 +46,16 @@ class RevertableContainer extends Container implements RevertableInterface {
     public function revert()
     {
         $this->items = $this->clone;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function assignClone()
+    {
+        $this->clone = $this->items;
 
         return $this;
     }

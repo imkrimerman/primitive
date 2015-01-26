@@ -3,10 +3,11 @@
 
 use im\Primitive\Int\Int;
 use im\Primitive\String\String;
+use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Contracts\TypeInterface;
 use Serializable;
 
-class Bool implements TypeInterface, Serializable {
+class Bool extends Type {
 
     /**
      * @var bool
@@ -18,7 +19,7 @@ class Bool implements TypeInterface, Serializable {
      */
     public function __construct($value)
     {
-        $this->value = $this->getBoolable($value);
+        $this->initialize($value);
     }
 
     /**
@@ -49,7 +50,7 @@ class Bool implements TypeInterface, Serializable {
      */
     public function set($value)
     {
-        $this->value = $this->getBoolable($value);
+        $this->value = $this->retrieveValue($value);
 
         return $this;
     }
@@ -121,14 +122,6 @@ class Bool implements TypeInterface, Serializable {
     }
 
     /**
-     * @return bool
-     */
-    public function __invoke()
-    {
-        return $this->value();
-    }
-
-    /**
      *
      */
     public function __destruct()
@@ -160,16 +153,23 @@ class Bool implements TypeInterface, Serializable {
      */
     public function unserialize($serialized)
     {
-        $this->__construct(unserialize($serialized));
+        $this->initialize(unserialize($serialized));
     }
 
     /**
-     * @param      $value
-     * @param bool $default
+     * @param $value
+     */
+    protected function initialize($value)
+    {
+        $this->value = $this->retrieveValue($value);
+    }
+
+    /**
+     * @param $value
      *
      * @return bool
      */
-    protected function getBoolable($value, $default = false)
+    protected function retrieveValue($value)
     {
         switch (true)
         {
@@ -178,38 +178,53 @@ class Bool implements TypeInterface, Serializable {
             case is_numeric($value):
                 return (bool) ((int) $value);
             case is_string($value):
-                return $this->fromString($value, $default);
+                return $this->fromString($value);
             case $value instanceof Bool:
                 return $value->value();
             case $value instanceof String:
-                return $this->fromString($value->all(), $default);
+                return $this->fromString($value->all());
             case $value instanceof Int:
                 return $value->toBool()->value();
             case $value instanceof Float:
                 return $value->toBool()->value();
             default:
-                return $default;
+                return $this->getDefault();
         }
     }
 
     /**
      * @param $value
-     * @param bool $default
      *
      * @return bool
      */
-    protected function fromString($value, $default = false)
+    protected function fromString($value)
     {
-        $grammar = [
+        $grammar = $this->getGrammar();
+
+        if (isset($grammar[$value])) return $grammar[$value];
+
+        return $this->getDefault();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getGrammar()
+    {
+        return [
             'true' => true, 'false' => false,
             'on' => true,   'off' => false,
             'yes' => true,  'no' => false,
             'y' => true,    'n' => false,
             '+' => true,    '-' => false
         ];
+    }
 
-        if (isset($grammar[$value])) return $grammar[$value];
-
-        return $default;
+    /**
+     * @return bool
+     */
+    protected function getDefault()
+    {
+        return false;
     }
 }

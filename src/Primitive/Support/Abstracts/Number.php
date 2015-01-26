@@ -4,13 +4,11 @@ use Serializable;
 use im\Primitive\Support\Contracts\TypeInterface;
 
 
-abstract class Number implements TypeInterface, Serializable {
+abstract class Number extends Type implements TypeInterface, Serializable {
 
     protected $value;
 
     abstract public function __construct($value);
-
-    abstract protected function retrieveValue($value);
 
     abstract protected function getDefault();
 
@@ -96,16 +94,6 @@ abstract class Number implements TypeInterface, Serializable {
     public function get()
     {
         return $this->value();
-    }
-
-    /**
-     * @param $value
-     *
-     * @return static
-     */
-    public function make($value)
-    {
-        return new static($value);
     }
 
     /**
@@ -206,13 +194,6 @@ abstract class Number implements TypeInterface, Serializable {
         unset($this->value);
     }
 
-    /**
-     * @return number
-     */
-    public function __invoke()
-    {
-        return $this->get();
-    }
 
     /**
      * @return string

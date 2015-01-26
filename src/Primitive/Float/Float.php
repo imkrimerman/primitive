@@ -1,9 +1,13 @@
 <?php namespace im\Primitive\Float;
 
-
 use im\Primitive\Support\Abstracts\Number;
+use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Contracts\FloatInterface;
 
-class Float extends Number {
+
+class Float extends Number implements FloatInterface{
+
+    use RetrievableTrait;
 
     /**
      * @var float
@@ -28,10 +32,14 @@ class Float extends Number {
 
     /**
      * @param $value
+     *
+     * @return $this
      */
     protected function initialize($value)
     {
         $this->value = $this->retrieveValue($value);
+
+        return $this;
     }
 
     /**
@@ -41,23 +49,7 @@ class Float extends Number {
      */
     protected function retrieveValue($value)
     {
-        switch (true)
-        {
-            case is_numeric($value):
-            case is_bool($value):
-                return (float) $value;
-
-            case $value instanceof Float:
-            case $value instanceof String:
-                return (float) $value->value();
-
-            case $value instanceof Int:
-            case $value instanceof Bool:
-                return $value->toFloat()->value();
-
-            default:
-                return $this->getDefault();
-        }
+        return $this->getFloatable($value, $this->getDefault());
     }
 
     /**

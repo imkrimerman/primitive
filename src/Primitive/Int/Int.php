@@ -1,13 +1,13 @@
 <?php namespace im\Primitive\Int;
 
-use UnexpectedValueException;
-
-use im\Primitive\Bool\Bool;
-use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\Number;
+use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Contracts\IntegerInterface;
 
 
-class Int extends Number {
+class Int extends Number implements IntegerInterface {
+
+    use RetrievableTrait;
 
     /**
      * @var int
@@ -32,10 +32,14 @@ class Int extends Number {
 
     /**
      * @param $value
+     *
+     * @return $this
      */
     protected function initialize($value)
     {
         $this->value = $this->retrieveValue($value);
+
+        return $this;
     }
 
     /**
@@ -45,23 +49,7 @@ class Int extends Number {
      */
     protected function retrieveValue($value)
     {
-        switch (true)
-        {
-            case is_numeric($value):
-            case is_bool($value):
-                return (int) $value;
-
-            case $value instanceof Int:
-            case $value instanceof String:
-                return (int) $value->value();
-
-            case $value instanceof Float:
-            case $value instanceof Bool:
-                return $value->toInt()->value();
-
-            default:
-                return $this->getDefault();
-        }
+        return $this->getIntegerable($value, $this->getDefault());
     }
 
     /**

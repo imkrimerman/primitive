@@ -290,7 +290,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_implode_items_even_if_its_multi_dimensional()
     {
-        $this->implode()->get()->shouldBeEqualTo('John Doe johndoe@example.com Jane Doe janedoe@example.com music');
+        $this->join()->get()->shouldBeEqualTo('JohnDoejohndoe@example.comJaneDoejanedoe@example.commusic');
     }
 
     function it_should_join_values_by_key_from_second_level()
@@ -310,7 +310,7 @@ class ContainerSpec extends ObjectBehavior
             ]
         );
 
-        $this->join('name')->get()->shouldBeEqualTo('JohnJane');
+        $this->joinByKey('name')->get()->shouldBeEqualTo('JohnJane');
     }
 
     function it_should_find_all_second_level_values_by_key_and_return_array()

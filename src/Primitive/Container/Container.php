@@ -1,6 +1,5 @@
 <?php namespace im\Primitive\Container;
 
-use im\Primitive\Support\Abstracts\Type;
 use \Iterator;
 use \Countable;
 use \ArrayAccess;
@@ -14,9 +13,13 @@ use JWT;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Dump\Dumper;
+use im\Primitive\Support\Abstracts\Type;
+use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Contracts\ContainerInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
@@ -25,7 +28,9 @@ use im\Primitive\Container\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 
 
-class Container extends Type implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
+class Container extends Type implements ContainerInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
+
+    use RetrievableTrait;
 
     /*
     |--------------------------------------------------------------------------
@@ -478,13 +483,13 @@ class Container extends Type implements ArrayAccess, ArrayableInterface, Jsonabl
      *
      * @return \im\Primitive\String\String
      */
-    public function implode($glue = ' ')
+    public function join($glue = '')
     {
-        $copy = Arr::flatten($this->items);
-
-        foreach ($copy as $key => & $object)
+        foreach ($copy = Arr::flatten($this->items) as $key => $object)
         {
-            $object = $this->retrieveValue($object);
+            $retrieved = $this->retrieveValue($object);
+
+            $object[$key] = is_array($retrieved) && empty($retrieved) ? '' : $retrieved;
         }
 
         return string(implode($glue, $copy));
@@ -498,7 +503,7 @@ class Container extends Type implements ArrayAccess, ArrayableInterface, Jsonabl
      *
      * @return \im\Primitive\String\String
      */
-    public function join($key, $glue = null)
+    public function joinByKey($key, $glue = null)
     {
         return string(implode($glue, $this->lists($key)->all()));
     }
@@ -1243,6 +1248,11 @@ class Container extends Type implements ArrayAccess, ArrayableInterface, Jsonabl
         return $this;
     }
 
+    public function sum()
+    {
+        //TODO make test for sum
+        return int(array_sum($this->filter('is_int', true)->flatten()->all()));
+    }
 
     /**
      * Finds all items by key or key value pairs
@@ -1332,6 +1342,47 @@ class Container extends Type implements ArrayAccess, ArrayableInterface, Jsonabl
         return (bool) $this->length();
     }
 
+    /**
+     * Return Int Type representation of Container
+     *
+     * @return \im\Primitive\Int\Int
+     */
+    public function toInt()
+    {
+        return int($this->sum());
+    }
+
+    /**
+     * Return Bool Type representation of Container
+     *
+     * @return \im\Primitive\Bool\Bool
+     */
+    public function toBool()
+    {
+        return $this->toInt()->toBool();
+    }
+
+    /**
+     * Return Float Type representation of Container
+     *
+     * @return \im\Primitive\Float\Float
+     */
+    public function toFloat()
+    {
+        return $this->toInt()->toFloat();
+    }
+
+    /**
+     * Return String Type representation of Container
+     *
+     * @param int $options
+     *
+     * @return \im\Primitive\String\String
+     */
+    public function toString($options = 0)
+    {
+        return string($this->toJson($options));
+    }
 
     /**
      * Return converted Container to array
@@ -1865,37 +1916,15 @@ class Container extends Type implements ArrayAccess, ArrayableInterface, Jsonabl
         return false;
     }
 
-
-    /**
-     * Check if is arrayable
-     *
-     * @param $items
-     *
-     * @return bool
-     */
-    protected function isArrayable($items)
-    {
-        return is_array($items) || $items instanceof Container || $items instanceof ArrayableInterface;
-    }
-
     /**
      * Results array of items from Container or ArrayableInterface.
      *
-     * @param $items
+     * @param $value
      * @return array
      */
-    protected function retrieveValue($items)
+    protected function retrieveValue($value)
     {
-        if ($items instanceof Container)
-        {
-            $items = $items->all();
-        }
-        elseif ($items instanceof ArrayableInterface)
-        {
-            $items = $items->toArray();
-        }
-
-        return $items;
+        return $this->getArrayable($value, $this->getDefault());
     }
 
     /**

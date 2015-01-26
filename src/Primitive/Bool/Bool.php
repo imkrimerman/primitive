@@ -1,13 +1,16 @@
 <?php namespace im\Primitive\Bool;
 
-
-use im\Primitive\Int\Int;
-use im\Primitive\String\String;
 use im\Primitive\Support\Abstracts\Type;
-use im\Primitive\Support\Contracts\TypeInterface;
-use Serializable;
+use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Contracts\BooleanInterface;
+use im\Primitive\Support\Contracts\FloatInterface;
+use im\Primitive\Support\Contracts\IntegerInterface;
+use im\Primitive\Support\Contracts\StringInterface;
 
-class Bool extends Type {
+
+class Bool extends Type implements BooleanInterface{
+
+    use RetrievableTrait;
 
     /**
      * @var bool
@@ -88,6 +91,14 @@ class Bool extends Type {
     }
 
     /**
+     * @return \im\Primitive\Container\Container
+     */
+    public function toContainer()
+    {
+        return a([$this->value]);
+    }
+
+    /**
      * @return bool
      */
     public function isTrue()
@@ -130,38 +141,15 @@ class Bool extends Type {
     }
 
     /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * String representation of object
-     * @link http://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     */
-    public function serialize()
-    {
-        return serialize($this->value);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Constructs the object
-     * @link http://php.net/manual/en/serializable.unserialize.php
-     *
-     * @param string $serialized <p>
-     *                           The string representation of the object.
-     *                           </p>
-     *
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        $this->initialize(unserialize($serialized));
-    }
-
-    /**
      * @param $value
+     *
+     * @return $this
      */
     protected function initialize($value)
     {
         $this->value = $this->retrieveValue($value);
+
+        return $this;
     }
 
     /**
@@ -171,25 +159,7 @@ class Bool extends Type {
      */
     protected function retrieveValue($value)
     {
-        switch (true)
-        {
-            case is_bool($value):
-                return $value;
-            case is_numeric($value):
-                return (bool) ((int) $value);
-            case is_string($value):
-                return $this->fromString($value);
-            case $value instanceof Bool:
-                return $value->value();
-            case $value instanceof String:
-                return $this->fromString($value->all());
-            case $value instanceof Int:
-                return $value->toBool()->value();
-            case $value instanceof Float:
-                return $value->toBool()->value();
-            default:
-                return $this->getDefault();
-        }
+        return $this->getBoolable($value, $this->getDefault());
     }
 
     /**
@@ -200,6 +170,8 @@ class Bool extends Type {
     protected function fromString($value)
     {
         $grammar = $this->getGrammar();
+
+        $value = $this->getStringable($value);
 
         if (isset($grammar[$value])) return $grammar[$value];
 

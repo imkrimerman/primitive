@@ -6,16 +6,38 @@ use im\Primitive\Support\Contracts\TypeInterface;
 
 abstract class Type implements TypeInterface, Serializable {
 
+    /**
+     * @param $value
+     *
+     * @return $this
+     */
     abstract protected function initialize($value);
 
+    /**
+     * @return mixed
+     */
     abstract public function value();
 
+    /**
+     * @param $value
+     *
+     * @return mixed
+     */
     abstract protected function retrieveValue($value);
 
+    /**
+     * @return mixed
+     */
     abstract protected function getDefault();
 
+    /**
+     * @return void
+     */
     abstract public function __destruct();
 
+    /**
+     * @return string
+     */
     abstract public function __toString();
 
     /**

@@ -1,4 +1,4 @@
-<?php namespace im\Primitive\Container;
+<?php namespace im\Primitive\Support\Iterators;
 
 use RecursiveArrayIterator;
 use im\Primitive\Support\Contracts\ArrayableInterface;

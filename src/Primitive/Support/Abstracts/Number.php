@@ -6,11 +6,15 @@ use im\Primitive\Support\Contracts\TypeInterface;
 
 abstract class Number extends Type implements TypeInterface, Serializable {
 
+    /**
+     * @var number
+     */
     protected $value;
 
+    /**
+     * @param $value
+     */
     abstract public function __construct($value);
-
-    abstract protected function getDefault();
 
     /**
      * @param $plus
@@ -184,6 +188,14 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     public function toString()
     {
         return string((string) $this->value);
+    }
+
+    /**
+     * @return \im\Primitive\Container\Container
+     */
+    public function toContainer()
+    {
+        return a([$this->value]);
     }
 
     /**

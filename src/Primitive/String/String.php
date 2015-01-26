@@ -9,15 +9,19 @@ use OutOfBoundsException;
 use InvalidArgumentException;
 
 use Stringy\StaticStringy;
+use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Abstracts\Type;
+use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\Container\Container;
 use im\Primitive\String\Exceptions\StringException;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 
-class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
+class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
+
+    use RetrievableTrait;
 
     /**
      * @var string
@@ -943,14 +947,6 @@ class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @return string
-     */
-    protected function getDefault()
-    {
-        return '';
-    }
-
-    /**
      * @param $string
      *
      * @return $this
@@ -970,81 +966,150 @@ class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
     /**
      * @param $value
      *
-     * @return bool
+     * @return string
      */
-    protected function isStringable($value)
+    protected function retrieveValue($value)
     {
-        return is_string($value) ||
-               $value instanceof String ||
-               is_array($value) ||
-               (is_object($value) && method_exists($value, '__toString'));
+        return $this->getStringable($value, $this->getDefault());
     }
 
     /**
-     * @param $string
-     *
-     * @return mixed
+     * @return string
      */
-    protected function retrieveValue($string)
+    protected function getDefault()
     {
-        if ($string instanceof String)
-        {
-            return $string->get();
-        }
-        elseif (is_array($string))
-        {
-            return (string) a($string)->implode();
-        }
-        elseif (is_object($string) && method_exists($string, '__toString'))
-        {
-            return (string) $string;
-        }
-
-        return $string;
+        return '';
     }
 
     /**
-     * @param $value
+     * Return a new instance given start, stop and step
+     * arguments for the desired slice. Start, which indicates the starting
+     * index of the slice, defaults to the first character in the string if
+     * step is positive, and the last character if negative. Stop, which
+     * indicates the exclusive boundary of the range, defaults to the length
+     * of the string if step is positive, and before the first character
+     * if negative. Step allows the user to include only every nth character
+     * in the result, with its sign determining the direction in which indices
+     * are sampled. Throws an exception if step is equal to 0.
      *
-     * @return bool
+     * @param $start
+     * @param $stop
+     * @param $step
+     *
+     * @return \im\Primitive\String\String|static
      */
-    protected function isArrayable($value)
+    protected function getSlice($start, $stop, $step)
     {
-        return is_array($value) || $value instanceof Container || $value instanceof ArrayableInterface;
+        $length = $this->length();
+
+        $step = (isset($step)) ? $step : 1;
+
+        if ($step === 0)
+        {
+            throw new InvalidArgumentException('Slice step cannot be 0');
+        }
+
+        if (isset($start))
+        {
+            $start = $this->adjustBoundary($length, $start, $step);
+        }
+        else
+        {
+            $start = ($step > 0) ? 0 : $length - 1;
+        }
+
+        if (isset($stop))
+        {
+            $stop = $this->adjustBoundary($length, $stop, $step);
+        }
+        else
+        {
+            $stop = ($step > 0) ? $length : -1;
+        }
+
+        // Return an empty string if the set of indices would be empty
+        if (($step > 0 && $start >= $stop) || ($step < 0 && $start <= $stop))
+        {
+            return new static();
+        }
+
+        // Return the substring if step is 1
+        if ($step === 1)
+        {
+            return $this->cut($start, $stop - $start);
+        }
+
+        // Otherwise iterate over the slice indices
+        $string = '';
+
+        foreach ($this->getIndices($start, $stop, $step) as $index)
+        {
+            $string .= (isset($this[$index])) ? $this[$index] : '';
+        }
+
+        return new static($string);
     }
 
     /**
-     * @param $value
+     * Adjusts the start or stop boundary based on the provided length and step.
+     * The logic here uses CPython's PySlice_GetIndices as a reference. See:
+     * https://github.com/python-git/python/blob/master/Objects/sliceobject.c
      *
-     * @return array
+     * @param $length
+     * @param $boundary
+     * @param $step
+     *
+     * @return int
      */
-    protected function getArrayable($value)
+    protected function adjustBoundary($length, $boundary, $step)
     {
-        if ($value instanceof Container)
+        if ($boundary < 0)
         {
-            $value = $value->all();
+            $boundary += $length;
+
+            if ($boundary < 0)
+            {
+                $boundary = ($step < 0) ? -1 : 0;
+            }
+
         }
-        elseif ($value instanceof ArrayableInterface)
+        else if ($boundary >= $length)
         {
-            $value = $value->toArray();
+            $boundary = ($step < 0) ? $length - 1 : $length;
         }
 
-        return $value;
+        return $boundary;
     }
 
     /**
-     * @param $value
+     * Returns an array of indices to be included in the slice.
      *
-     * @return array|mixed
+     * @param int $start Start index of the slice
+     * @param int $stop  Boundary for the slice
+     * @param int $step  Rate at which to include characters
+     *
+     * @return array An array of indices in the string
      */
-    protected function getSearchable($value)
+    protected function getIndices($start, $stop, $step)
     {
-        if ($this->isStringable($value))
+        $indices = [];
+
+        if ($step > 0)
         {
-            return $this->retrieveValue($value);
+            for ($i = $start; $i < $stop; $i += $step)
+            {
+                $indices[] = $i;
+            }
+        }
+        else
+        {
+            for ($i = $start; $i > $stop; $i += $step)
+            {
+                $indices[] = $i;
+            }
         }
 
-        return $this->getArrayable($value);
+        return $indices;
     }
 
     /*
@@ -1066,7 +1131,7 @@ class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
 
         if ($this->offsetExists($offset))
         {
-            $this->string = (string) $this->chars()->set($offset, $value)->implode();
+            $this->string = (string) $this->chars()->set($offset, $this->retrieveValue($value))->implode();
         }
     }
 
@@ -1097,22 +1162,46 @@ class String extends Type implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @param mixed $offset
+     * Implements python-like string slices. Slices the string if the offset
+     * contains at least a single colon. Slice notation follow the format
+     * "start:stop:step". If no colon is present, returns the character at the
+     * given index. Offsets may be negative to count from the last character in
+     * the string. Throws an exception if the index does not exist, more than 3
+     * slice args are given, or the step is 0.
      *
-     * @throws OffsetNotExistsException
-     * @return null
+     * @param int|string $args
+     *
+     * @return \im\Primitive\String\String
      */
-    public function offsetGet($offset)
+    public function offsetGet($args)
     {
-        $offset = (int) $offset;
-        $length = $this->length();
-
-        if (($offset >= 0 && $length <= $offset) || $length < abs($offset))
+        if ( ! $this->isStringable($args) || strpos($args, ':') === false)
         {
-            throw new OutOfBoundsException('No character exists at the index');
+            return $this->at($args);
         }
 
-        return mb_substr($this->string, $offset, 1);
+        $args = explode(':', $args);
+
+        // Too many colons, invalid slice syntax
+        if (count($args) > 3)
+        {
+            throw new InvalidArgumentException('Too many slice arguments');
+        }
+
+        // Get slice arguments
+        for ($i = 0; $i < 3; $i++)
+        {
+            if (isset($args[$i]) && $args[$i] !== '')
+            {
+                $args[$i] = (int) $args[$i];
+            }
+            else
+            {
+                $args[$i] = null;
+            }
+        }
+
+        return call_user_func_array([$this, 'getSlice'], $args);
     }
 
     /*

@@ -2,11 +2,14 @@
 
 use \ArrayAccess;
 use \BadMethodCallException;
-use Iterator;
+use \Iterator;
 use \JsonSerializable;
 use \Countable;
-use \ArrayIterator;
 use \IteratorAggregate;
+use \RecursiveIteratorIterator;
+use \UnexpectedValueException;
+
+use JWT;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Contracts\ArrayableInterface;
@@ -19,10 +22,6 @@ use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Support\Dump\Dumper;
-use JWT;
-use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
-use UnexpectedValueException;
 
 
 class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -1769,6 +1768,8 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     }
 
     /**
+     * Initialize items from array
+     *
      * @param array $array
      *
      * @return $this

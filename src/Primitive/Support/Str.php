@@ -242,7 +242,6 @@ class Str {
 	{
 		if (function_exists('openssl_random_pseudo_bytes'))
 		{
-			// TODO import func
 			$bytes = openssl_random_pseudo_bytes($length * 2);
 
 			if ($bytes === false)

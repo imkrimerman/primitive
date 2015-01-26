@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
+use OutOfBoundsException;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
@@ -206,7 +207,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function studly()
     {
-        return new static(Str::studly($this->value));
+        return new static(Str::studly($this->string));
     }
 
     /**
@@ -404,7 +405,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @param string $search
+     * @param array|Container|ArrayableInterface|string $search
      * @param string $replace
      *
      * @return static
@@ -437,7 +438,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @param array|Container|ArrayableInterface $needles
+     * @param array|Container|ArrayableInterface|string $needles
      *
      * @return bool
      */
@@ -447,7 +448,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @param array|Container|ArrayableInterface $needles
+     * @param array|Container|ArrayableInterface|string $needles
      *
      * @return bool
      */
@@ -665,14 +666,6 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
-     * @return static
-     */
-    public function md5()
-    {
-        return new static(md5($this->string));
-    }
-
-    /**
      * Echo string
      *
      * @param string $before
@@ -692,7 +685,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
             $after = '';
         }
 
-        echo $this->getStringable($before), $this->string, $this->isStringable($after);
+        echo $this->getStringable($before), $this->string, $this->getStringable($after);
 
         return $this;
     }
@@ -1070,9 +1063,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
         $length = $this->length();
         $offset = (int) $offset;
 
-        if ($offset >= 0) {
-            return ($length > $offset);
-        }
+        if ($offset >= 0) return ($length > $offset);
 
         return ($length >= abs($offset));
     }
@@ -1099,11 +1090,12 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
         $offset = (int) $offset;
         $length = $this->length();
 
-        if (($offset >= 0 && $length <= $offset) || $length < abs($offset)) {
-            throw new \OutOfBoundsException('No character exists at the index');
+        if (($offset >= 0 && $length <= $offset) || $length < abs($offset))
+        {
+            throw new OutOfBoundsException('No character exists at the index');
         }
 
-        return mb_substr($this->str, $offset, 1, $this->encoding);
+        return mb_substr($this->string, $offset, 1);
     }
 
     /*

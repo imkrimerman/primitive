@@ -14,6 +14,22 @@ class RevertableContainer extends Container implements RevertableInterface {
 
 
     /**
+     * Initialize items from array
+     *
+     * @param array $array
+     *
+     * @return $this
+     */
+    protected function initialize(array $array)
+    {
+        parent::initialize($array);
+
+        $this->clone = $this->items;
+
+        return $this;
+    }
+
+    /**
      * Saves Container state to clone, to revert in future
      *
      * @return $this

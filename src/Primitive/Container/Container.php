@@ -2,6 +2,7 @@
 
 use \ArrayAccess;
 use \BadMethodCallException;
+use im\Primitive\Support\Contracts\TypeInterface;
 use \Iterator;
 use \JsonSerializable;
 use \Countable;
@@ -24,7 +25,7 @@ use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Support\Dump\Dumper;
 
 
-class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
+class Container implements TypeInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
     /*
     |--------------------------------------------------------------------------
@@ -50,7 +51,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if (is_array($from) || $from instanceof Container)
         {
-            return $this->fromArray($this->getArrayable($from));
+            return $this->fromArray($this->retrieveValue($from));
         }
         elseif (is_string($from))
         {
@@ -137,6 +138,13 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         return $this;
     }
 
+    /**
+     * @return array
+     */
+    public function value()
+    {
+        return $this->items;
+    }
 
     /**
      * Push items in the Container,
@@ -476,7 +484,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         foreach ($copy as $key => & $object)
         {
-            $object = $this->getArrayable($object);
+            $object = $this->retrieveValue($object);
         }
 
         return string(implode($glue, $copy));
@@ -548,7 +556,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function combine($array, $what = 'keys')
     {
-        $array = $this->getArrayable($array);
+        $array = $this->retrieveValue($array);
 
         if (count($array) !== $this->length())
         {
@@ -696,11 +704,11 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         if (is_null($key))
         {
-            return new static(array_merge($this->items, $this->getArrayable($items)));
+            return new static(array_merge($this->items, $this->retrieveValue($items)));
         }
         elseif ($this->has($key))
         {
-            return $this->mergeWithKey($this->getArrayable($items), $key, $default);
+            return $this->mergeWithKey($this->retrieveValue($items), $key, $default);
         }
 
         throw new BadContainerMethodArgumentException('Bad key given');
@@ -922,7 +930,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function all()
     {
-        return $this->items;
+        return $this->value();
     }
 
 
@@ -1063,7 +1071,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($this->isArrayable($items))
         {
-            return new static(array_diff($this->items, $this->getArrayable($items)));
+            return new static(array_diff($this->items, $this->retrieveValue($items)));
         }
 
         throw new BadContainerMethodArgumentException('Argument 1 should be array, Container or implement ArrayableInterface');
@@ -1185,10 +1193,10 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         if ($assoc === true)
         {
-            return new static(array_intersect_assoc($this->items, $this->getArrayable($array)));
+            return new static(array_intersect_assoc($this->items, $this->retrieveValue($array)));
         }
 
-        return new static(array_intersect($this->items, $this->getArrayable($array)));
+        return new static(array_intersect($this->items, $this->retrieveValue($array)));
     }
 
 
@@ -1201,7 +1209,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      */
     public function intersectKey($array)
     {
-        return new static(array_intersect_key($this->items, $this->getArrayable($array)));
+        return new static(array_intersect_key($this->items, $this->retrieveValue($array)));
     }
 
 
@@ -1334,7 +1342,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
     {
         return array_map(function ($item)
         {
-            return $this->getArrayable($item);
+            return $this->retrieveValue($item);
 
         }, $this->items);
     }
@@ -1551,12 +1559,12 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         if ($callable->startsWith('array_'))
         {
-            return call_user_func_array($callable->value, array_merge([$this->items], $args));
+            return call_user_func_array($callable(), array_merge([$this->items], $args));
         }
 
         if ($callable->startsWith('where'))
         {
-            $key = $callable->cut(Str::length('where'), Str::length($callable))->lower();
+            $key = $callable->cut(Str::length('where'), $callable->length())->lower();
 
             return $this->where([(string)$key => $args[0]]);
         }
@@ -1580,6 +1588,13 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         unset($this->items);
     }
 
+    /**
+     * @return array
+     */
+    public function __invoke()
+    {
+        return $this->all();
+    }
 
     /**
      * Measure Container length
@@ -1716,7 +1731,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
 
         foreach ($items as $key => $item)
         {
-            $items[$key] = $this->filterRecursive($function, $this->getArrayable($item));
+            $items[$key] = $this->filterRecursive($function, $this->retrieveValue($item));
         }
 
         return array_filter($items, $function);
@@ -1739,7 +1754,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             if ($this->isArrayable($item))
             {
-                $items[$key] = $this->forgetRecursive($forgetKey, $this->getArrayable($item));
+                $items[$key] = $this->forgetRecursive($forgetKey, $this->retrieveValue($item));
             }
         }
 
@@ -1760,7 +1775,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
         {
             if ($this->isArrayable($item))
             {
-                $this->items[$key] = $this->uniqueRecursive($this->getArrayable($item));
+                $this->items[$key] = $this->uniqueRecursive($this->retrieveValue($item));
             }
         }
 
@@ -1877,7 +1892,7 @@ class Container implements ArrayAccess, ArrayableInterface, JsonableInterface, J
      * @param $items
      * @return array
      */
-    protected function getArrayable($items)
+    protected function retrieveValue($items)
     {
         if ($items instanceof Container)
         {

@@ -1,8 +1,9 @@
 <?php namespace im\Primitive\Float;
 
-use Serializable;
 
-class Float implements Serializable {
+use im\Primitive\Support\Abstracts\Number;
+
+class Float extends Number {
 
     /**
      * @var float
@@ -10,12 +11,11 @@ class Float implements Serializable {
     protected $value;
 
     /**
-     * @param       $value
-     * @param float $default
+     * @param $value
      */
-    public function __construct($value, $default = 0.0)
+    public function __construct($value)
     {
-        $this->value = $this->getFloatable($value, $default);
+        $this->value = $this->retrieveValue($value);
     }
 
     /**
@@ -27,55 +27,11 @@ class Float implements Serializable {
     }
 
     /**
-     * @return \im\Primitive\Bool\Bool
-     */
-    public function toBool()
-    {
-        return bool((bool) $this->value);
-    }
-
-    /**
-     * @return \im\Primitive\String\String
-     */
-    public function toString()
-    {
-        return string((string) $this->value);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * String representation of object
-     * @link http://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     */
-    public function serialize()
-    {
-        return serialize($this->value);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Constructs the object
-     * @link http://php.net/manual/en/serializable.unserialize.php
-     *
-     * @param string $serialized <p>
-     *                           The string representation of the object.
-     *                           </p>
-     *
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        $this->__construct(unserialize($serialized));
-    }
-
-    /**
-     * @param       $value
-     * @param float $default
+     * @param $value
      *
      * @return float
      */
-    protected function getFloatable($value, $default = 0.0)
+    protected function retrieveValue($value)
     {
         switch (true)
         {
@@ -91,7 +47,15 @@ class Float implements Serializable {
             case $value instanceof String:
                 return (float) $value->all();
             default:
-                return $default;
+                return $this->getDefault();
         }
+    }
+
+    /**
+     * @return float
+     */
+    protected function getDefault()
+    {
+        return 0.00;
     }
 }

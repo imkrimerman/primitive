@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
+use im\Primitive\Support\Contracts\TypeInterface;
 use OutOfBoundsException;
 use Traversable;
 use ArrayAccess;
@@ -16,7 +17,7 @@ use im\Primitive\Container\Container;
 use im\Primitive\String\Exceptions\StringException;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 
-class String implements Countable, ArrayAccess, IteratorAggregate {
+class String implements TypeInterface, Countable, ArrayAccess, IteratorAggregate {
 
     /**
      * @var string
@@ -51,7 +52,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function set($string)
     {
-        $this->string = $this->getStringable($string);
+        $this->string = $this->retrieveValue($string);
 
         return $this;
     }
@@ -98,7 +99,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
-            $this->string .= $this->getStringable($delimiter) . $this->getStringable($string);
+            $this->string .= $this->retrieveValue($delimiter) . $this->retrieveValue($string);
         }
 
         return $this;
@@ -114,7 +115,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
-            $this->string = $this->getStringable($string) . $this->getStringable($delimiter) . $this->string;
+            $this->string = $this->retrieveValue($string) . $this->retrieveValue($delimiter) . $this->string;
         }
 
         return $this;
@@ -244,7 +245,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function has($string, $caseSensitive = true)
     {
-        return StaticStringy::contains($this->string, $this->getStringable($string), $caseSensitive);
+        return StaticStringy::contains($this->string, $this->retrieveValue($string), $caseSensitive);
     }
 
     /**
@@ -371,7 +372,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function ensureLeft($string)
     {
-        return new static(StaticStringy::ensureLeft($this->string, $this->getStringable($string)));
+        return new static(StaticStringy::ensureLeft($this->string, $this->retrieveValue($string)));
     }
 
     /**
@@ -381,7 +382,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function ensureRight($string)
     {
-        return new static(StaticStringy::ensureRight($this->string, $this->getStringable($string)));
+        return new static(StaticStringy::ensureRight($this->string, $this->retrieveValue($string)));
     }
 
     /**
@@ -391,7 +392,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function removeLeft($string)
     {
-        return new static(StaticStringy::removeLeft($this->string, $this->getStringable($string)));
+        return new static(StaticStringy::removeLeft($this->string, $this->retrieveValue($string)));
     }
 
     /**
@@ -401,7 +402,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function removeRight($string)
     {
-        return new static(StaticStringy::removeRight($this->string, $this->getStringable($string)));
+        return new static(StaticStringy::removeRight($this->string, $this->retrieveValue($string)));
     }
 
     /**
@@ -414,7 +415,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     {
         $string = $this->string;
 
-        $replace = $this->getStringable($replace);
+        $replace = $this->retrieveValue($replace);
 
         if ($search == ' ') $search = '\s*';
 
@@ -434,7 +435,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function replaceRegex($pattern, $replace)
     {
-        return new static(StaticStringy::regexReplace($this->string, $pattern, $this->getStringable($replace)));
+        return new static(StaticStringy::regexReplace($this->string, $pattern, $this->retrieveValue($replace)));
     }
 
     /**
@@ -464,7 +465,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function is($pattern)
     {
-        return Str::is($this->getStringable($pattern), $this->string);
+        return Str::is($this->retrieveValue($pattern), $this->string);
     }
 
     /**
@@ -474,7 +475,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function finish($cap)
     {
-        return new static(Str::finish($this->string, $this->getStringable($cap)));
+        return new static(Str::finish($this->string, $this->retrieveValue($cap)));
     }
 
     /**
@@ -496,7 +497,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function parseCallback($callback, $default = '')
     {
-        return a(Str::parseCallback($this->getStringable($callback), $default));
+        return a(Str::parseCallback($this->retrieveValue($callback), $default));
     }
 
     /**
@@ -526,7 +527,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function slug($delimiter = '-')
     {
-        return new static(Str::slug($this->string, $this->getStringable($delimiter)));
+        return new static(Str::slug($this->string, $this->retrieveValue($delimiter)));
     }
 
     /**
@@ -536,7 +537,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function explode($delimiter)
     {
-        return a(explode($this->getStringable($delimiter), $this->string));
+        return a(explode($this->retrieveValue($delimiter), $this->string));
     }
 
     /**
@@ -550,7 +551,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     {
         if ($this->isArrayable($array))
         {
-            $this->string = implode($this->getStringable($delimiter), $this->getArrayable($array));
+            $this->string = implode($this->retrieveValue($delimiter), $this->getArrayable($array));
 
             return $this;
         }
@@ -637,7 +638,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function fromBase64($base)
     {
-        return $this->initialize(base64_decode($this->getStringable($base)));
+        return $this->initialize(base64_decode($this->retrieveValue($base)));
     }
 
     /**
@@ -660,7 +661,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function fromEntities($entities, $flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        $this->string = html_entity_decode($this->getStringable($entities), $flags, $encoding);
+        $this->string = html_entity_decode($this->retrieveValue($entities), $flags, $encoding);
 
         return $this;
     }
@@ -685,7 +686,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
             $after = '';
         }
 
-        echo $this->getStringable($before), $this->string, $this->getStringable($after);
+        echo $this->retrieveValue($before), $this->string, $this->retrieveValue($after);
 
         return $this;
     }
@@ -720,7 +721,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function limit($limit = 100, $end = '...')
     {
-        return new static(Str::limit($this->string, $limit, $this->getStringable($end)));
+        return new static(Str::limit($this->string, $limit, $this->retrieveValue($end)));
     }
 
     /**
@@ -731,7 +732,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function limitSafe($limit = 100, $end = '...')
     {
-        return new static(StaticStringy::safeTruncate($this->string, $limit).$this->getStringable($end));
+        return new static(StaticStringy::safeTruncate($this->string, $limit).$this->retrieveValue($end));
     }
 
     /**
@@ -780,8 +781,8 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
                 number_format(
                     (float) $this->string,
                     $decimals,
-                    $this->getStringable($decimal_delimiter),
-                    $this->getStringable($thousands_delimiter)
+                    $this->retrieveValue($decimal_delimiter),
+                    $this->retrieveValue($thousands_delimiter)
                 )
             );
         }
@@ -824,7 +825,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      */
     public function fromEncrypted($encrypted)
     {
-        $this->string = $this->fromBase64($this->getStringable($encrypted))->uncompress();
+        $this->string = $this->fromBase64($this->retrieveValue($encrypted))->uncompress();
 
         return $this;
     }
@@ -934,6 +935,14 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     }
 
     /**
+     * @return string
+     */
+    public function __invoke()
+    {
+        return $this->get();
+    }
+
+    /**
      * @param $string
      *
      * @return $this
@@ -945,7 +954,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
             throw new InvalidArgumentException('Argument 1 should be string or object implementing __toString');
         }
 
-        $this->string = $this->getStringable($string);
+        $this->string = $this->retrieveValue($string);
 
         return $this;
     }
@@ -968,7 +977,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
      *
      * @return mixed
      */
-    protected function getStringable($string)
+    protected function retrieveValue($string)
     {
         if ($string instanceof String)
         {
@@ -1024,7 +1033,7 @@ class String implements Countable, ArrayAccess, IteratorAggregate {
     {
         if ($this->isStringable($value))
         {
-            return $this->getStringable($value);
+            return $this->retrieveValue($value);
         }
 
         return $this->getArrayable($value);

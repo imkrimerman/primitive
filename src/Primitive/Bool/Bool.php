@@ -3,9 +3,10 @@
 
 use im\Primitive\Int\Int;
 use im\Primitive\String\String;
+use im\Primitive\Support\Contracts\TypeInterface;
 use Serializable;
 
-class Bool implements Serializable {
+class Bool implements TypeInterface, Serializable {
 
     /**
      * @var bool
@@ -38,7 +39,7 @@ class Bool implements Serializable {
      */
     public function value()
     {
-        return $this->get();
+        return (bool) $this->value;
     }
 
     /**
@@ -58,7 +59,7 @@ class Bool implements Serializable {
      */
     public function get()
     {
-        return (bool) $this->value;
+        return $this->value();
     }
 
     /**
@@ -117,6 +118,14 @@ class Bool implements Serializable {
     public function __toString()
     {
         return $this->value ? 'true' : 'false';
+    }
+
+    /**
+     * @return bool
+     */
+    public function __invoke()
+    {
+        return $this->value();
     }
 
     /**

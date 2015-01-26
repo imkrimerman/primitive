@@ -75,7 +75,7 @@ abstract class Number implements TypeInterface, Serializable {
      */
     public function value()
     {
-        return $this->get();
+        return $this->value;
     }
 
     /**
@@ -95,7 +95,7 @@ abstract class Number implements TypeInterface, Serializable {
      */
     public function get()
     {
-        return $this->value;
+        return $this->value();
     }
 
     /**

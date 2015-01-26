@@ -62,7 +62,7 @@ class String implements TypeInterface, Countable, ArrayAccess, IteratorAggregate
      */
     public function get()
     {
-        return (string) $this->string;
+        return $this->value();
     }
 
     /**
@@ -70,7 +70,7 @@ class String implements TypeInterface, Countable, ArrayAccess, IteratorAggregate
      */
     public function value()
     {
-        return $this->get();
+        return (string) $this->string;
     }
 
     /**

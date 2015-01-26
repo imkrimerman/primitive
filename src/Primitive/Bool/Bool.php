@@ -2,8 +2,10 @@
 
 
 use im\Primitive\Int\Int;
+use im\Primitive\String\String;
+use Serializable;
 
-class Bool {
+class Bool implements Serializable {
 
     /**
      * @var bool
@@ -60,11 +62,27 @@ class Bool {
     }
 
     /**
-     * @return int
+     * @return \im\Primitive\Int\Int
      */
     public function toInt()
     {
         return int($this->value);
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function toFloat()
+    {
+        return float($this->value);
+    }
+
+    /**
+     * @return \im\Primitive\String\String
+     */
+    public function toString()
+    {
+        return string($this->__toString());
     }
 
     /**
@@ -98,7 +116,7 @@ class Bool {
      */
     public function __toString()
     {
-        return (string) $this->value;
+        return $this->value ? 'true' : 'false';
     }
 
     /**
@@ -110,6 +128,33 @@ class Bool {
     }
 
     /**
+     * (PHP 5 &gt;= 5.1.0)<br/>
+     * String representation of object
+     * @link http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     */
+    public function serialize()
+    {
+        return serialize($this->value);
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.1.0)<br/>
+     * Constructs the object
+     * @link http://php.net/manual/en/serializable.unserialize.php
+     *
+     * @param string $serialized <p>
+     *                           The string representation of the object.
+     *                           </p>
+     *
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        $this->__construct(unserialize($serialized));
+    }
+
+    /**
      * @param      $value
      * @param bool $default
      *
@@ -117,18 +162,44 @@ class Bool {
      */
     protected function getBoolable($value, $default = false)
     {
-        if (is_bool($value))
+        switch (true)
         {
-            return $value;
+            case is_bool($value):
+                return $value;
+            case is_numeric($value):
+                return (bool) ((int) $value);
+            case is_string($value):
+                return $this->fromString($value, $default);
+            case $value instanceof Bool:
+                return $value->value();
+            case $value instanceof String:
+                return $this->fromString($value->all(), $default);
+            case $value instanceof Int:
+                return $value->toBool()->value();
+            case $value instanceof Float:
+                return $value->toBool()->value();
+            default:
+                return $default;
         }
-        elseif (is_numeric($value))
-        {
-            return (bool) ((int) $value);
-        }
-        elseif ($value instanceof Int)
-        {
-            return $value->toBool();
-        }
+    }
+
+    /**
+     * @param $value
+     * @param bool $default
+     *
+     * @return bool
+     */
+    protected function fromString($value, $default = false)
+    {
+        $grammar = [
+            'true' => true, 'false' => false,
+            'on' => true,   'off' => false,
+            'yes' => true,  'no' => false,
+            'y' => true,    'n' => false,
+            '+' => true,    '-' => false
+        ];
+
+        if (isset($grammar[$value])) return $grammar[$value];
 
         return $default;
     }

@@ -42,11 +42,25 @@ if ( ! function_exists('int'))
      * @param     $value
      * @param int $default
      *
-     * @return \im\Primitive\String\String
+     * @return \im\Primitive\Int\Int
      */
     function int($value, $default = 0)
     {
         return new im\Primitive\Int\Int($value, $default);
+    }
+}
+
+if ( ! function_exists('int'))
+{
+    /**
+     * @param     $value
+     * @param int $default
+     *
+     * @return \im\Primitive\Float\Float
+     */
+    function float($value, $default = 0)
+    {
+        return new im\Primitive\Float\Float($value, $default);
     }
 }
 

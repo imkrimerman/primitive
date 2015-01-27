@@ -152,7 +152,7 @@ if ( ! function_exists('lastKey'))
     }
 }
 
-if ( ! function_exists('flipInt'))
+if ( ! function_exists('flipIntegers'))
 {
     /**
      * Flips 2 integers
@@ -160,7 +160,7 @@ if ( ! function_exists('flipInt'))
      * @param $a
      * @param $b
      */
-    function flipInt(& $a, & $b)
+    function flipIntegers(& $a, & $b)
     {
         $a ^= $b ^= $a ^= $b;
     }
@@ -181,6 +181,51 @@ if ( ! function_exists('flipVars'))
         return [$b, $a];
     }
 }
+
+if ( ! function_exists('factorialRecursive'))
+{
+    /**
+     * Calculate Factorial Recursively
+     *
+     * @param $value
+     *
+     * @return int
+     */
+    function factorialRecursive($value)
+    {
+        return $value ? $value * factorial($value - 1) : 1;
+    }
+}
+
+
+if ( ! function_exists('factorial'))
+{
+    /**
+     * Calculate Factorial
+     *
+     * @param $value
+     *
+     * @return int
+     */
+    function factorial($value)
+    {
+        if ($value < 0)
+        {
+            throw new InvalidArgumentException('Number cannot be less than zero');
+        }
+
+        $factorial = 1;
+
+        while ($value > 0)
+        {
+            $factorial *= $value;
+            --$value;
+        }
+
+        return $factorial;
+    }
+}
+
 
 if ( ! function_exists('measureObject'))
 {

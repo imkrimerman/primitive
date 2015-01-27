@@ -41,6 +41,19 @@ abstract class Type implements TypeInterface, Serializable {
     abstract public function __toString();
 
     /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public function __get($value)
+    {
+        if (method_exists($this, $value))
+        {
+            return $this->{$value}();
+        }
+    }
+
+    /**
      * (PHP 5 &gt;= 5.1.0)<br/>
      * String representation of object
      * @link http://php.net/manual/en/serializable.serialize.php

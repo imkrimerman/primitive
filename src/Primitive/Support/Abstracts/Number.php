@@ -23,19 +23,6 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     /**
      * @param $value
      *
-     * @return mixed
-     */
-    public function __get($value)
-    {
-        if (method_exists($this, $value))
-        {
-            return $this->{$value}();
-        }
-    }
-
-    /**
-     * @param $value
-     *
      * @return $this
      */
     public function set($value)
@@ -178,14 +165,19 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     }
 
     /**
-     * @param null $value Used for recursive call
+     * @param bool $recursive
      *
      * @return int|number
      */
-    //public function factorial($value = null)
-    //{
-    //    return $this->value ? $this->value * $this->factorial($this->value - 1) : 1;
-    //}
+    public function factorial($recursive = true)
+    {
+        if ($recursive)
+        {
+            return factorialRecursive($this->value);
+        }
+
+        return factorial($this->value);
+    }
 
     /**
      * @param int    $decimals
@@ -261,7 +253,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return bool
      */
-    public function greaterThan($value)
+    public function isGreaterThan($value)
     {
         return $this->value > $this->retrieveValue($value);
     }
@@ -271,7 +263,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return bool
      */
-    public function greaterThanOrEquals($value)
+    public function isGreaterThanOrEqual($value)
     {
         return $this->value >= $this->retrieveValue($value);
     }
@@ -281,7 +273,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return bool
      */
-    public function lowerThan($value)
+    public function isLowerThan($value)
     {
         return $this->value < $this->retrieveValue($value);
     }
@@ -291,7 +283,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return bool
      */
-    public function lowerThanOrEquals($value)
+    public function isLowerThanOrEqual($value)
     {
         return $this->value <= $this->retrieveValue($value);
     }

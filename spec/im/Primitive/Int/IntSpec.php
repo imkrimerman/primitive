@@ -202,10 +202,10 @@ class IntSpec extends ObjectBehavior
         $this->pi()->value->shouldBe(pi());
     }
 
-    //function it_should_return_factorial_of_value()
-    //{
-    //    $this->factorial()->value()->shouldBe($this->fact($this->init));
-    //}
+    function it_should_return_factorial_of_value()
+    {
+        $this->factorial()->shouldBe(factorial($this->init));
+    }
 
     function it_should_format_int_to_correct_float_string()
     {
@@ -227,15 +227,43 @@ class IntSpec extends ObjectBehavior
         $this->isEqual($this->init);
     }
 
-    //function it_should_check_if_lessThen()
-    //{
-    //
-    //}
-    //
-    //function it_should_check_if_lessThenOrEqual()
-    //{
-    //
-    //}
+    function it_should_check_ifNegative()
+    {
+        $this->isNegative()->shouldBe(false);
+
+        $this->set(-10)->isNegative()->shouldBe(true);
+    }
+
+    function it_should_check_ifNotNegative()
+    {
+        $this->isNotNegative()->shouldBe(true);
+
+        $this->set(-10)->isNotNegative()->shouldBe(false);
+    }
+
+    function it_should_check_if_isLowerThan()
+    {
+        $this->isLowerThan(int(20))->shouldBe(true);
+        $this->isLowerThan(5)->shouldBe(false);
+    }
+
+    function it_should_check_if_isLowerThanOrEqual()
+    {
+        $this->isLowerThanOrEqual(int(10))->shouldBe(true);
+        $this->isLowerThanOrEqual(5)->shouldBe(false);
+    }
+
+    function it_should_check_if_isGreaterThan()
+    {
+        $this->isGreaterThan(int(0))->shouldBe(true);
+        $this->isGreaterThan(15)->shouldBe(false);
+    }
+
+    function it_should_check_if_isGreaterThanOrEqual()
+    {
+        $this->isGreaterThanOrEqual(int(10))->shouldBe(true);
+        $this->isGreaterThanOrEqual(5)->shouldBe(true);
+    }
 
     /**
      * Helpers
@@ -298,19 +326,5 @@ class IntSpec extends ObjectBehavior
         $match = $this->init;
 
         $this->set(int($match))->value()->shouldBe($match);
-    }
-
-    /**
-     * Helper for test
-     */
-
-    /**
-     * @param $n
-     *
-     * @return int
-     */
-    function fact($n)
-    {
-        return $n ? $n * $this->fact($n - 1) : 1;
     }
 }

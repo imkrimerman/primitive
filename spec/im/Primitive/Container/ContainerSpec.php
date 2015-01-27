@@ -1143,7 +1143,7 @@ class ContainerSpec extends ObjectBehavior
     function it_should_convert_Container_to_array()
     {
         $this->fromArray([
-            a(['John']), a(['Jane'])
+            container(['John']), container(['Jane'])
         ]);
 
         $array = $this->toArray();

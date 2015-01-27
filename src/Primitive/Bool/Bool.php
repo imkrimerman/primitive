@@ -95,7 +95,7 @@ class Bool extends Type implements BooleanInterface{
      */
     public function toContainer()
     {
-        return a([$this->value]);
+        return container([$this->value]);
     }
 
     /**
@@ -112,16 +112,6 @@ class Bool extends Type implements BooleanInterface{
     public function isFalse()
     {
         return ! $this->isTrue();
-    }
-
-    /**
-     * @param $value
-     *
-     * @return static
-     */
-    public function make($value)
-    {
-        return new static($value);
     }
 
     /**
@@ -160,36 +150,6 @@ class Bool extends Type implements BooleanInterface{
     protected function retrieveValue($value)
     {
         return $this->getBoolable($value, $this->getDefault());
-    }
-
-    /**
-     * @param $value
-     *
-     * @return bool
-     */
-    protected function fromString($value)
-    {
-        $grammar = $this->getGrammar();
-
-        $value = $this->getStringable($value);
-
-        if (isset($grammar[$value])) return $grammar[$value];
-
-        return $this->getDefault();
-    }
-
-    /**
-     * @return array
-     */
-    protected function getGrammar()
-    {
-        return [
-            'true' => true, 'false' => false,
-            'on' => true,   'off' => false,
-            'yes' => true,  'no' => false,
-            'y' => true,    'n' => false,
-            '+' => true,    '-' => false
-        ];
     }
 
     /**

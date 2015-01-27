@@ -12,7 +12,6 @@ class RevertableContainer extends Container implements RevertableInterface {
     */
     protected $clone;
 
-
     /**
      * Initialize items from array
      *
@@ -27,6 +26,7 @@ class RevertableContainer extends Container implements RevertableInterface {
         return $this->assignClone();
     }
 
+
     /**
      * Saves Container state to clone, to revert in future
      *
@@ -36,7 +36,6 @@ class RevertableContainer extends Container implements RevertableInterface {
     {
         return $this->assignClone();
     }
-
 
     /**
      * Reverts Container state from clone
@@ -48,6 +47,15 @@ class RevertableContainer extends Container implements RevertableInterface {
         $this->items = $this->clone;
 
         return $this;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getClone()
+    {
+        return $this->clone;
     }
 
     /**

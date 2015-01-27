@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Support\Traits;
 
 
+use im\Primitive\Container\Container;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Contracts\BooleanInterface;
 use im\Primitive\Support\Contracts\ContainerInterface;
@@ -50,7 +51,7 @@ trait RetrievableTrait {
             case is_array($value):
             case $value instanceof ContainerInterface:
             case $value instanceof ArrayableInterface:
-                return (string) a($this->getArrayable($value))->implode();
+                return (string) container($this->getArrayable($value))->implode();
 
             case is_object($value) && method_exists($value, '__toString'):
                 return (string) $value;
@@ -102,6 +103,7 @@ trait RetrievableTrait {
     {
         switch (true)
         {
+            case is_int($value):
             case is_numeric($value):
             case is_bool($value):
                 return (int) $value;
@@ -179,24 +181,82 @@ trait RetrievableTrait {
      */
     public function isStringable($value)
     {
-        return is_string($value) ||
-               $value instanceof String ||
-               is_array($value) ||
-               (is_object($value) && method_exists($value, '__toString'));
+        return  is_string($value) ||
+                is_array($value) ||
+                $value instanceof StringInterface ||
+                $value instanceof ContainerInterface ||
+                $value instanceof ArrayableInterface ||
+                (is_object($value) && method_exists($value, '__toString'));
     }
 
-    public function isIntegerable()
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isIntegerable($value)
     {
-
+        return  is_numeric($value) ||
+                is_bool($value) ||
+                $value instanceof IntegerInterface ||
+                $value instanceof FloatInterface ||
+                $value instanceof StringInterface ||
+                $value instanceof BooleanInterface;
     }
 
-    public function isFloatable()
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isFloatable($value)
     {
-
+        return $this->isIntegerable($value);
     }
 
-    public function isBoolable()
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isBoolable($value)
     {
+        return  is_bool($value) ||
+                is_numeric($value) ||
+                is_string($value) ||
+                $value instanceof StringInterface ||
+                $value instanceof BooleanInterface ||
+                $value instanceof IntegerInterface ||
+                $value instanceof FloatInterface;
+    }
 
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
+    protected function fromString($value)
+    {
+        $grammar = $this->getGrammar();
+
+        $value = $this->getStringable($value);
+
+        if (isset($grammar[$value])) return $grammar[$value];
+
+        return $this->getDefault();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getGrammar()
+    {
+        return [
+            'true' => true, 'false' => false,
+            'on' => true,   'off' => false,
+            'yes' => true,  'no' => false,
+            'y' => true,    'n' => false,
+            '+' => true,    '-' => false
+        ];
     }
 }

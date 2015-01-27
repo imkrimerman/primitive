@@ -90,7 +90,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function chars()
     {
-        return a(StaticStringy::chars($this->string));
+        return container(StaticStringy::chars($this->string));
     }
 
     /**
@@ -501,7 +501,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function parseCallback($callback, $default = '')
     {
-        return a(Str::parseCallback($this->retrieveValue($callback), $default));
+        return container(Str::parseCallback($this->retrieveValue($callback), $default));
     }
 
     /**
@@ -541,7 +541,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function explode($delimiter)
     {
-        return a(explode($this->retrieveValue($delimiter), $this->string));
+        return container(explode($this->retrieveValue($delimiter), $this->string));
     }
 
     /**
@@ -616,7 +616,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function wordSplit($charsAsWords = null)
     {
-        return a(str_word_count($this->string, 2, $this->getArrayable($charsAsWords)));
+        return container(str_word_count($this->string, 2, $this->getArrayable($charsAsWords)));
     }
 
     /**
@@ -738,7 +738,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
 
         parse_str($this->string, $vars);
 
-        return a($vars);
+        return container($vars);
     }
 
     /**

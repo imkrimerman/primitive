@@ -3,7 +3,7 @@
 use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Container\ContainerType;
 
-if ( ! function_exists('a'))
+if ( ! function_exists('container'))
 {
     /**
      * @param array $array
@@ -11,7 +11,7 @@ if ( ! function_exists('a'))
      *
      * @return \im\Primitive\Container\Container
      */
-    function a($array = [], $type = ContainerType::SIMPLE)
+    function container($array = [], $type = ContainerType::SIMPLE)
     {
         if ($type === ContainerType::SIMPLE)
         {
@@ -50,7 +50,7 @@ if ( ! function_exists('int'))
     }
 }
 
-if ( ! function_exists('int'))
+if ( ! function_exists('fool'))
 {
     /**
      * @param     $value

@@ -1,7 +1,6 @@
 <?php namespace im\Primitive\Int;
 
 use im\Primitive\Support\Abstracts\Number;
-use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Contracts\IntegerInterface;
 
 

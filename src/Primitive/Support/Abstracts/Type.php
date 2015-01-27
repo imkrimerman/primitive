@@ -92,6 +92,16 @@ abstract class Type implements TypeInterface, Serializable {
     }
 
     /**
+     * @param $value
+     *
+     * @return static
+     */
+    public static function create($value)
+    {
+        return new static($value);
+    }
+
+    /**
      * @return number
      */
     public function __invoke()

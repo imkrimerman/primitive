@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Support\Abstracts;
 
+use im\Primitive\Support\Str;
 use Serializable;
 use im\Primitive\Support\Contracts\TypeInterface;
 use im\Primitive\Support\Traits\RetrievableTrait;
@@ -18,6 +19,47 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      * @param $value
      */
     abstract public function __construct($value);
+
+    /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public function __get($value)
+    {
+        if (method_exists($this, $value))
+        {
+            return $this->{$value}();
+        }
+    }
+
+    /**
+     * @param $value
+     *
+     * @return $this
+     */
+    public function set($value)
+    {
+        $this->value = $this->retrieveValue($value);
+
+        return $this;
+    }
+
+    /**
+     * @return number
+     */
+    public function get()
+    {
+        return $this->value();
+    }
+
+    /**
+     * @return number
+     */
+    public function value()
+    {
+        return $this->value;
+    }
 
     /**
      * @param $plus
@@ -57,7 +99,9 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function divide($divide)
     {
-        if ($retrieved = $this->retrieveValue($divide) === 0)
+        $retrieved = $this->retrieveValue($divide);
+
+        if ($retrieved === 0)
         {
             throw new UnexpectedValueException('Division by zero is unacceptable');
         }
@@ -90,7 +134,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function sqrt()
     {
-        return new static(sqrt($this->value));
+        return float(sqrt($this->value));
     }
 
     /**
@@ -98,7 +142,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function abs()
     {
-        return new static(abs($this->value()));
+        return new static(abs($this->value));
     }
 
     /**
@@ -138,10 +182,10 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return int|number
      */
-    public function factorial($value = null)
-    {
-        return $this->value ? $this->value * $this->factorial($this->value - 1) : 1;
-    }
+    //public function factorial($value = null)
+    //{
+    //    return $this->value ? $this->value * $this->factorial($this->value - 1) : 1;
+    //}
 
     /**
      * @param int    $decimals
@@ -152,7 +196,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function format($decimals = 2, $decimalDelimiter = '.', $thousandDelimiter = ' ')
     {
-        return float(
+        return string(
             number_format(
                 (float) $this->value,
                 (int) $decimals,
@@ -160,34 +204,6 @@ abstract class Number extends Type implements TypeInterface, Serializable {
                 (string) $thousandDelimiter
             )
         );
-    }
-
-    /**
-     * @return number
-     */
-    public function value()
-    {
-        return $this->value;
-    }
-
-    /**
-     * @param $value
-     *
-     * @return $this
-     */
-    public function set($value)
-    {
-        $this->value = $this->retrieveValue($value);
-
-        return $this;
-    }
-
-    /**
-     * @return number
-     */
-    public function get()
-    {
-        return $this->value();
     }
 
     /**
@@ -219,7 +235,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      *
      * @return bool
      */
-    public function isEquals($value)
+    public function isEqual($value)
     {
         return $this->value === $this->retrieveValue($value);
     }
@@ -301,7 +317,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function toContainer()
     {
-        return a([$this->value]);
+        return container([$this->value]);
     }
 
     /**
@@ -311,7 +327,6 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     {
         unset($this->value);
     }
-
 
     /**
      * @return string

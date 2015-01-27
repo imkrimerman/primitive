@@ -173,7 +173,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     {
         if ($recursive)
         {
-            return factorialRecursive($this->value);
+            return factorial_recursive($this->value);
         }
 
         return factorial($this->value);

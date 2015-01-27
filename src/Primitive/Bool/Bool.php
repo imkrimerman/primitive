@@ -3,9 +3,6 @@
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Contracts\BooleanInterface;
-use im\Primitive\Support\Contracts\FloatInterface;
-use im\Primitive\Support\Contracts\IntegerInterface;
-use im\Primitive\Support\Contracts\StringInterface;
 
 
 class Bool extends Type implements BooleanInterface{

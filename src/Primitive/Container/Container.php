@@ -12,7 +12,6 @@ use \RecursiveIteratorIterator;
 use JWT;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
-use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Contracts\ContainerInterface;
@@ -20,12 +19,11 @@ use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Iterators\RecursiveContainerIterator;
+use im\Primitive\Support\Exceptions\NotIsFileException;
+use im\Primitive\Support\Exceptions\OffsetNotExistsException;
 use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\BadLengthException;
-use im\Primitive\Container\Exceptions\NotIsFileException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
-use im\Primitive\Container\Exceptions\OffsetNotExistsException;
-use im\Primitive\Container\Exceptions\BadContainerMethodArgumentException;
 
 
 class Container extends Type implements ContainerInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
@@ -49,21 +47,21 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param array|string|Container|String $from
      *
-     * @throws BadContainerMethodArgumentException
+     * @throws BadMethodCallException
      * @throws ContainerException
      */
     public function __construct($from = [])
     {
-        if (is_array($from) || $from instanceof Container)
+        if ($this->isArrayable($from))
         {
             return $this->fromArray($this->retrieveValue($from));
         }
-        elseif (is_string($from))
+        elseif ($this->isStringable($from))
         {
-            return $this->fromString($from);
+            return $this->fromString($this->getStringable($from));
         }
 
-        throw new BadContainerMethodArgumentException('Bad constructor argument, expected string, array or Container');
+        throw new BadMethodCallException('Bad constructor argument, expected string, array or Container');
     }
 
 
@@ -125,7 +123,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function get($key, $default = null)
     {
-        return Arr::get($this->items, $key, $default);
+        return value(Arr::get($this->items, $key, $default));
     }
 
     /**
@@ -203,7 +201,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function pop()
     {
-        return array_pop($this->items);
+        return value(array_pop($this->items));
     }
 
 
@@ -229,7 +227,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function shift()
     {
-        return array_shift($this->items);
+        return value(array_shift($this->items));
     }
 
 
@@ -267,18 +265,15 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * First level search
      *
-     * @param $value
+     * @param      $value
+     *
+     * @param null $strict
      *
      * @return bool
      */
-    public function hasValue($value)
+    public function hasValue($value, $strict = null)
     {
-        foreach ($this->items as $item)
-        {
-            if ($item === $value) return true;
-        }
-
-        return false;
+        return in_array($value, $this->items, $strict);
     }
 
 
@@ -293,7 +288,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         if ($this->isNotEmpty())
         {
-            return firstKey($this->items);
+            return first_key($this->items);
         }
 
         throw new EmptyContainerException('Empty Container');
@@ -311,7 +306,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         if ($this->isNotEmpty())
         {
-            return lastKey($this->items);
+            return last_key($this->items);
         }
 
         throw new EmptyContainerException('Empty Container');
@@ -331,7 +326,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         foreach ($this->items as $item)
         {
-            $key = dataGet($item, $keyBy);
+            $key = data_get($item, $keyBy);
 
             $results[$key] = $item;
         }
@@ -462,6 +457,41 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static(Arr::divide($this->items));
     }
 
+    /**
+     * Return items only with numeric keys
+     *
+     * @return static
+     */
+    public function numericKeys()
+    {
+        $keys = new static;
+
+        foreach ($this->items as $key => $value)
+        {
+            if (is_numeric($key)) $keys->put($key, $value);
+        }
+
+        return $keys;
+    }
+
+    //TODO add setKey(lastKey, newKey)
+
+    /**
+     * Return items only with not numeric keys
+     *
+     * @return static
+     */
+    public function notNumericKeys()
+    {
+        $keys = new static;
+
+        foreach ($this->items as $key => $value)
+        {
+            if ( ! is_numeric($key)) $keys->put($key, $value);
+        }
+
+        return $keys;
+    }
 
     /**
      * Shuffles Container items
@@ -556,7 +586,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $array
      * @param string $what
      * @return array|string
-     * @throws BadContainerMethodArgumentException
+     * @throws BadMethodCallException
      * @throws BadLengthException
      */
     public function combine($array, $what = 'keys')
@@ -575,7 +605,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             case 'values':
                 return new static(array_combine($this->keys()->all(), $array));
             default:
-                throw new BadContainerMethodArgumentException('Argument 2 must be string (keys or values)');
+                throw new BadMethodCallException('Argument 2 must be string (keys or values)');
         }
     }
 
@@ -697,14 +727,14 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param null $default
      *
-     * @throws BadContainerMethodArgumentException
+     * @throws BadMethodCallException
      * @return $this
      */
     public function merge($items, $key = null, $default = null)
     {
         if ( ! $this->isArrayable($items))
         {
-            throw new BadContainerMethodArgumentException('1 Argument must be array or Container');
+            throw new BadMethodCallException('1 Argument must be array or Container');
         }
 
         if (is_null($key))
@@ -716,7 +746,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $this->mergeWithKey($this->retrieveValue($items), $key, $default);
         }
 
-        throw new BadContainerMethodArgumentException('Bad key given');
+        throw new BadMethodCallException('Bad key given');
     }
 
     /**
@@ -759,7 +789,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param int $quantity
      *
-     * @throws BadContainerMethodArgumentException
+     * @throws BadMethodCallException
      * @return mixed
      */
     public function randomKey($quantity = 1)
@@ -771,7 +801,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return is_array($random) ? new static($random) : $random;
         }
 
-        throw new BadContainerMethodArgumentException("1 Argument should be between 1 and the number of elements in the Container, got: {$quantity}");
+        throw new BadMethodCallException("1 Argument should be between 1 and the number of elements in the Container, got: {$quantity}");
     }
 
     /**
@@ -1004,15 +1034,15 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $index
      *
      * @return \im\Primitive\Container\Container
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
-     * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
-     * @throws \im\Primitive\Container\Exceptions\OffsetNotExistsException
+     * @throws \im\Primitive\Container\Exceptions\BadLengthException
+     * @throws \im\Primitive\Container\Exceptions\ContainerException
+     * @throws \im\Primitive\Support\Exceptions\OffsetNotExistsException
      */
     public function restAfterIndex($index)
     {
         if ( ! is_numeric($index))
         {
-            throw new BadContainerMethodArgumentException('Argument 1: ' . $index . ' is not numeric');
+            throw new BadMethodCallException('Argument 1: ' . $index . ' is not numeric');
         }
 
         $length = $this->length();
@@ -1037,9 +1067,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $key
      *
      * @return \im\Primitive\Container\Container
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
      * @throws \im\Primitive\Container\Exceptions\ContainerException
-     * @throws \im\Primitive\Container\Exceptions\OffsetNotExistsException
+     * @throws \im\Primitive\Support\Exceptions\OffsetNotExistsException
      */
     public function restAfterKey($key)
     {
@@ -1070,7 +1099,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $items
      *
      * @return static
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      */
     public function difference($items)
     {
@@ -1079,7 +1108,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return new static(array_diff($this->items, $this->retrieveValue($items)));
         }
 
-        throw new BadContainerMethodArgumentException('Argument 1 should be array, Container or implement ArrayableInterface');
+        throw new BadMethodCallException('Argument 1 should be array, Container or implement ArrayableInterface');
     }
 
 
@@ -1505,7 +1534,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $content
      *
      * @return $this
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      * @throws \im\Primitive\Container\UncountableException
      */
     public function fromSerialized($content)
@@ -1515,7 +1544,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $this->initialize(unserialize($content));
         }
 
-        throw new BadContainerMethodArgumentException('Expected serialized, got: ' . $content);
+        throw new BadMethodCallException('Expected serialized, got: ' . $content);
     }
 
 
@@ -1526,7 +1555,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $key
      *
      * @return \im\Primitive\Container\Container
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      */
     public function fromEncrypted($encrypted, $key)
     {
@@ -1537,7 +1566,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $this->fromJson($data->container);
         }
 
-        throw new BadContainerMethodArgumentException('Expected encrypted Container, got: ' . $encrypted);
+        throw new BadMethodCallException('Expected encrypted Container, got: ' . $encrypted);
     }
 
 
@@ -1547,7 +1576,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param array $string
      *
      * @return $this
-     * @throws \im\Primitive\Container\Exceptions\BadContainerMethodArgumentException
+     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      * @throws \im\Primitive\Container\Exceptions\ContainerException
      * @throws \im\Primitive\Container\Exceptions\NotIsFileException
      */
@@ -1566,7 +1595,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $this->initialize(unserialize($string));
         }
 
-        throw new BadContainerMethodArgumentException('Argument 1 should be valid json, serialized or file with json or serialized data');
+        throw new BadMethodCallException('Argument 1 should be valid json, serialized or file with json or serialized data');
     }
 
 
@@ -1650,7 +1679,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     protected function whereCondition(array $conditions, $preserveKeys)
     {
-        $key = firstKey($conditions);
+        $key = first_key($conditions);
         $value = array_shift($conditions);
 
         $where = $this->whereRecursive($this->items, $key, $value, $preserveKeys);
@@ -1737,7 +1766,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $groupBy($value, $key);
         }
 
-        return dataGet($value, $groupBy);
+        return data_get($value, $groupBy);
     }
 
 
@@ -1948,7 +1977,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function jsonSerialize()
     {
-        return $this->items;
+        return $this->filter(function($value)
+        {
+            return ! is_callable($value);
+        });
     }
 
     /*

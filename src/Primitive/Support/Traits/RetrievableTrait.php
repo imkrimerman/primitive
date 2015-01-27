@@ -1,13 +1,13 @@
 <?php namespace im\Primitive\Support\Traits;
 
-
-use im\Primitive\Container\Container;
+use stdClass;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Contracts\BooleanInterface;
 use im\Primitive\Support\Contracts\ContainerInterface;
 use im\Primitive\Support\Contracts\FloatInterface;
 use im\Primitive\Support\Contracts\IntegerInterface;
 use im\Primitive\Support\Contracts\StringInterface;
+
 
 trait RetrievableTrait {
 
@@ -27,6 +27,8 @@ trait RetrievableTrait {
                 return $value->value();
             case $value instanceof ArrayableInterface:
                 return $value->toArray();
+            case $value instanceof stdClass:
+                return object_public_var($value);
             default:
                 return $default;
         }
@@ -171,7 +173,10 @@ trait RetrievableTrait {
      */
     public function isArrayable($value)
     {
-        return is_array($value) || $value instanceof ContainerInterface || $value instanceof ArrayableInterface;
+        return  is_array($value) ||
+                $value instanceof ContainerInterface ||
+                $value instanceof ArrayableInterface ||
+                $value instanceof stdClass;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace spec\im\Primitive\String;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
+
 class StringSpec extends ObjectBehavior
 {
     protected $init;

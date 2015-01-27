@@ -1,7 +1,14 @@
 <?php
 
 use im\Primitive\Support\Dump\Dumper;
+use im\Primitive\Container\Container;
+use im\Primitive\Container\RevertableContainer;
 use im\Primitive\Container\ContainerType;
+use im\Primitive\String\String;
+use im\Primitive\Int\Int;
+use im\Primitive\Float\Float;
+use im\Primitive\Bool\Bool;
+
 
 if ( ! function_exists('container'))
 {
@@ -15,11 +22,11 @@ if ( ! function_exists('container'))
     {
         if ($type === ContainerType::SIMPLE)
         {
-            return new im\Primitive\Container\Container($array);
+            return new Container($array);
         }
         elseif ($type === ContainerType::REVERTABLE)
         {
-            return new im\Primitive\Container\RevertableContainer($array);
+            return new RevertableContainer($array);
         }
     }
 }
@@ -32,7 +39,7 @@ if ( ! function_exists('string'))
      */
     function string($string = '')
     {
-        return new im\Primitive\String\String($string);
+        return new String($string);
     }
 }
 
@@ -46,11 +53,11 @@ if ( ! function_exists('int'))
      */
     function int($value, $default = 0)
     {
-        return new im\Primitive\Int\Int($value, $default);
+        return new Int($value, $default);
     }
 }
 
-if ( ! function_exists('fool'))
+if ( ! function_exists('float'))
 {
     /**
      * @param     $value
@@ -60,7 +67,7 @@ if ( ! function_exists('fool'))
      */
     function float($value, $default = 0)
     {
-        return new im\Primitive\Float\Float($value, $default);
+        return new Float($value, $default);
     }
 }
 
@@ -74,7 +81,7 @@ if ( ! function_exists('bool'))
      */
     function bool($value, $default = false)
     {
-        return new im\Primitive\Bool\Bool($value, $default);
+        return new Bool($value, $default);
     }
 }
 
@@ -106,7 +113,7 @@ if ( ! function_exists('first'))
     }
 }
 
-if ( ! function_exists('firstKey'))
+if ( ! function_exists('first_key'))
 {
     /**
      * Get the first elements key of an array. Useful for method chaining.
@@ -114,7 +121,7 @@ if ( ! function_exists('firstKey'))
      * @param  array $array
      * @return mixed
      */
-    function firstKey($array)
+    function first_key($array)
     {
         reset($array);
 
@@ -136,7 +143,7 @@ if ( ! function_exists('last'))
     }
 }
 
-if ( ! function_exists('lastKey'))
+if ( ! function_exists('last_key'))
 {
     /**
      * Get the last elements key from an array.
@@ -144,7 +151,7 @@ if ( ! function_exists('lastKey'))
      * @param  array $array
      * @return mixed
      */
-    function lastKey($array)
+    function last_key($array)
     {
         end($array);
 
@@ -152,7 +159,7 @@ if ( ! function_exists('lastKey'))
     }
 }
 
-if ( ! function_exists('flipIntegers'))
+if ( ! function_exists('flip_integers'))
 {
     /**
      * Flips 2 integers
@@ -160,13 +167,13 @@ if ( ! function_exists('flipIntegers'))
      * @param $a
      * @param $b
      */
-    function flipIntegers(& $a, & $b)
+    function flip_integers(& $a, & $b)
     {
         $a ^= $b ^= $a ^= $b;
     }
 }
 
-if ( ! function_exists('flipVars'))
+if ( ! function_exists('flip_vars'))
 {
     /**
      * Flips 2 variables
@@ -176,13 +183,13 @@ if ( ! function_exists('flipVars'))
      *
      * @return array
      */
-    function flipVars($a, $b)
+    function flip_vars($a, $b)
     {
         return [$b, $a];
     }
 }
 
-if ( ! function_exists('factorialRecursive'))
+if ( ! function_exists('factorial_recursive'))
 {
     /**
      * Calculate Factorial Recursively
@@ -191,7 +198,7 @@ if ( ! function_exists('factorialRecursive'))
      *
      * @return int
      */
-    function factorialRecursive($value)
+    function factorial_recursive($value)
     {
         return $value ? $value * factorial($value - 1) : 1;
     }
@@ -206,6 +213,7 @@ if ( ! function_exists('factorial'))
      * @param $value
      *
      * @return int
+     * @throws \im\InvalidArgumentException
      */
     function factorial($value)
     {
@@ -227,7 +235,7 @@ if ( ! function_exists('factorial'))
 }
 
 
-if ( ! function_exists('measureObject'))
+if ( ! function_exists('measure_object'))
 {
     /**
      * Count object length
@@ -236,7 +244,7 @@ if ( ! function_exists('measureObject'))
      *
      * @return int
      */
-    function measureObject($object)
+    function measure_object($object)
     {
         if (is_object($object))
         {
@@ -253,7 +261,7 @@ if ( ! function_exists('measureObject'))
     }
 }
 
-if ( ! function_exists('strReplaceArray'))
+if ( ! function_exists('str_replace_array'))
 {
     /**
      * Replace a given value in the string sequentially with an array.
@@ -263,7 +271,7 @@ if ( ! function_exists('strReplaceArray'))
      * @param  string $subject
      * @return string
      */
-    function strReplaceArray($search, array $replace, $subject)
+    function str_replace_array($search, array $replace, $subject)
     {
         foreach ($replace as $value)
         {
@@ -274,7 +282,7 @@ if ( ! function_exists('strReplaceArray'))
     }
 }
 
-if ( ! function_exists('objectGet'))
+if ( ! function_exists('object_get'))
 {
     /**
      * Get an item from an object using "dot" notation.
@@ -284,7 +292,7 @@ if ( ! function_exists('objectGet'))
      * @param  mixed $default
      * @return mixed
      */
-    function objectGet($object, $key, $default = null)
+    function object_get($object, $key, $default = null)
     {
         if (is_null($key) || trim($key) == '') return $object;
 
@@ -302,7 +310,7 @@ if ( ! function_exists('objectGet'))
     }
 }
 
-if ( ! function_exists('objectHasMethod'))
+if ( ! function_exists('object_has_method'))
 {
     /**
      * Check if object has method
@@ -312,7 +320,7 @@ if ( ! function_exists('objectHasMethod'))
      *
      * @return bool
      */
-    function objectHasMethod($object, $method)
+    function object_has_method($object, $method)
     {
         $reflactor = new ReflectionClass($object);
 
@@ -328,7 +336,7 @@ if ( ! function_exists('objectHasMethod'))
     }
 }
 
-if ( ! function_exists('objectMethodHasAcceptableParameters'))
+if ( ! function_exists('object_method_has_acceptable_parameters'))
 {
     /**
      * @param $object
@@ -336,7 +344,7 @@ if ( ! function_exists('objectMethodHasAcceptableParameters'))
      *
      * @return bool
      */
-    function objectMethodHasAcceptableParameters($object, $method)
+    function object_method_has_acceptable_parameters($object, $method)
     {
         $reflactor = new ReflectionClass($object);
 
@@ -352,7 +360,7 @@ if ( ! function_exists('objectMethodHasAcceptableParameters'))
     }
 }
 
-if ( ! function_exists('dataGet'))
+if ( ! function_exists('data_get'))
 {
     /**
      * Get an item from an array or object using "dot" notation.
@@ -362,7 +370,7 @@ if ( ! function_exists('dataGet'))
      * @param  mixed $default
      * @return mixed
      */
-    function dataGet($target, $key, $default = null)
+    function data_get($target, $key, $default = null)
     {
         if (is_null($key)) return $target;
 
@@ -396,7 +404,7 @@ if ( ! function_exists('dataGet'))
     }
 }
 
-if ( ! function_exists('e'))
+if ( ! function_exists('entities'))
 {
     /**
      * Escape HTML entities in a string.
@@ -404,13 +412,13 @@ if ( ! function_exists('e'))
      * @param  string $value
      * @return string
      */
-    function e($value)
+    function entities($value)
     {
         return htmlentities($value, ENT_QUOTES, 'UTF-8', false);
     }
 }
 
-if ( ! function_exists('dd'))
+if ( ! function_exists('ddump'))
 {
     /**
      * Dump the passed variables and end the script.
@@ -418,14 +426,14 @@ if ( ! function_exists('dd'))
      * @param  mixed
      * @return void
      */
-    function dd()
+    function ddump()
     {
         array_map(function($x) { (new Dumper)->dump($x); }, func_get_args()); die;
     }
 }
 
 
-if ( ! function_exists('d'))
+if ( ! function_exists('dump'))
 {
     /**
      * Dump the passed variables.
@@ -433,7 +441,7 @@ if ( ! function_exists('d'))
      * @param  mixed
      * @return void
      */
-    function d()
+    function dump()
     {
         array_map(function($x) { (new Dumper)->dump($x); }, func_get_args());
     }

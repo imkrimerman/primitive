@@ -281,6 +281,44 @@ class ContainerSpec extends ObjectBehavior
         );
     }
 
+    function it_should_return_items_with_only_numeric_keys()
+    {
+        $init = [
+            0 => 'John',
+            1 => 'Doe',
+            'email' => 'johndoe@example.com',
+            3 => [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com',
+                'hobby' =>'music'
+            ]
+        ];
+
+        $match = $init;
+
+        unset($match['email']);
+
+        $this->fromArray($init)->numericKeys()->all()->shouldBe($match);
+    }
+
+    function it_should_return_items_with_only_not_numeric_keys()
+    {
+        $init = [
+            0 => 'John',
+            1 => 'Doe',
+            'email' => 'johndoe@example.com',
+            3 => [
+                'name' => 'Jane',
+                'surname' => 'Doe',
+                'email' => 'janedoe@example.com',
+                'hobby' =>'music'
+            ]
+        ];
+
+        $this->fromArray($init)->notNumericKeys()->all()->shouldBe(['email' => 'johndoe@example.com']);
+    }
+
     function it_should_shuffle_items()
     {
         $this->shuffle()->shouldNotBeEqualTo($this->initializer);
@@ -406,7 +444,7 @@ class ContainerSpec extends ObjectBehavior
             'first', 'second', 'third', 'forth'
         ];
 
-        $this->shouldThrow('im\Primitive\Container\Exceptions\BadContainerMethodArgumentException')
+        $this->shouldThrow('\BadMethodCallException')
              ->duringCombine($keys, 'foo');
     }
 
@@ -861,7 +899,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_throw_exception_if_given_equal_or_larger_index()
     {
-        $this->shouldThrow('im\Primitive\Container\Exceptions\OffsetNotExistsException')
+        $this->shouldThrow('im\Primitive\Support\Exceptions\OffsetNotExistsException')
              ->during('exceptIndex', [count($this->initializer)]);
     }
 

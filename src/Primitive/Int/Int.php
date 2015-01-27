@@ -7,8 +7,6 @@ use im\Primitive\Support\Contracts\IntegerInterface;
 
 class Int extends Number implements IntegerInterface {
 
-    use RetrievableTrait;
-
     /**
      * @var int
      */

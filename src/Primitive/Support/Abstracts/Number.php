@@ -2,9 +2,12 @@
 
 use Serializable;
 use im\Primitive\Support\Contracts\TypeInterface;
+use im\Primitive\Support\Traits\RetrievableTrait;
 
 
 abstract class Number extends Type implements TypeInterface, Serializable {
+
+    use RetrievableTrait;
 
     /**
      * @var number
@@ -54,22 +57,109 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function divide($divide)
     {
-        if ($divide == 0)
+        if ($retrieved = $this->retrieveValue($divide) === 0)
         {
             throw new UnexpectedValueException('Division by zero is unacceptable');
         }
 
-        return new static($this->value / $this->retrieveValue($divide));
+        return new static($this->value / $retrieved);
     }
 
     /**
      * @param $by
      *
-     * @return int
+     * @return \im\Primitive\Int\Int
      */
     public function modulo($by)
     {
-        return $this->value % $this->retrieveValue($by);
+        return int($this->value % $this->retrieveValue($by));
+    }
+
+    /**
+     * @param $pow
+     *
+     * @return static
+     */
+    public function power($pow)
+    {
+        return new static(pow($this->value, $this->retrieveValue($pow)));
+    }
+
+    /**
+     * @return static
+     */
+    public function sqrt()
+    {
+        return new static(sqrt($this->value));
+    }
+
+    /**
+     * @return static
+     */
+    public function abs()
+    {
+        return new static(abs($this->value()));
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function sin()
+    {
+        return float(sin($this->value));
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function cos()
+    {
+        return float(cos($this->value));
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function tan()
+    {
+        return float(tan($this->value));
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function pi()
+    {
+        return float(pi());
+    }
+
+    /**
+     * @param null $value Used for recursive call
+     *
+     * @return int|number
+     */
+    public function factorial($value = null)
+    {
+        return $this->value ? $this->value * $this->factorial($this->value - 1) : 1;
+    }
+
+    /**
+     * @param int    $decimals
+     * @param string $decimalDelimiter
+     * @param string $thousandDelimiter
+     *
+     * @return \im\Primitive\Float\Float
+     */
+    public function format($decimals = 2, $decimalDelimiter = '.', $thousandDelimiter = ' ')
+    {
+        return float(
+            number_format(
+                (float) $this->value,
+                (int) $decimals,
+                (string) $decimalDelimiter,
+                (string) $thousandDelimiter
+            )
+        );
     }
 
     /**
@@ -132,6 +222,22 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     public function isEquals($value)
     {
         return $this->value === $this->retrieveValue($value);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNegative()
+    {
+        return $this->value < 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNotNegative()
+    {
+        return ! $this->isNegative();
     }
 
     /**
@@ -213,32 +319,5 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     public function __toString()
     {
         return (string) $this->value;
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * String representation of object
-     * @link http://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     */
-    public function serialize()
-    {
-        return serialize($this->value);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Constructs the object
-     * @link http://php.net/manual/en/serializable.unserialize.php
-     *
-     * @param string $serialized <p>
-     *                           The string representation of the object.
-     *                           </p>
-     *
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        $this->value = $this->retrieveValue(unserialize($serialized));
     }
 }

@@ -696,16 +696,6 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param bool $die
-     */
-    public function dump($die = false)
-    {
-        (new Dumper())->dump($this->string);
-
-        if ($die) die;
-    }
-
-    /**
      * @param int    $offset
      * @param int    $length
      * @param string $encoding
@@ -767,31 +757,6 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         $this->string = '';
 
         return $this;
-    }
-
-    /**
-     * @param int    $decimals
-     * @param string $decimal_delimiter
-     * @param string $thousands_delimiter
-     *
-     * @return static
-     * @throws \im\Primitive\String\Exceptions\StringException
-     */
-    public function number($decimals = 2, $decimal_delimiter = '.', $thousands_delimiter = ' ')
-    {
-        if (is_numeric($this->string))
-        {
-            return new static(
-                number_format(
-                    (float) $this->string,
-                    $decimals,
-                    $this->retrieveValue($decimal_delimiter),
-                    $this->retrieveValue($thousands_delimiter)
-                )
-            );
-        }
-
-        throw new StringException('String is not numeric');
     }
 
     /**

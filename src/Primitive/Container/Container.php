@@ -1580,22 +1580,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->toJson();
     }
 
-
-    /**
-     * Dump the Container.
-     *
-     * Var dump
-     *
-     * @param bool $die
-     */
-    public function dump($die = false)
-    {
-        (new Dumper())->dump($this);
-
-        if ($die) die;
-    }
-
-
     /**
      * Call magic
      *

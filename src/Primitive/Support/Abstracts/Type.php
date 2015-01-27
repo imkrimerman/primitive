@@ -68,6 +68,20 @@ abstract class Type implements TypeInterface, Serializable {
     }
 
     /**
+     * Dump Type.
+     *
+     * Var dump
+     *
+     * @param bool $die
+     */
+    public function dump($die = false)
+    {
+        (new Dumper())->dump($this);
+
+        if ($die) die;
+    }
+
+    /**
      * @param $value
      *
      * @return static

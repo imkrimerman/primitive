@@ -7,8 +7,6 @@ use im\Primitive\Support\Contracts\FloatInterface;
 
 class Float extends Number implements FloatInterface{
 
-    use RetrievableTrait;
-
     /**
      * @var float
      */
@@ -20,6 +18,33 @@ class Float extends Number implements FloatInterface{
     public function __construct($value)
     {
         $this->initialize($value);
+    }
+
+    /**
+     * @return static
+     */
+    public function ceil()
+    {
+        return new static(ceil($this->value));
+    }
+
+    /**
+     * @return static
+     */
+    public function floor()
+    {
+        return new static(floor($this->value));
+    }
+
+    /**
+     * @param int $precision
+     * @param int $mode
+     *
+     * @return static
+     */
+    public function round($precision = 0, $mode = PHP_ROUND_HALF_UP)
+    {
+        return new static(round($this->value, $precision, $mode));
     }
 
     /**

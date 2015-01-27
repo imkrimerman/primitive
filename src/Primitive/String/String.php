@@ -995,7 +995,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         // Return an empty string if the set of indices would be empty
         if (($step > 0 && $start >= $stop) || ($step < 0 && $start <= $stop))
         {
-            return new static();
+            return new static;
         }
 
         // Return the substring if step is 1

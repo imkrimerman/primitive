@@ -36,13 +36,6 @@ class Str {
 	protected static $dashedCache = [];
 
 	/**
-	 * The cache of underscore-cased words.
-	 *
-	 * @var array
-	 */
-	protected static $underscoreCache = [];
-
-	/**
 	 * Transliterate a UTF-8 value to ASCII.
 	 *
 	 * @param  string  $value
@@ -332,14 +325,7 @@ class Str {
 			return static::$snakeCache[$value.$delimiter];
 		}
 
-		if ( ! ctype_lower($value))
-		{
-			$replace = '$1'.$delimiter.'$2';
-
-			$value = strtolower(preg_replace('/(.)([A-Z])/', $replace, $value));
-		}
-
-		return static::$snakeCache[$value.$delimiter] = $value;
+		return static::$snakeCache[$value.$delimiter] = StaticStringy::underscored($value);;
 	}
 
 	/**
@@ -384,20 +370,5 @@ class Str {
 		$value = ucwords(str_replace(array('-', '_'), ' ', $value));
 
 		return static::$studlyCache[$value] = str_replace(' ', '', $value);
-	}
-
-	/**
-	 * @param $value
-	 *
-	 * @return string
-	 */
-    public static function underscore($value)
-	{
-		if (isset(static::$underscoreCache[$value]))
-		{
-			return static::$underscoreCache[$value];
-		}
-
-		return static::$underscoreCache[$value] = StaticStringy::underscored($value);
 	}
 }

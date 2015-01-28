@@ -28,7 +28,7 @@ trait RetrievableTrait {
             case $value instanceof ArrayableInterface:
                 return $value->toArray();
             case $value instanceof stdClass:
-                return object_public_var($value);
+                return get_object_vars($value);
             default:
                 return $default;
         }
@@ -53,8 +53,12 @@ trait RetrievableTrait {
             case is_array($value):
             case $value instanceof ContainerInterface:
             case $value instanceof ArrayableInterface:
-                return (string) container($this->getArrayable($value))->implode();
+                return (string) container($value)->join();
 
+            case is_bool($value):
+                return (string) bool($value);
+
+            case is_numeric($value):
             case is_object($value) && method_exists($value, '__toString'):
                 return (string) $value;
 
@@ -105,8 +109,8 @@ trait RetrievableTrait {
     {
         switch (true)
         {
-            case is_int($value):
             case is_numeric($value):
+            case is_string($value):
             case is_bool($value):
                 return (int) $value;
 
@@ -158,12 +162,12 @@ trait RetrievableTrait {
      */
     public function getSearchable($value, $default = null)
     {
-        if ($this->isStringable($value))
+        if ($this->isArrayable($value))
         {
-            return $this->getStringable($value, $default);
+            return $this->getArrayable($value, $default);
         }
 
-        return $this->getArrayable($value, $default);
+        return $this->getStringable($value, $default);
     }
 
     /**
@@ -188,6 +192,8 @@ trait RetrievableTrait {
     {
         return  is_string($value) ||
                 is_array($value) ||
+                is_numeric($value) ||
+                is_bool($value) ||
                 $value instanceof StringInterface ||
                 $value instanceof ContainerInterface ||
                 $value instanceof ArrayableInterface ||
@@ -202,6 +208,7 @@ trait RetrievableTrait {
     public function isIntegerable($value)
     {
         return  is_numeric($value) ||
+                is_string($value) ||
                 is_bool($value) ||
                 $value instanceof IntegerInterface ||
                 $value instanceof FloatInterface ||

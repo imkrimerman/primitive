@@ -1,22 +1,21 @@
 <?php namespace im\Primitive\String;
 
+use BadMethodCallException;
 use Countable;
+use Stringy\Stringy;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
 use IteratorAggregate;
-use OutOfBoundsException;
 use InvalidArgumentException;
 
 use Stringy\StaticStringy;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
-use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\String\Exceptions\StringException;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 
 class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
@@ -47,6 +46,8 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         {
             return $this->{$value}();
         }
+
+        throw new BadMethodCallException('No: ' . $value . ' found');
     }
 
     /**
@@ -74,7 +75,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function value()
     {
-        return (string) $this->string;
+        return $this->string;
     }
 
     /**
@@ -99,7 +100,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      *
      * @return $this
      */
-    public function append($string, $delimiter = ' ')
+    public function append($string, $delimiter = '')
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
@@ -115,7 +116,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      *
      * @return $this
      */
-    public function prepend($string, $delimiter = ' ')
+    public function prepend($string, $delimiter = '')
     {
         if ($this->isStringable($string) && $this->isStringable($delimiter))
         {
@@ -190,21 +191,13 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @return static
-     */
-    public function underscore()
-    {
-        return new static(Str::underscore($this->string));
-    }
-
-    /**
      * @param string $delimiter
      *
      * @return static
      */
     public function snake($delimiter = '_')
     {
-        return new static(Str::snake($this->string, $delimiter));
+        return new static(Str::snake($this->string, $this->retrieveValue($delimiter)));
     }
 
     /**
@@ -238,7 +231,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function titleize($ignore = null)
     {
-        return new static(StaticStringy::titleize($this->string, $ignore));
+        return new static(StaticStringy::titleize($this->string, $this->getArrayable($ignore)));
     }
 
     /**
@@ -260,7 +253,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function hasAny($strings, $caseSensitive = true)
     {
-        return StaticStringy::containsAny($this->string, $this->getArrayable($strings), $caseSensitive);
+        return StaticStringy::containsAny(
+            $this->string, $this->getArrayable($strings), $this->getBoolable($caseSensitive)
+        );
     }
 
     /**
@@ -271,7 +266,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function hasAll($strings, $caseSensitive = true)
     {
-        return StaticStringy::containsAll($this->string, $this->getArrayable($strings), $caseSensitive);
+        return StaticStringy::containsAll(
+            $this->string, $this->getArrayable($strings), $this->getBoolable($caseSensitive)
+        );
     }
 
     /**
@@ -297,7 +294,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function toSpaces($tabLength = 4)
     {
-        return new static(StaticStringy::toSpaces($this->string, $tabLength));
+        return new static(StaticStringy::toSpaces($this->string, $this->getIntegerable($tabLength)));
     }
 
     /**
@@ -305,9 +302,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      *
      * @return static
      */
-    public function toTabs($tabLength = 1)
+    public function toTabs($tabLength = 4)
     {
-        return new static(StaticStringy::toTabs($tabLength));
+        return new static(StaticStringy::toTabs($this->string, $this->getIntegerable($tabLength)));
     }
 
     /**
@@ -317,7 +314,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function surround($surround)
     {
-        return new static(StaticStringy::surround($this->string, $surround));
+        return new static(StaticStringy::surround($this->string, $this->retrieveValue($surround)));
     }
 
     /**
@@ -328,7 +325,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function insert($insert, $index)
     {
-        return new static(StaticStringy::insert($this->string, $insert, $index));
+        return new static(StaticStringy::insert(
+            $this->string, $this->retrieveValue($insert), $this->getIntegerable($index))
+        );
     }
 
     /**
@@ -346,7 +345,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function at($index)
     {
-        return new static(StaticStringy::at($this->string, $index));
+        return new static(StaticStringy::at($this->string, $this->getIntegerable($index)));
     }
 
     /**
@@ -356,7 +355,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function first($length)
     {
-        return new static(StaticStringy::first($this->string, $length));
+        return new static(StaticStringy::first($this->string, $this->getIntegerable($length)));
     }
 
     /**
@@ -366,7 +365,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function last($length)
     {
-        return new static(StaticStringy::last($this->string, $length));
+        return new static(StaticStringy::last($this->string, $this->getIntegerable($length)));
     }
 
     /**
@@ -410,25 +409,23 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|Container|ArrayableInterface|string $search
-     * @param string $replace
+     * @param array|ContainerInterface|ArrayableInterface|string $search
+     * @param string|StringInterface $replace
      *
      * @return static
      */
     public function replace($search, $replace)
     {
-        $string = $this->string;
+        $string = Stringy::create($this->string);
 
         $replace = $this->retrieveValue($replace);
 
-        if ($search == ' ') $search = '\s*';
-
         foreach ((array) $this->getSearchable($search) as $find)
         {
-            $string = StaticStringy::replace($string, $find, $replace);
+            $string = $string->replace($find, $replace);
         }
 
-        return new static($string);
+        return new static((string) $string);
     }
 
     /**
@@ -746,7 +743,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function clean()
     {
-        return $this->strip()->toEntities()->trim();
+        return $this->stripTags()->toEntities()->trim();
     }
 
     /**
@@ -901,6 +898,44 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     public function __toString()
     {
         return $this->value();
+    }
+
+    /**
+     * @return \im\Primitive\Bool\Bool
+     */
+    public function toBool()
+    {
+        return bool($this->value());
+    }
+
+    /**
+     * @return \im\Primitive\Int\Int
+     */
+    public function toInt()
+    {
+        return int($this->value());
+    }
+
+    /**
+     * @return \im\Primitive\Float\Float
+     */
+    public function toFloat()
+    {
+        return float($this->value());
+    }
+
+    /**
+     * @param bool $wrapWithArray
+     *
+     * @return Container
+     */
+    public function toContainer($wrapWithArray = false)
+    {
+        $value = $this->value();
+
+        if ($wrapWithArray) $value = [$value];
+
+        return container($value);
     }
 
     /**
@@ -1096,7 +1131,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
 
         if ($this->offsetExists($offset))
         {
-            $this->string = (string) $this->chars()->set($offset, $this->retrieveValue($value))->implode();
+            $this->string = (string) $this->chars()->set($offset, $this->retrieveValue($value))->join();
         }
     }
 
@@ -1122,7 +1157,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     {
         if ($this->offsetExists($offset))
         {
-            $this->string = (string) $this->chars()->forget($offset)->implode();
+            $this->string = (string) $this->chars()->forget($offset)->join();
         }
     }
 

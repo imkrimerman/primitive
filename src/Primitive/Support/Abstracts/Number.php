@@ -165,13 +165,11 @@ abstract class Number extends Type implements TypeInterface, Serializable {
     }
 
     /**
-     * @param bool $recursive
-     *
      * @return int|number
      */
-    public function factorial($recursive = true)
+    public function factorial()
     {
-        if ($recursive)
+        if ($this->value < 100)
         {
             return factorial_recursive($this->value);
         }

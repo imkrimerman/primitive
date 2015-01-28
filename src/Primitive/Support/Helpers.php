@@ -213,7 +213,7 @@ if ( ! function_exists('factorial'))
      * @param $value
      *
      * @return int
-     * @throws \im\InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     function factorial($value)
     {
@@ -231,33 +231,6 @@ if ( ! function_exists('factorial'))
         }
 
         return $factorial;
-    }
-}
-
-
-if ( ! function_exists('measure_object'))
-{
-    /**
-     * Count object length
-     *
-     * @param $object
-     *
-     * @return int
-     */
-    function measure_object($object)
-    {
-        if (is_object($object))
-        {
-            $reflactor = new ReflectionClass($object);
-
-            $properties = $reflactor->getProperties();
-            $constants = $reflactor->getConstants();
-            $methods = $reflactor->getMethods();
-
-            return count($properties) + count($constants) + count($methods);
-        }
-
-        return 0;
     }
 }
 
@@ -279,6 +252,31 @@ if ( ! function_exists('str_replace_array'))
         }
 
         return $subject;
+    }
+}
+
+if ( ! function_exists('measure_object'))
+{
+    /**
+     * Count object length
+     *
+     * @param $object
+     *
+     * @return int
+     */
+    function measure_object($object)
+    {
+        if (is_object($object))
+        {
+            $reflactor = new ReflectionClass($object);
+
+            $properties = $reflactor->getProperties();
+            $constants = $reflactor->getConstants();
+
+            return count($properties) + count($constants);
+        }
+
+        return 0;
     }
 }
 
@@ -307,56 +305,6 @@ if ( ! function_exists('object_get'))
         }
 
         return $object;
-    }
-}
-
-if ( ! function_exists('object_has_method'))
-{
-    /**
-     * Check if object has method
-     *
-     * @param $object
-     * @param $method
-     *
-     * @return bool
-     */
-    function object_has_method($object, $method)
-    {
-        $reflactor = new ReflectionClass($object);
-
-        foreach ($reflactor->getMethods() as $reflactorMethod)
-        {
-            if ($reflactorMethod->getName() == $method)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-}
-
-if ( ! function_exists('object_method_has_acceptable_parameters'))
-{
-    /**
-     * @param $object
-     * @param $method
-     *
-     * @return bool
-     */
-    function object_method_has_acceptable_parameters($object, $method)
-    {
-        $reflactor = new ReflectionClass($object);
-
-        foreach ($reflactor->getMethods() as $reflactorMethod)
-        {
-            if ($reflactorMethod->getName() == $method && $reflactorMethod->getNumberOfRequiredParameters() == 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
 
@@ -401,20 +349,6 @@ if ( ! function_exists('data_get'))
         }
 
         return $target;
-    }
-}
-
-if ( ! function_exists('entities'))
-{
-    /**
-     * Escape HTML entities in a string.
-     *
-     * @param  string $value
-     * @return string
-     */
-    function entities($value)
-    {
-        return htmlentities($value, ENT_QUOTES, 'UTF-8', false);
     }
 }
 

@@ -1,10 +1,12 @@
 <?php namespace im\Primitive\Support\Iterators;
 
 use RecursiveArrayIterator;
-use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Traits\RetrievableTrait;
 
 
 class RecursiveContainerIterator extends RecursiveArrayIterator {
+
+    use RetrievableTrait;
 
     /**
      * (PHP 5 &gt;= 5.1.0)<br/>
@@ -28,34 +30,5 @@ class RecursiveContainerIterator extends RecursiveArrayIterator {
     public function getChildren()
     {
         return new static($this->getArrayable($this->current()));
-    }
-
-    /**
-     * @param $items
-     *
-     * @return bool
-     */
-    private function isArrayable($items)
-    {
-        return is_array($items) || $items instanceof Container || $items instanceof ArrayableInterface;
-    }
-
-    /**
-     * @param $items
-     *
-     * @return array
-     */
-    private function getArrayable($items)
-    {
-        if ($items instanceof Container)
-        {
-            $items = $items->all();
-        }
-        elseif ($items instanceof ArrayableInterface)
-        {
-            $items = $items->toArray();
-        }
-
-        return $items;
     }
 }

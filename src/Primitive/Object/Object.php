@@ -1,8 +1,8 @@
 <?php namespace im\Primitive\Object;
 
-use ArrayAccess;
 use Countable;
-use im\Primitive\Support\Iterators\RecursiveContainerIterator;
+use ArrayAccess;
+use Traversable;
 use IteratorAggregate;
 use JsonSerializable;
 
@@ -10,8 +10,8 @@ use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Contracts\ObjectInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Support\Exceptions\OffsetNotExistsException;
-use Traversable;
 
 
 class Object extends Type implements ObjectInterface, JsonSerializable, JsonableInterface, ArrayAccess, ArrayableInterface, IteratorAggregate, Countable {
@@ -22,19 +22,6 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     public function __construct($from = [])
     {
         $this->initialize($from);
-    }
-
-    /**
-     * @param $value
-     *
-     * @return mixed
-     */
-    public function __get($value)
-    {
-        if (method_exists($this, $value))
-        {
-            return $this->{$value}();
-        }
     }
 
     /**
@@ -88,6 +75,18 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     }
 
     /**
+     * @param $field
+     *
+     * @return $this
+     */
+    public function forget($field)
+    {
+        unset($this->{$field});
+
+        return $this;
+    }
+
+    /**
      * @param $from
      *
      * @return $this
@@ -117,7 +116,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     protected function retrieveValue($field)
     {
-        return value($this->{$field});
+        return object_get($this, $field);
     }
 
     /**
@@ -134,6 +133,22 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     public function __toString()
     {
         return $this->toJson();
+    }
+
+    /**
+     * @return \im\Primitive\String\String
+     */
+    public function toString()
+    {
+        return string($this->toJson());
+    }
+
+    /**
+     * @return \im\Primitive\Container\Container
+     */
+    public function toContainer()
+    {
+        return $this->value();
     }
 
     /**
@@ -212,7 +227,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function offsetExists($offset)
     {
-        return isset($this->{$offset});
+        return $this->has($offset);
     }
 
     /**
@@ -253,7 +268,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function offsetSet($offset, $value)
     {
-        $this->{$offset} = $value;
+        $this->set($offset, $value);
     }
 
     /**
@@ -269,7 +284,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function offsetUnset($offset)
     {
-        unset($this->{$offset});
+        $this->forget($offset);
     }
 
     /*
@@ -307,6 +322,6 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function getIterator()
     {
-        return new RecursiveContainerIterator();
+        return new RecursiveContainerIterator($this->value()->all());
     }
 }

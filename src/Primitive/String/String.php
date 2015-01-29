@@ -733,9 +733,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     {
         $vars = [];
 
-        parse_str($this->string, $vars);
-
-        return container($vars);
+        return mb_parse_str($this->string, $vars) ? container($vars) : container();
     }
 
     /**
@@ -791,7 +789,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function fromEncrypted($encrypted)
     {
-        $this->string = $this->fromBase64($this->retrieveValue($encrypted))->uncompress();
+        $this->string = $this->fromBase64($this->retrieveValue($encrypted))->uncompress()->value();
 
         return $this;
     }

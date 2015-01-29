@@ -47,13 +47,12 @@ if ( ! function_exists('int'))
 {
     /**
      * @param     $value
-     * @param int $default
      *
      * @return \im\Primitive\Int\Int
      */
-    function int($value, $default = 0)
+    function int($value)
     {
-        return new Int($value, $default);
+        return new Int($value);
     }
 }
 
@@ -61,13 +60,12 @@ if ( ! function_exists('float'))
 {
     /**
      * @param     $value
-     * @param int $default
      *
      * @return \im\Primitive\Float\Float
      */
-    function float($value, $default = 0)
+    function float($value)
     {
-        return new Float($value, $default);
+        return new Float($value);
     }
 }
 
@@ -75,13 +73,12 @@ if ( ! function_exists('bool'))
 {
     /**
      * @param      $value
-     * @param bool $default
      *
      * @return \im\Primitive\Bool\Bool
      */
-    function bool($value, $default = false)
+    function bool($value)
     {
-        return new Bool($value, $default);
+        return new Bool($value);
     }
 }
 

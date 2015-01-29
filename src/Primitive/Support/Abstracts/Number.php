@@ -17,11 +17,6 @@ abstract class Number extends Type implements TypeInterface, Serializable {
 
     /**
      * @param $value
-     */
-    abstract public function __construct($value);
-
-    /**
-     * @param $value
      *
      * @return $this
      */

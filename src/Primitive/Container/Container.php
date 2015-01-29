@@ -45,7 +45,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * Container can be constructed from array, json, serialized, Container or file that contains json or serialized
      *
-     * @param array|string|Container|String $from
+     * @param array|string|ContainerInterface|StringInterface $from
      *
      * @throws BadMethodCallException
      * @throws ContainerException

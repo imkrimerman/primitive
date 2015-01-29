@@ -12,8 +12,8 @@ use im\Primitive\Support\Contracts\StringInterface;
 trait RetrievableTrait {
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param array|ContainerInterface|ArrayableInterface|stdClass $value
+     * @param null|array $default
      *
      * @return mixed
      */
@@ -35,8 +35,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass $value
+     * @param null|string $default
      *
      * @return string
      */
@@ -68,8 +68,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param bool|number|StringInterface|BooleanInterface|integerInterface|FloatInterface $value
+     * @param null|bool $default
      *
      * @return bool
      */
@@ -100,8 +100,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param number|string|bool|IntegerInterface|StringInterface|FloatInterface|BooleanInterface $value
+     * @param null|int $default
      *
      * @return int
      */
@@ -128,8 +128,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param number|bool|FloatInterface|StringInterface|IntegerInterface|BooleanInterface $value
+     * @param null|float $default
      *
      * @return float
      */
@@ -155,8 +155,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param      $value
-     * @param null $default
+     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass $value
+     * @param null|string|array $default
      *
      * @return array|string
      */
@@ -171,7 +171,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param array|ContainerInterface|ArrayableInterface|stdClass $value
      *
      * @return bool
      */
@@ -184,7 +184,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param string|array|number|bool|StringInterface|ContainerInterface|ArrayableInterface|stdClass $value
      *
      * @return bool
      */
@@ -201,7 +201,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param number|string|bool|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
      *
      * @return bool
      */
@@ -217,7 +217,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param number|string|bool|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
      *
      * @return bool
      */
@@ -227,7 +227,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param bool|number|string|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
      *
      * @return bool
      */
@@ -243,7 +243,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param $value
+     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|int|float|stdClass $value
      *
      * @return bool
      */

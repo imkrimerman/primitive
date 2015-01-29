@@ -11,9 +11,6 @@ before_script:
 
 script: vendor/bin/phpspec run
 
-after_script:
-  - php vendor/bin/coveralls
-
 matrix:
   allow_failures:
     - php: hhvm

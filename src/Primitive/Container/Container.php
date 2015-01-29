@@ -6,6 +6,7 @@ use \ArrayAccess;
 use \JsonSerializable;
 use \IteratorAggregate;
 use \BadMethodCallException;
+use \InvalidArgumentException;
 use \RecursiveIteratorIterator;
 
 use JWT;
@@ -55,14 +56,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         if ($this->isArrayable($from))
         {
-            return $this->fromArray($this->retrieveValue($from));
+            $this->fromArray($this->retrieveValue($from));
         }
         elseif ($this->isStringable($from))
         {
-            return $this->fromString($this->getStringable($from));
+            $this->fromString($this->getStringable($from));
         }
-
-        throw new BadMethodCallException('Bad constructor argument, expected string, array or Container');
+        else
+        {
+            throw new InvalidArgumentException('Bad constructor argument, expected string, array or Container');
+        }
     }
 
 

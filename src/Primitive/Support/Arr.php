@@ -216,7 +216,7 @@ class Arr {
 
 		foreach (explode('.', $key) as $segment)
 		{
-			if ( ! is_array($array) || ! array_key_exists($segment, $array))
+			if (static::isNotArrayOrNotKeyExists($array, $segment))
 			{
 				return value($default);
 			}
@@ -242,7 +242,7 @@ class Arr {
 
 		foreach (explode('.', $key) as $segment)
 		{
-			if ( ! is_array($array) || ! array_key_exists($segment, $array))
+			if (static::isNotArrayOrNotKeyExists($array, $segment))
 			{
 				return false;
 			}
@@ -372,6 +372,17 @@ class Arr {
 		}
 
 		return $filtered;
+	}
+
+	/**
+	 * @param $array
+	 * @param $segment
+	 *
+	 * @return bool
+	 */
+	protected static function isNotArrayOrNotKeyExists($array, $segment)
+	{
+		return ! is_array($array) || ! array_key_exists($segment, $array);
 	}
 
 }

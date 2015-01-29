@@ -23,4 +23,4 @@ gulp.task('tdd', function() {
     gulp.watch(['./spec/**/*.php', './src/**/*.php'], ['phpspec']);
 });
 
-gulp.task('default', ['tdd']);
+gulp.task('default', ['phpspec', 'tdd']);

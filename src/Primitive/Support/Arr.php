@@ -1,11 +1,7 @@
 <?php namespace im\Primitive\Support;
 
 
-use im\Primitive\Support\Traits\MacroableTrait;
-
 class Arr {
-
-	use MacroableTrait;
 
 	/**
 	 * Add an element to an array using "dot" notation if it doesn't exist.

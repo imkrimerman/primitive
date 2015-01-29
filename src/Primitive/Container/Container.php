@@ -1630,35 +1630,35 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Call magic
      *
-     * @param $callable
-     * @param $args
+     * @param $method
+     * @param $parameters
      *
      * @return mixed
      */
-    public function __call($callable, $args)
+    public function __call($method, $parameters)
     {
-        $callable = string($callable);
+        $method = string($method);
 
-        if ($callable->startsWith('array_'))
+        if ($method->startsWith('array_'))
         {
-            return call_user_func_array($callable(), array_merge([$this->items], $args));
+            return call_user_func_array($method(), array_merge([$this->items], $parameters));
         }
 
-        if ($callable->startsWith('where'))
+        if ($method->startsWith('where'))
         {
-            $key = $callable->cut(Str::length('where'), $callable->length())->lower();
+            $key = $method->cut(Str::length('where'), $method->length())->lower();
 
-            return $this->where([(string)$key => $args[0]]);
+            return $this->where([(string)$key => $parameters[0]]);
         }
 
-        if ($callable->startsWith('combine'))
+        if ($method->startsWith('combine'))
         {
-            $what = $callable->removeLeft('combine')->lower()->value();
+            $what = $method->removeLeft('combine')->lower()->value();
 
-            return $this->combine($args[0], $what);
+            return $this->combine($parameters[0], $what);
         }
 
-        throw new BadMethodCallException(__CLASS__ . '->' . $callable);
+        return static::__callStatic((string) $method, $parameters);
     }
 
 

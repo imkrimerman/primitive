@@ -2,6 +2,7 @@
 
 namespace spec\im\Primitive\String;
 
+use im\Primitive\Container\Container;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use Stringy\StaticStringy;
@@ -389,6 +390,20 @@ class StringSpec extends ObjectBehavior
         $this->ensureRight('ensured')->value()->shouldBe($this->init.'ensured');
     }
 
+    function it_should_remove_chars_from_left()
+    {
+        $str = substr($this->init, 2);
+
+        $this->removeLeft('fo')->value()->shouldBe($str);
+    }
+
+    function it_should_remove_chars_from_right()
+    {
+        $str = substr($this->init, 0, -2);
+
+        $this->removeRight('ar')->value()->shouldBe($str);
+    }
+
     function it_should_replace_string()
     {
         $this->replace('foo', 'baz')->value()->shouldBe(str_replace('foo', 'baz', $this->init));
@@ -404,6 +419,238 @@ class StringSpec extends ObjectBehavior
 
         $this->replace($container, 'baz')->value()->shouldBe(str_replace($container->all(), 'baz', $this->init));
     }
+
+    function it_should_check_if_value_starts_with_given_string()
+    {
+        $this->startsWith('foo')->shouldBe(true);
+        $this->startsWith('Bar')->shouldBe(false);
+        $this->startsWith(container(['foo', 'f']))->shouldBe(true);
+    }
+
+    function it_should_check_if_value_ends_with_given_string()
+    {
+        $this->endsWith('foo')->shouldBe(false);
+        $this->endsWith('Bar')->shouldBe(true);
+        $this->endsWith(container(['Bar', 'ar']))->shouldBe(true);
+    }
+
+    function it_should_check_if_string_is_matching_pattern()
+    {
+        $this->is('.*')->shouldBe(true);
+    }
+
+    function it_should_remove_duplicated_values_at_the_end_and_leave_one()
+    {
+        $this->finish('r')->value()->shouldBe($this->init);
+
+        $this->set('dir//')->finish('/')->value()->shouldBe('dir/');
+    }
+
+    function it_should_cut_by_words_count()
+    {
+        $this->set('lorem ipsum dolor foo bar')->words(3)->value()->shouldBe('lorem ipsum dolor...');
+    }
+
+    function it_should_parse_callback_and_method()
+    {
+        $this->set('class@method')->parseCallback()->value()->shouldBe(['class', 'method']);
+    }
+
+    function it_should_return_random_string()
+    {
+        $this->random()->value()->shouldBeString();
+    }
+
+    function it_should_return_quick_random_string()
+    {
+        $this->quickRandom()->value()->shouldBeString();
+    }
+
+    function it_should_return_slug_with_ascii()
+    {
+        $match = (string) StaticStringy::slugify('Вот такой вот адрес');
+
+        $this->set('Вот такой вот адрес')->slug()->value()->shouldBe($match);
+    }
+
+    function it_should_explode_value_in_container()
+    {
+        $explode = $this->explode('B');
+
+        $explode->shouldHaveType(Container::class);
+
+        $explode->all()->shouldBe(['foo', 'ar']);
+    }
+
+    function it_should_implode_arrayable_to_value()
+    {
+        $this->implode('', container(['foo', 'Bar']))->value()->shouldBe($this->init);
+
+        $this->shouldThrow('InvalidArgumentException')->duringImplode('', true);
+    }
+
+    function it_should_trim_value_by_given_parameter()
+    {
+        $init = ' foo ';
+
+        $this->set($init)->trim('front')->value()->shouldBe(ltrim($init));
+        $this->set($init)->trim('back')->value()->shouldBe(rtrim($init));
+        $this->set($init.' bar')->trim('all')->value()->shouldBe(trim($init).'bar');
+        $this->set($init)->trim()->value()->shouldBe(trim($init));
+    }
+
+    function it_should_generate_random_uuid()
+    {
+        $uuid = $this->uuid();
+
+        $uuid->value()->shouldBeString();
+
+        $this->isUuid($uuid)->shouldBe(true);
+
+        $this->set($uuid)->isUuid()->shouldBe(true);
+
+        $this->uuid()->shouldNotBe($uuid);
+    }
+
+    function it_should_repeat_value()
+    {
+        $this->repeat(3)->value()->shouldBe(str_repeat($this->init, 3));
+    }
+
+    function it_should_shuffle_value()
+    {
+        $this->shuffle()->value()->shouldNotBe($this->init);
+        $this->shuffle(false)->value()->shouldNotBe($this->init);
+    }
+
+    function it_should_split_words_in_Container()
+    {
+        $init = 'lorem ipsum dolorm';
+
+        $words = $this->set($init)->wordSplit();
+
+        $words->shouldHaveType(Container::class);
+
+        $words->all()->shouldBe(str_word_count($init, 2));
+    }
+
+    function it_should_strip_tags()
+    {
+        $tags = '<div>'.$this->init.'</div>';
+
+        $this->set($tags)->stripTags()->value()->shouldBe(strip_tags($tags));
+    }
+
+    function it_should_encode_to_base64()
+    {
+        $_64 = $this->base64();
+
+        $_64->value()->shouldBe(base64_encode($this->init));
+    }
+
+    function it_should_init_from_base64_to_valid_string()
+    {
+        $_64 = base64_encode($this->init);
+
+        $this->fromBase64($_64)->value()->shouldBe($this->init);
+    }
+
+    function it_should_encode_html_entities()
+    {
+        $tags = '<div>'.$this->init.'</div>';
+
+        $this->set($tags)->toEntities()->value()->shouldBe(htmlentities($tags));
+    }
+
+    function it_should_decode_html_entities()
+    {
+        $tags = '<div>'.$this->init.'</div>';
+
+        $this->set($tags)->fromEntities()->value()->shouldBe(html_entity_decode($tags));
+
+        $this->fromEntities($tags)->value()->shouldBe(html_entity_decode($tags));
+    }
+
+    function it_should_echo_value_with_append_and_prepend()
+    {
+        ob_start();
+
+        $this->say('me', 'you');
+
+        $said = ob_get_contents();
+
+        $this->set($said)->value()->shouldBe('me'.$this->init.'you');
+
+        ob_end_clean();
+    }
+
+    function it_should_echo_value()
+    {
+        ob_start();
+
+        $this->say(new \stdClass(), new \stdClass());
+
+        $said = ob_get_contents();
+
+        $this->set($said)->value()->shouldBe($this->init);
+
+        ob_end_clean();
+    }
+
+    function it_should_cut_value()
+    {
+        $this->cut(2)->value()->shouldBe(substr($this->init, 2));
+        $this->cut(2, 1)->value()->shouldBe(substr($this->init, 2, 1));
+    }
+
+    function it_should_limit_letters_quantity_to_given()
+    {
+        $this->limit(3)->value()->shouldBe(substr($this->init, 0, 3).'...');
+    }
+
+    function it_should_limit_letters_quantity_to_given_but_check_for_words_cut()
+    {
+        $this->limitSafe(3)->value()->shouldBe('...');
+    }
+
+    function it_should_parse_vars_from_string()
+    {
+        $init = 'http://localhost:8000/?XDEBUG_SESSION_START=11857';
+
+        $vars = $this->set($init)->toVars();
+
+        $vars->shouldHaveType(Container::class);
+
+        $expect = [];
+        mb_parse_str($init, $expect);
+
+        $vars->all()->shouldBe($expect);
+    }
+
+    function it_should_clean_string_from_tags_entities_and_trim()
+    {
+        $init = ' <div>'.$this->init.'</div>& ';
+
+        $this->set($init)->clean()->value()->shouldBe(trim(htmlentities(strip_tags($init))));
+    }
+
+    function it_should_reset_inner_string()
+    {
+        $this->reset()->value()->shouldBe('');
+    }
+
+    function it_should_compress_string()
+    {
+        $this->compress()->value()->shouldBe(gzcompress($this->init));
+    }
+
+    function it_should_uncompress_string()
+    {
+        $str = gzcompress($this->init);
+
+        $this->set($str)->uncompress()->value()->shouldBe($this->init);
+    }
+
 
     /**
      * Abstract Type methods

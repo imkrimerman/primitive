@@ -82,6 +82,34 @@ if ( ! function_exists('bool'))
     }
 }
 
+if ( ! function_exists('uuid'))
+{
+    /**
+     * Generates random Unique User Identifier
+     *
+     * @return string
+     */
+    function uuid()
+    {
+        return string()->uuid()->value();
+    }
+}
+
+if ( ! function_exists('is_uuid'))
+{
+    /**
+     * Generates random Unique User Identifier
+     *
+     * @param string|StringInterface $uuid
+     *
+     * @return string
+     */
+    function is_uuid($uuid)
+    {
+        return string($uuid)->isUuid();
+    }
+}
+
 if ( ! function_exists('value'))
 {
     /**

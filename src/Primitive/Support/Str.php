@@ -1,11 +1,9 @@
 <?php namespace im\Primitive\Support;
 
 use Stringy\StaticStringy;
-use im\Primitive\Support\Traits\MacroableTrait;
+
 
 class Str {
-
-	use MacroableTrait;
 
 	/**
 	 * The cache of snake-cased words.
@@ -155,6 +153,26 @@ class Str {
 		$pattern = str_replace('\*', '.*', $pattern).'\z';
 
 		return (bool) preg_match('#^'.$pattern.'#', $value);
+	}
+
+	/**
+	 * Returns true if $str matches the supplied pattern, false otherwise.
+	 *
+	 * @param  string $pattern Regex pattern to match against
+	 *
+	 * @param         $string string to match
+	 *
+	 * @return bool Whether or not $str matches the pattern
+	 */
+	public static function matches($pattern, $string)
+	{
+		$regexEncoding = mb_regex_encoding();
+		mb_regex_encoding(mb_internal_encoding());
+
+		$match = mb_ereg_match($pattern, $string);
+		mb_regex_encoding($regexEncoding);
+
+		return $match;
 	}
 
 	/**

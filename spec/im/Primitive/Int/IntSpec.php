@@ -122,6 +122,11 @@ class IntSpec extends ObjectBehavior
         $this->toContainer()->shouldHaveType('im\Primitive\Container\Container');
     }
 
+    function it_should_return_value_with_get()
+    {
+        $this->get()->shouldBe($this->init);
+    }
+
     /**
      * Math
      */
@@ -152,6 +157,13 @@ class IntSpec extends ObjectBehavior
         $divide = 10;
 
         $this->divide($divide)->value()->shouldBe($this->init / $divide);
+    }
+
+    function it_should_throw_if_divide_by_zero()
+    {
+        $divide = 0;
+
+        $this->shouldThrow('\UnexpectedValueException')->duringDivide($divide);
     }
 
     function it_should_modulo_values()
@@ -205,6 +217,8 @@ class IntSpec extends ObjectBehavior
     function it_should_return_factorial_of_value()
     {
         $this->factorial()->shouldBe(factorial($this->init));
+
+        $this->set(120)->factorial()->shouldBe(factorial(120));
     }
 
     function it_should_format_int_to_correct_float_string()

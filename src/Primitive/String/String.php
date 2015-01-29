@@ -17,7 +17,6 @@ use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 
 class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
 
@@ -438,7 +437,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function replaceRegex($pattern, $replace)
     {
-        return new static(StaticStringy::regexReplace($this->string, $pattern, $this->retrieveValue($replace)));
+        return new static(StaticStringy::regexReplace(
+            $this->string, $this->retrieveValue($pattern), $this->retrieveValue($replace))
+        );
     }
 
     /**
@@ -448,7 +449,16 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function startsWith($needles)
     {
-        return Str::startsWith($this->string, $this->getArrayable($needles));
+        if ($this->isArrayable($needles))
+        {
+            $needles = $this->getArrayable($needles);
+        }
+        else
+        {
+            $needles = $this->getStringable($needles);
+        }
+
+        return Str::startsWith($this->string, $needles);
     }
 
     /**
@@ -458,7 +468,16 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function endsWith($needles)
     {
-        return Str::endsWith($this->string, $this->getArrayable($needles));
+        if ($this->isArrayable($needles))
+        {
+            $needles = $this->getArrayable($needles);
+        }
+        else
+        {
+            $needles = $this->getStringable($needles);
+        }
+
+        return Str::endsWith($this->string, $needles);
     }
 
     /**
@@ -468,7 +487,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function is($pattern)
     {
-        return Str::is($this->retrieveValue($pattern), $this->string);
+        return (bool) Str::matches($this->retrieveValue($pattern), $this->string);
     }
 
     /**
@@ -493,14 +512,28 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param string $callback
      * @param string $default
      *
      * @return \im\Primitive\Container\Container
      */
-    public function parseCallback($callback, $default = '')
+    public function parseCallback($default = '')
     {
-        return container(Str::parseCallback($this->retrieveValue($callback), $default));
+        return container(Str::parseCallback($this->string, $default));
+    }
+
+    /**
+     * Generates random Unique User Identifier
+     *
+     * @return static
+     */
+    public function uuid()
+    {
+        return new static(sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        ));
     }
 
     /**
@@ -543,12 +576,13 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         return container(explode($this->retrieveValue($delimiter), $this->string));
     }
 
+
     /**
-     * @param string $delimiter
-     * @param array  $array
+     * @param $delimiter
+     * @param $array
      *
      * @return $this
-     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
+     * @throws InvalidArgumentException
      */
     public function implode($delimiter, $array)
     {
@@ -559,14 +593,13 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
             return $this;
         }
 
-        throw new UnexpectedArgumentValueException('Argument 2 should be array, Container or instance of Arrayable');
+        throw new InvalidArgumentException('Argument 2 should be array, Container or instance of Arrayable');
     }
 
     /**
      * @param null|string $what
      *
      * @return static
-     * @throws \im\Primitive\String\Exceptions\UnexpectedArgumentValueException
      */
     public function trim($what = null)
     {
@@ -577,7 +610,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
             case 'back':
                 return new static(rtrim($this->string));
             case 'all':
-                return $this->replace(' ', '');
+                return $this->replaceRegex('\s*', '');
             default:
                 return new static(trim($this->string));
         }
@@ -600,7 +633,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function shuffle($quick = true)
     {
-        if ($quick)
+        if ($this->getBoolable($quick))
         {
             return new static(str_shuffle($this->string));
         }
@@ -609,13 +642,11 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null|array|Container|ArrayableInterface|stdClass $charsAsWords
-     *
      * @return \im\Primitive\Container\Container
      */
-    public function wordSplit($charsAsWords = null)
+    public function wordSplit()
     {
-        return container(str_word_count($this->string, 2, $this->getArrayable($charsAsWords)));
+        return container(str_word_count($this->string, 2));
     }
 
     /**
@@ -656,17 +687,22 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param string $entities
+     * @param string|null $entities
      * @param int    $flags
      * @param string $encoding
      *
      * @return $this
      */
-    public function fromEntities($entities, $flags = ENT_QUOTES, $encoding = 'UTF-8')
+    public function fromEntities($entities = null, $flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        $this->string = html_entity_decode($this->retrieveValue($entities), $flags, $encoding);
+        if ( ! is_null($entities))
+        {
+            $this->string = html_entity_decode($this->retrieveValue($entities), $flags, $encoding);
 
-        return $this;
+            return $this;
+        }
+
+        return new static(html_entity_decode($this->string, $flags, $encoding));
     }
 
     /**
@@ -695,13 +731,13 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param int    $offset
-     * @param int    $length
-     * @param string $encoding
+     * @param int      $offset
+     * @param int|null $length
+     * @param string   $encoding
      *
      * @return static
      */
-    public function cut($offset, $length, $encoding = 'UTF-8')
+    public function cut($offset, $length = null, $encoding = 'UTF-8')
     {
         return new static(mb_substr($this->string, $offset, $length, $encoding));
     }
@@ -714,7 +750,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function limit($limit = 100, $end = '...')
     {
-        return new static(Str::limit($this->string, $limit, $this->retrieveValue($end)));
+        return new static(
+            Str::limit($this->string, $this->getIntegerable($limit), $this->retrieveValue($end))
+        );
     }
 
     /**
@@ -725,7 +763,9 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function limitSafe($limit = 100, $end = '...')
     {
-        return new static(StaticStringy::safeTruncate($this->string, $limit).$this->retrieveValue($end));
+        return new static(
+            StaticStringy::safeTruncate($this->string, $this->getIntegerable($limit)).$this->retrieveValue($end)
+        );
     }
 
     /**
@@ -895,6 +935,25 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     public function isUpper()
     {
         return StaticStringy::isUpperCase($this->string);
+    }
+
+    /**
+     * @param null|string|StringInterface $uuid
+     *
+     * @return bool
+     */
+    public function isUuid($uuid = null)
+    {
+        if (is_null($uuid))
+        {
+            $uuid = $this->string;
+        }
+
+        $uuid = $this->retrieveValue($uuid);
+
+        return (bool) preg_match(
+            '/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $uuid
+        );
     }
 
     /**

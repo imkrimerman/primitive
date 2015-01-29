@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Support\Traits;
 
+
 trait MacroableTrait {
 
 	/**

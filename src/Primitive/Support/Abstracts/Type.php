@@ -2,10 +2,13 @@
 
 use Serializable;
 use im\Primitive\Support\Dump\Dumper;
+use im\Primitive\Support\Traits\MacroableTrait;
 use im\Primitive\Support\Contracts\TypeInterface;
 
 
 abstract class Type implements TypeInterface, Serializable {
+
+    use MacroableTrait;
 
     /**
      * @param $value
@@ -48,6 +51,8 @@ abstract class Type implements TypeInterface, Serializable {
         {
             return $this->{$value}();
         }
+
+        throw new \InvalidArgumentException('Argument 1 is invalid, offset not exists.');
     }
 
     /**

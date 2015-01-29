@@ -735,7 +735,12 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     {
         $vars = [];
 
-        return mb_parse_str($this->string, $vars) ? container($vars) : container();
+        if (mb_parse_str($this->string, $vars) && ! is_null($vars))
+        {
+            return container($vars);
+        }
+
+        return container();
     }
 
     /**

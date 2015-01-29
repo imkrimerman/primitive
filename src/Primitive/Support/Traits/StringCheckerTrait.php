@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Support\Traits;
 
 use JWT;
+use UnexpectedValueException;
 
 
 trait StringCheckerTrait {

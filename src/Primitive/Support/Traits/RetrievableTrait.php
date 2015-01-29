@@ -12,8 +12,8 @@ use im\Primitive\Support\Contracts\StringInterface;
 trait RetrievableTrait {
 
     /**
-     * @param array|ContainerInterface|ArrayableInterface|stdClass|null $value
-     * @param null|array|string $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return mixed
      */
@@ -35,8 +35,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass|null $value
-     * @param null|string|array $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return string
      */
@@ -45,10 +45,8 @@ trait RetrievableTrait {
         switch (true)
         {
             case is_string($value):
-                return $value;
-
             case $value instanceof StringInterface:
-                return $value->value();
+                return (string) $value;
 
             case is_array($value):
             case $value instanceof ContainerInterface:
@@ -68,8 +66,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param bool|number|StringInterface|BooleanInterface|integerInterface|FloatInterface|null $value
-     * @param null|bool $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return bool
      */
@@ -100,8 +98,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|string|bool|IntegerInterface|StringInterface|FloatInterface|BooleanInterface|null $value
-     * @param null|int $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return int
      */
@@ -128,8 +126,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|bool|FloatInterface|StringInterface|IntegerInterface|BooleanInterface|null $value
-     * @param null|float $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return float
      */
@@ -155,8 +153,8 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass|null $value
-     * @param null|string|array $default
+     * @param mixed $value
+     * @param mixed $default
      *
      * @return array|string|null
      */
@@ -175,7 +173,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param array|ContainerInterface|ArrayableInterface|stdClass $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -188,7 +186,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param string|array|number|bool|StringInterface|ContainerInterface|ArrayableInterface|stdClass $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -205,7 +203,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|string|bool|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -221,7 +219,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|string|bool|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -231,23 +229,17 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param bool|number|string|IntegerInterface|FloatInterface|StringInterface|BooleanInterface $value
+     * @param mixed $value
      *
      * @return bool
      */
     public function isBoolable($value)
     {
-        return  is_bool($value) ||
-                is_numeric($value) ||
-                is_string($value) ||
-                $value instanceof StringInterface ||
-                $value instanceof BooleanInterface ||
-                $value instanceof IntegerInterface ||
-                $value instanceof FloatInterface;
+        return  $this->getIntegerable($value);
     }
 
     /**
-     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|int|float|stdClass $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -274,5 +266,13 @@ trait RetrievableTrait {
             'y' => true,    'n' => false,
             '+' => true,    '-' => false
         ];
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDefault()
+    {
+        return '';
     }
 }

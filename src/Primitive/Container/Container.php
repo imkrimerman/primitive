@@ -316,22 +316,24 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Key an associative array by a field.
      *
-     * @param  string  $keyBy
+     * @param  string|StringInterface  $keyBy
      * @return static
      */
     public function keysByField($keyBy)
     {
         // TODO make test for keysByField
-        $results = [];
+        $byField = [];
+
+        $keyBy = $this->getStringable($keyBy);
 
         foreach ($this->items as $item)
         {
             $key = data_get($item, $keyBy);
 
-            $results[$key] = $item;
+            $byField[$key] = $item;
         }
 
-        return new static($results);
+        return new static($byField);
     }
 
 
@@ -543,7 +545,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param  string $value
      * @param  string $key
-     * @return array
+     *
+     * @return static
      */
     public function lists($value, $key = null)
     {
@@ -557,7 +560,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param bool $preserveKeys
      *
-     * @return bool|\im\Primitive\Container\Container
+     * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadLengthException
      */
     public function chunk($size = 2, $preserveKeys = false)
@@ -583,9 +586,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * You can specify what to combine 'keys' or 'values' with the second argument
      *
-     * @param $array
+     * @param array|ContainerInterface|ArrayableInterface|stdClass $array
      * @param string $what
-     * @return array|string
+     *
+     * @return static
      * @throws BadMethodCallException
      * @throws BadLengthException
      */
@@ -827,18 +831,23 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * You can return result or assign to Container with the forth argument
      *
-     * @param      $offset
-     * @param null $length
-     * @param bool $preserve_keys
-     * @param bool $set
+     * @param int|IntegerInterface $offset
+     * @param null|int|IntegerInterface $length
+     * @param bool|BooleanInterface $preserve_keys
+     * @param bool|BooleanInterface $set
      *
      * @return array|Container
      */
     public function cut($offset, $length = null, $preserve_keys = false, $set = true)
     {
-        $result = array_slice($this->items, $offset, $length, $preserve_keys);
+        $result = array_slice(
+            $this->items,
+            $this->getIntegerable($offset),
+            $this->getIntegerable($length),
+            $this->getBoolable($preserve_keys)
+        );
 
-        if ($set === true)
+        if ($this->getBoolable($set) === true)
         {
             $this->items = empty($result) ? [] : $result;
 
@@ -1122,7 +1131,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * Get gathered column of a nested array element.
      *
      * @param $key
-     * @return array
+     * @return static
      */
     public function column($key)
     {
@@ -1579,7 +1588,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Construct from string
      *
-     * @param array $string
+     * @param string $string
      *
      * @return $this
      * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
@@ -1677,8 +1686,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
 
     /**
-     * @param $conditions
-     * @param $preserveKeys
+     * @param array $conditions
+     * @param bool $preserveKeys
      *
      * @return array
      * @throws EmptyContainerException
@@ -1979,14 +1988,15 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     */
 
     /**
-     * @return array|string
+     * @return array
      */
     public function jsonSerialize()
     {
         return $this->filter(function($value)
         {
             return ! is_callable($value);
-        });
+
+        })->all();
     }
 
     /*

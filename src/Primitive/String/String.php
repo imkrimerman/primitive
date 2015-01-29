@@ -449,16 +449,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function startsWith($needles)
     {
-        if ($this->isArrayable($needles))
-        {
-            $needles = $this->getArrayable($needles);
-        }
-        else
-        {
-            $needles = $this->getStringable($needles);
-        }
-
-        return Str::startsWith($this->string, $needles);
+        return Str::startsWith($this->string, $this->getSearchable($needles));
     }
 
     /**
@@ -468,16 +459,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function endsWith($needles)
     {
-        if ($this->isArrayable($needles))
-        {
-            $needles = $this->getArrayable($needles);
-        }
-        else
-        {
-            $needles = $this->getStringable($needles);
-        }
-
-        return Str::endsWith($this->string, $needles);
+        return Str::endsWith($this->string, $this->getSearchable($needles));
     }
 
     /**

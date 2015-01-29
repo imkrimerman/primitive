@@ -36,7 +36,7 @@ trait RetrievableTrait {
 
     /**
      * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass|null $value
-     * @param null|string $default
+     * @param null|string|array $default
      *
      * @return string
      */

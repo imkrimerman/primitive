@@ -6,7 +6,6 @@ use \ArrayAccess;
 use \JsonSerializable;
 use \IteratorAggregate;
 use \BadMethodCallException;
-use \UnexpectedValueException;
 use \RecursiveIteratorIterator;
 
 use JWT;
@@ -14,6 +13,7 @@ use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\ContainerInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
@@ -29,6 +29,7 @@ use im\Primitive\Container\Exceptions\EmptyContainerException;
 class Container extends Type implements ContainerInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
     use RetrievableTrait;
+    use StringCheckerTrait;
 
     /*
     |--------------------------------------------------------------------------
@@ -1170,7 +1171,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function truly($recursive = false, callable $function = null)
     {
-        $function = ! is_null($function) ?: function ($item) {return ! empty($item);};
+        if (is_null($function))
+        {
+            $function = function ($item) {return ! empty($item);};
+        }
 
         return new static($this->filter($function, $recursive));
     }
@@ -1513,7 +1517,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * Contents can be json or serialized array
      *
-     * @param $file
+     * @param string $file
      *
      * @throws ContainerException
      * @throws NotIsFileException
@@ -1521,27 +1525,23 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function fromFile($file)
     {
-        if (is_string($file) && is_file($file) && is_readable($file))
+        if ( ! $this->isFile($file))
         {
-            $content = file_get_contents($file);
-
-            if ($this->isJson($content))
-            {
-                $content = json_decode($content, true);
-            }
-            elseif ($this->isSerialized($content))
-            {
-                $content = unserialize($content);
-            }
-            else
-            {
-                throw new ContainerException('Can\'t convert file to Container');
-            }
-
-            return $this->initialize($content);
+            throw new NotIsFileException('Not is file: ' . $file);
         }
 
-        throw new NotIsFileException('Not is file: ' . $file);
+        $content = file_get_contents($file);
+
+        if ($this->isJson($content))
+        {
+            return $this->initialize(json_decode($content, true));
+        }
+        elseif ($this->isSerialized($content))
+        {
+            return $this->initialize(unserialize($content));
+        }
+
+        throw new ContainerException('Can\'t convert file to Container');
     }
 
 
@@ -1870,78 +1870,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         }
 
         return $this;
-    }
-
-
-    /**
-     * Check if string is encrypted Container
-     *
-     * @param $encrypted
-     *
-     * @param $key
-     *
-     * @return bool
-     */
-    protected function isEncryptedContainer($encrypted, $key)
-    {
-        try
-        {
-            $data = JWT::decode($encrypted, $key);
-        }
-        catch(UnexpectedValueException $e)
-        {
-            return false;
-        }
-
-        return $this->isJson($data->container);
-    }
-
-    /**
-     * Check if string is readable file
-     *
-     * @param $string
-     *
-     * @return bool
-     */
-    protected function isFile($string)
-    {
-        return is_file($string) && is_readable($string);
-    }
-
-
-    /**
-     * Checks if given string is Json
-     *
-     * @param $string
-     *
-     * @return bool
-     */
-    protected function isJson($string)
-    {
-        if (is_string($string))
-        {
-            return is_array(json_decode($string, true));
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Checks if given string is serialized
-     *
-     * @param $string
-     *
-     * @return bool
-     */
-    protected function isSerialized($string)
-    {
-        if ($string === 'b:0;' || @unserialize($string) !== false)
-        {
-            return true;
-        }
-
-        return false;
     }
 
     /**

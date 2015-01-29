@@ -117,7 +117,7 @@ class StringSpec extends ObjectBehavior
 
     function it_should_convert_to_Container_Type()
     {
-        $this->toContainer(true)->shouldHaveType('im\Primitive\Container\Container');
+        $this->toContainer()->shouldHaveType('im\Primitive\Container\Container');
     }
 
     function it_should_return_value_with_get_method()

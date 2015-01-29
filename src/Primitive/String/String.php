@@ -14,6 +14,7 @@ use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
@@ -21,6 +22,7 @@ use im\Primitive\String\Exceptions\UnexpectedArgumentValueException;
 class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
 
     use RetrievableTrait;
+    use StringCheckerTrait;
 
     /**
      * @var string
@@ -102,7 +104,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function append($string, $delimiter = '')
     {
-        if ($this->isStringable($string) && $this->isStringable($delimiter))
+        if ($this->isValidArgs($string, $delimiter))
         {
             $this->string .= $this->retrieveValue($delimiter) . $this->retrieveValue($string);
         }
@@ -118,7 +120,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function prepend($string, $delimiter = '')
     {
-        if ($this->isStringable($string) && $this->isStringable($delimiter))
+        if ($this->isValidArgs($string, $delimiter))
         {
             $this->string = $this->retrieveValue($string) . $this->retrieveValue($delimiter) . $this->string;
         }
@@ -923,15 +925,16 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param bool $wrapWithArray
-     *
-     * @return Container
+     * @return \im\Primitive\Container\Container
      */
-    public function toContainer($wrapWithArray = false)
+    public function toContainer()
     {
         $value = $this->value();
 
-        if ($wrapWithArray) $value = [$value];
+        if ( ! $this->isFile($value) || ! $this->isJson() || ! $this->isSerialized())
+        {
+            $value = [$value];
+        }
 
         return container($value);
     }
@@ -959,6 +962,18 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         $this->string = $this->retrieveValue($string);
 
         return $this;
+    }
+
+
+    /**
+     * @param $string
+     * @param $delimiter
+     *
+     * @return bool
+     */
+    protected function isValidArgs($string, $delimiter)
+    {
+        return $this->isStringable($string) && $this->isStringable($delimiter);
     }
 
     /**
@@ -994,7 +1009,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      * @param $stop
      * @param $step
      *
-     * @return \im\Primitive\String\String|static
+     * @return static
      */
     protected function getSlice($start, $stop, $step)
     {

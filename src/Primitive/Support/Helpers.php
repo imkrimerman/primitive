@@ -13,7 +13,7 @@ use im\Primitive\Bool\Bool;
 if ( ! function_exists('container'))
 {
     /**
-     * @param array $array
+     * @param array|string|ContainerInterface|StringInterface $array
      * @param int   $type
      *
      * @return \im\Primitive\Container\Container

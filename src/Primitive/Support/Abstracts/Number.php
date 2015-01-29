@@ -1,7 +1,9 @@
 <?php namespace im\Primitive\Support\Abstracts;
 
-use im\Primitive\Support\Str;
 use Serializable;
+use UnexpectedValueException;
+
+use im\Primitive\Support\Str;
 use im\Primitive\Support\Contracts\TypeInterface;
 use im\Primitive\Support\Traits\RetrievableTrait;
 

@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Support\Abstracts;
 
 use Serializable;
+use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Contracts\TypeInterface;
 
 

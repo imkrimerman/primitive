@@ -13,6 +13,8 @@ class BoolSpec extends ObjectBehavior
 
     function let()
     {
+        date_default_timezone_set('UTC');
+
         $this->init = true;
 
         $this->beConstructedWith($this->init);
@@ -78,6 +80,8 @@ class BoolSpec extends ObjectBehavior
     function it_should_call_method_if_it_looks_looks_variable()
     {
         $this->value->shouldBe($this->init);
+
+        $this->default->shouldBe(false);
     }
 
     function it_should_convert_to_Int_Type()

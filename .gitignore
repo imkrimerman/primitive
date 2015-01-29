@@ -6,4 +6,5 @@ Thumbs.db
 vendor
 index.php
 node_modules
+coverage
 

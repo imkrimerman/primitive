@@ -33,6 +33,8 @@ class Bool extends Type implements BooleanInterface{
         {
             return $this->{$value}();
         }
+
+        return $this->getDefault();
     }
 
     /**

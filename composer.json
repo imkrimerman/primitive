@@ -2,7 +2,7 @@
     "name": "im/primitive",
     "description": "Object-oriented PHP primitives",
     "license": "MIT",
-    "keywords": ["php", "array", "string", "object", "int", "integer", "bool", "strict typing", "object-oriented", "primitive", "laravel"],
+    "keywords": ["php", "type", "array", "string", "object", "int", "float", "integer", "bool", "strict typing", "object-oriented", "oop", "primitive", "laravel"],
     "authors": [
         {
             "name": "Igor Krimerman",
@@ -18,7 +18,9 @@
         "symfony/var-dumper": "3.0.*@dev"
     },
     "require-dev": {
-        "phpspec/phpspec": "2.1.1"
+        "phpspec/phpspec": "2.1.1",
+        "henrikbjorn/phpspec-code-coverage": "~0.2",
+        "satooshi/php-coveralls": "dev-master"
     },
     "autoload": {
         "psr-4": {

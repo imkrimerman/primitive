@@ -26,27 +26,6 @@ class Arr {
 	}
 
 	/**
-	 * Build a new array using a callback.
-	 *
-	 * @param  array     $array
-	 * @param  callable  $callback
-	 * @return array
-	 */
-	public static function build($array, Callable $callback)
-	{
-		$results = [];
-
-		foreach ($array as $key => $value)
-		{
-			list($innerKey, $innerValue) = call_user_func($callback, $key, $value);
-
-			$results[$innerKey] = $innerValue;
-		}
-
-		return $results;
-	}
-
-	/**
 	 * Divide an array into two arrays. One with keys and the other with values.
 	 *
 	 * @param  array  $array
@@ -353,25 +332,6 @@ class Arr {
 		$array[array_shift($keys)] = $value;
 
 		return $array;
-	}
-
-	/**
-	 * Filter the array using the given Callable.
-	 *
-	 * @param  array     $array
-	 * @param  callable  $callback
-	 * @return array
-	 */
-	public static function where($array, callable $callback)
-	{
-		$filtered = [];
-
-		foreach ($array as $key => $value)
-		{
-			if (call_user_func($callback, $key, $value)) $filtered[$key] = $value;
-		}
-
-		return $filtered;
 	}
 
 	/**

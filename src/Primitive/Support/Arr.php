@@ -29,7 +29,7 @@ class Arr {
 	 * Build a new array using a callback.
 	 *
 	 * @param  array     $array
-	 * @param  \Callable  $callback
+	 * @param  callable  $callback
 	 * @return array
 	 */
 	public static function build($array, Callable $callback)
@@ -126,7 +126,7 @@ class Arr {
 	 * Return the first element in an array passing a given truth test.
 	 *
 	 * @param  array     $array
-	 * @param  \Callable  $callback
+	 * @param  callable  $callback
 	 * @param  mixed     $default
 	 * @return mixed
 	 */
@@ -144,7 +144,7 @@ class Arr {
 	 * Return the last element in an array passing a given truth test.
 	 *
 	 * @param  array     $array
-	 * @param  \Callable  $callback
+	 * @param  callable  $callback
 	 * @param  mixed     $default
 	 * @return mixed
 	 */
@@ -359,10 +359,10 @@ class Arr {
 	 * Filter the array using the given Callable.
 	 *
 	 * @param  array     $array
-	 * @param  \Callable  $callback
+	 * @param  callable  $callback
 	 * @return array
 	 */
-	public static function where($array, Callable $callback)
+	public static function where($array, callable $callback)
 	{
 		$filtered = [];
 

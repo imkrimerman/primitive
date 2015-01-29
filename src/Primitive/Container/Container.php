@@ -355,7 +355,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Return first value that passes truth test
      *
-     * @param callable $function
+     * @param \Callable $function
      *
      * @return mixed
      * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
@@ -988,6 +988,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function groupBy($groupBy)
     {
+        $results = [];
+
         foreach ($this->items as $key => $value)
         {
             $results[$this->getGroupByKey($groupBy, $key, $value)][] = $value;
@@ -1031,7 +1033,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Return rest items after given index
      *
-     * @param $index
+     * @param int|IntegerInterface|FloatInterface $index
      *
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadLengthException
@@ -1040,6 +1042,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function restAfterIndex($index)
     {
+        $index = $this->getIntegerable($index);
+
         if ( ! is_numeric($index))
         {
             throw new BadMethodCallException('Argument 1: ' . $index . ' is not numeric');
@@ -1047,12 +1051,12 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         $length = $this->length();
 
-        if ($length <= (int) $index)
+        if ($length <= $index)
         {
             throw new OffsetNotExistsException('Offset: '. $index .' not exists');
         }
 
-        $index = (int) $index + 1;
+        $index++;
 
         $keys = $this->keys()->cut($index, $length - 1)->flip();
 
@@ -1072,6 +1076,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function restAfterKey($key)
     {
+        $key = $this->getStringable($key);
+
         if ( ! array_key_exists($key, $this->items))
         {
             throw new OffsetNotExistsException('Key: '. $key .' not exists');
@@ -1148,8 +1154,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * You can specify second argument to make it recursive
      *
-     * @param bool     $recursive
-     * @param callable $function
+     * @param bool          $recursive
+     * @param callable|null $function
      *
      * @return $this
      */
@@ -1635,7 +1641,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         if ($callable->startsWith('combine'))
         {
-            $what = $callable->removeLeft('combine')->lower->value;
+            $what = $callable->removeLeft('combine')->lower()->value();
 
             return $this->combine($args[0], $what);
         }
@@ -1727,14 +1733,14 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
 
     /**
-     * @param Iterator $iterator
+     * @param RecursiveIteratorIterator $iterator
      * @param Iterator $subIterator
      * @param array $outputArray
      * @param $preventKeys
      *
      * @return array
      */
-    protected function iteratorToArray(Iterator $iterator, Iterator $subIterator, array $outputArray, $preventKeys = false)
+    protected function iteratorToArray(RecursiveIteratorIterator $iterator, Iterator $subIterator, array $outputArray, $preventKeys = false)
     {
         if ($preventKeys === false)
         {

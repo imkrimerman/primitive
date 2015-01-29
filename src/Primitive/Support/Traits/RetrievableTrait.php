@@ -12,8 +12,8 @@ use im\Primitive\Support\Contracts\StringInterface;
 trait RetrievableTrait {
 
     /**
-     * @param array|ContainerInterface|ArrayableInterface|stdClass $value
-     * @param null|array $default
+     * @param array|ContainerInterface|ArrayableInterface|stdClass|null $value
+     * @param null|array|string $default
      *
      * @return mixed
      */
@@ -35,7 +35,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass $value
+     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass|null $value
      * @param null|string $default
      *
      * @return string
@@ -68,7 +68,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param bool|number|StringInterface|BooleanInterface|integerInterface|FloatInterface $value
+     * @param bool|number|StringInterface|BooleanInterface|integerInterface|FloatInterface|null $value
      * @param null|bool $default
      *
      * @return bool
@@ -100,7 +100,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|string|bool|IntegerInterface|StringInterface|FloatInterface|BooleanInterface $value
+     * @param number|string|bool|IntegerInterface|StringInterface|FloatInterface|BooleanInterface|null $value
      * @param null|int $default
      *
      * @return int
@@ -128,7 +128,7 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param number|bool|FloatInterface|StringInterface|IntegerInterface|BooleanInterface $value
+     * @param number|bool|FloatInterface|StringInterface|IntegerInterface|BooleanInterface|null $value
      * @param null|float $default
      *
      * @return float
@@ -155,10 +155,10 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass $value
+     * @param string|StringInterface|array|ContainerInterface|ArrayableInterface|bool|number|stdClass|null $value
      * @param null|string|array $default
      *
-     * @return array|string
+     * @return array|string|null
      */
     public function getSearchable($value, $default = null)
     {
@@ -166,8 +166,12 @@ trait RetrievableTrait {
         {
             return $this->getArrayable($value, $default);
         }
+        elseif ($this->isStringable($value))
+        {
+            return $this->getStringable($value, $default);
+        }
 
-        return $this->getStringable($value, $default);
+        return $default;
     }
 
     /**

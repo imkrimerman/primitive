@@ -1,14 +1,14 @@
 <?php namespace im\Primitive\String;
 
-use BadMethodCallException;
 use Countable;
-use Stringy\Stringy;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
 use IteratorAggregate;
+use BadMethodCallException;
 use InvalidArgumentException;
 
+use Stringy\Stringy;
 use Stringy\StaticStringy;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
@@ -225,7 +225,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null $ignore
+     * @param null|array|ContainerInterface|ArrayableInterface $ignore
      *
      * @return static
      */
@@ -607,7 +607,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null|array|Container|ArrayableInterface $charsAsWords
+     * @param null|array|Container|ArrayableInterface|stdClass $charsAsWords
      *
      * @return \im\Primitive\Container\Container
      */

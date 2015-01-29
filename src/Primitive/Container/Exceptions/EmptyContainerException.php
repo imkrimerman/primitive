@@ -1,6 +1,5 @@
 <?php namespace im\Primitive\Container\Exceptions;
 
-class EmptyContainerException extends \Exception
-{
+use Exception;
 
-} 
+class EmptyContainerException extends Exception {}

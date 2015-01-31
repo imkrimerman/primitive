@@ -455,22 +455,18 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     public function startsWith($needles, $caseSensitive = true)
     {
         return Str::startsWith(
-            $this->string, $this->getSearchable($needles, []), $this->getBoolable($caseSensitive)
+            $this->string, $this->getSearchable($needles), $this->getBoolable($caseSensitive, true)
         );
     }
 
     /**
      * @param array|Container|ArrayableInterface|string $needles
      *
-     * @param bool                                      $caseSensitive
-     *
      * @return bool
      */
-    public function endsWith($needles, $caseSensitive = true)
+    public function endsWith($needles)
     {
-        return Str::endsWith(
-            $this->string, $this->getSearchable($needles, []), $this->getBoolable($caseSensitive)
-        );
+        return Str::endsWith($this->string, $this->getSearchable($needles, []));
     }
 
     /**

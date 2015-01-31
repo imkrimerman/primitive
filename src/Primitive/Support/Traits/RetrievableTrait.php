@@ -156,9 +156,9 @@ trait RetrievableTrait {
      * @param mixed $value
      * @param mixed $default
      *
-     * @return array|string|null
+     * @return array|string
      */
-    public function getSearchable($value, $default = null)
+    public function getSearchable($value, $default = [])
     {
         if ($this->isArrayable($value))
         {

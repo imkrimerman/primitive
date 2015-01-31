@@ -1,8 +1,8 @@
 {
     "name": "im/primitive",
-    "description": "Object-oriented PHP primitives",
+    "description": "PHP OOP Primitive Types",
     "license": "MIT",
-    "keywords": ["php", "type", "array", "string", "object", "int", "float", "integer", "bool", "strict typing", "object-oriented", "oop", "primitive", "laravel"],
+    "keywords": ["type", "array", "string", "object", "int", "float", "bool", "strict typing", "object-oriented", "oop", "primitive", "laravel"],
     "authors": [
         {
             "name": "Igor Krimerman",

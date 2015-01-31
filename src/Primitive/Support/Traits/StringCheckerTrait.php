@@ -69,11 +69,6 @@ trait StringCheckerTrait {
      */
     public function isSerialized($string)
     {
-        if ($string === 'b:0;' || @unserialize($string) !== false)
-        {
-            return true;
-        }
-
-        return false;
+        return $string === 'b:0;' || @unserialize($string) !== false;
     }
 }

@@ -1139,7 +1139,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
             }
 
         }
-        else if ($boundary >= $length)
+        elseif ($boundary >= $length)
         {
             $boundary = ($step < 0) ? $length - 1 : $length;
         }

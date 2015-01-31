@@ -29,7 +29,6 @@ use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
 
-
 class Container extends Type implements ContainerInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
     use RetrievableTrait;
@@ -840,18 +839,18 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @param int|IntegerInterface $offset
      * @param null|int|IntegerInterface $length
-     * @param bool|BooleanInterface $preserve_keys
+     * @param bool|BooleanInterface $preserveKeys
      * @param bool|BooleanInterface $set
      *
      * @return array|Container
      */
-    public function cut($offset, $length = null, $preserve_keys = false, $set = true)
+    public function cut($offset, $length = null, $preserveKeys = false, $set = true)
     {
         $result = array_slice(
             $this->items,
             $this->getIntegerable($offset),
             $this->getIntegerable($length),
-            $this->getBoolable($preserve_keys)
+            $this->getBoolable($preserveKeys)
         );
 
         if ($this->getBoolable($set) === true)
@@ -1661,7 +1660,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         {
             $key = $method->cut(Str::length('where'), $method->length())->lower();
 
-            return $this->where([(string)$key => $parameters[0]]);
+            return $this->where([(string) $key => $parameters[0]]);
         }
 
         if ($method->startsWith('combine'))

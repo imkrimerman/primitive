@@ -913,11 +913,11 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     public function encrypt($key, $expires)
     {
         $payload = [
-            'exp' => $expires,
+            'exp' => $this->getIntegerable($expires),
             'container' => $this->toJson()
         ];
 
-        return JWT::encode($payload, $key);
+        return JWT::encode($payload, $this->getStringable($key));
     }
 
     /**
@@ -1671,7 +1671,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return $this->combine($parameters[0], $what);
         }
 
-        return static::__callStatic((string) $method, $parameters);
+        throw new BadMethodCallException('Can\'t find method: '.$method.' in class'. __CLASS__);
     }
 
 

@@ -3,5 +3,11 @@
 
 interface StringInterface {
 
-    public function value();
+    public function toInt();
+
+    public function toBool();
+
+    public function toFloat();
+
+    public function toContainer();
 }

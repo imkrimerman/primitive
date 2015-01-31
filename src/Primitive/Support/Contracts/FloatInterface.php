@@ -3,5 +3,11 @@
 
 interface FloatInterface {
 
-    public function value();
+    public function toInt();
+
+    public function toBool();
+
+    public function toString();
+
+    public function toContainer();
 }

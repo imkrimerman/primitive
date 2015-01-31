@@ -2,6 +2,8 @@
 
 use Countable;
 use ArrayAccess;
+use im\Primitive\Container\Container;
+use im\Primitive\String\String;
 use Traversable;
 use IteratorAggregate;
 use JsonSerializable;
@@ -93,7 +95,9 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     protected function initialize($from)
     {
-        foreach (container($from)->notNumericKeys() as $field => $value)
+        $array = (new Container($from))->notNumericKeys();
+
+        foreach ($array as $field => $value)
         {
             $this->{$field} = $value;
         }
@@ -106,7 +110,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function value()
     {
-        return container(get_object_vars($this));
+        return new Container(get_object_vars($this));
     }
 
     /**
@@ -124,7 +128,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function length()
     {
-        return measure_object($this);
+        return object_length($this);
     }
 
     /**
@@ -140,7 +144,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function toString()
     {
-        return string($this->toJson());
+        return new String($this->toJson());
     }
 
     /**

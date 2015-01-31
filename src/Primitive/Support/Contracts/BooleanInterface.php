@@ -3,5 +3,11 @@
 
 interface BooleanInterface {
 
-    public function value();
+    public function toInt();
+
+    public function toFloat();
+
+    public function toString();
+
+    public function toContainer();
 }

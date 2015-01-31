@@ -2,7 +2,7 @@
 
 namespace spec\im\Primitive\Container;
 
-use im\Primitive\Container\ContainerType;
+use im\Primitive\Container\ContainerFactory;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
@@ -103,6 +103,6 @@ class RevertableContainerSpec extends ObjectBehavior
     {
         $match = $this->init;
 
-        $this->fromArray(container($match, ContainerType::REVERTABLE)->all)->value()->shouldBe($match);
+        $this->fromArray(container($match, ContainerFactory::REVERTABLE)->all())->value()->shouldBe($match);
     }
 }

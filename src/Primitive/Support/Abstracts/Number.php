@@ -3,6 +3,9 @@
 use Serializable;
 use UnexpectedValueException;
 
+use im\Primitive\Bool\Bool;
+use im\Primitive\String\String;
+use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Contracts\TypeInterface;
 use im\Primitive\Support\Traits\RetrievableTrait;
@@ -288,7 +291,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function toBool()
     {
-        return bool((bool) $this->value);
+        return new Bool((bool) $this->value);
     }
 
     /**
@@ -296,7 +299,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function toString()
     {
-        return string((string) $this->value);
+        return new String((string) $this->value);
     }
 
     /**
@@ -304,7 +307,7 @@ abstract class Number extends Type implements TypeInterface, Serializable {
      */
     public function toContainer()
     {
-        return container([$this->value]);
+        return new Container([$this->value]);
     }
 
     /**

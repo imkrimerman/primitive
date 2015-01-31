@@ -10,8 +10,11 @@ use InvalidArgumentException;
 
 use Stringy\Stringy;
 use Stringy\StaticStringy;
-use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
+use im\Primitive\Int\Int;
+use im\Primitive\Bool\Bool;
+use im\Primitive\Float\Float;
+use im\Primitive\Container\Container;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Traits\StringCheckerTrait;
@@ -951,7 +954,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function toBool()
     {
-        return bool($this->value());
+        return new Bool($this->value());
     }
 
     /**
@@ -959,7 +962,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function toInt()
     {
-        return int($this->value());
+        return new Int($this->value());
     }
 
     /**
@@ -967,7 +970,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function toFloat()
     {
-        return float($this->value());
+        return new Float($this->value());
     }
 
     /**
@@ -982,7 +985,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
             $value = [$value];
         }
 
-        return container($value);
+        return new Container($value);
     }
 
     /**

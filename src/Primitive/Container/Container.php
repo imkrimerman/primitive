@@ -10,6 +10,9 @@ use \InvalidArgumentException;
 use \RecursiveIteratorIterator;
 
 use JWT;
+use im\Primitive\Int\Int;
+use im\Primitive\String\String;
+use im\Primitive\Object\Object;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\Type;
@@ -1400,7 +1403,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function toInt()
     {
-        return int($this->sum());
+        return new Int($this->sum());
     }
 
     /**
@@ -1432,7 +1435,17 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function toString($options = 0)
     {
-        return string($this->toJson($options));
+        return new String($this->toJson($options));
+    }
+
+    /**
+     * Returns Object Type representation of Container
+     *
+     * @return \im\Primitive\Object\Object
+     */
+    public function toObject()
+    {
+        return new Object($this->value());
     }
 
     /**

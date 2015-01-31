@@ -1,9 +1,10 @@
 <?php
 
+use im\Primitive\Container\ContainerFactory;
+use im\Primitive\Object\Object;
 use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Container\Container;
 use im\Primitive\Container\RevertableContainer;
-use im\Primitive\Container\ContainerType;
 use im\Primitive\String\String;
 use im\Primitive\Int\Int;
 use im\Primitive\Float\Float;
@@ -13,21 +14,27 @@ use im\Primitive\Bool\Bool;
 if ( ! function_exists('container'))
 {
     /**
-     * @param mixed $array
+     * @param mixed $from
      * @param int   $type
      *
      * @return \im\Primitive\Container\Container
      */
-    function container($array = [], $type = ContainerType::SIMPLE)
+    function container($from = [], $type = ContainerFactory::SIMPLE)
     {
-        if ($type === ContainerType::SIMPLE)
-        {
-            return new Container($array);
-        }
-        elseif ($type === ContainerType::REVERTABLE)
-        {
-            return new RevertableContainer($array);
-        }
+        return ContainerFactory::initialize()->create($from, $type);
+    }
+}
+
+if ( ! function_exists('object'))
+{
+    /**
+     * @param mixed $from
+     *
+     * @return \im\Primitive\Object\Object
+     */
+    function object($from = [])
+    {
+        return new Object($from);
     }
 }
 
@@ -280,7 +287,7 @@ if ( ! function_exists('str_replace_array'))
     }
 }
 
-if ( ! function_exists('measure_object'))
+if ( ! function_exists('object_length'))
 {
     /**
      * Count object length
@@ -289,7 +296,7 @@ if ( ! function_exists('measure_object'))
      *
      * @return int
      */
-    function measure_object($object)
+    function object_length($object)
     {
         if (is_object($object))
         {

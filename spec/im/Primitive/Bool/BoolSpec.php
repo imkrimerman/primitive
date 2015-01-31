@@ -1,6 +1,5 @@
 <?php namespace spec\im\Primitive\Bool;
 
-use im\Primitive\Bool\Bool;
 use Prophecy\Argument;
 use PhpSpec\ObjectBehavior;
 use im\Primitive\Support\Traits\RetrievableTrait;
@@ -124,45 +123,6 @@ class BoolSpec extends ObjectBehavior
         $result = $this->init ? 'true' : 'false';
 
         $this->__toString()->shouldBe($result);
-    }
-
-    /**
-     * MacroableTrait Tests
-     */
-
-    function it_should_register_macro_and_save_it()
-    {
-        static::macro('testing', function()
-        {
-            return 'ok!';
-        });
-
-        static::hasMacro('testing')->shouldBe(true);
-    }
-
-    function it_should_throw_during_call_macro_statically_if_not_registered()
-    {
-        $this->shouldThrow('\BadMethodCallException')->duringNew();
-    }
-
-    function it_should_call_macro_statically()
-    {
-        static::macro('new', function()
-        {
-            return new Bool('false');
-        });
-
-        static::{'new'}()->shouldHaveType('im\Primitive\Bool\Bool');
-    }
-
-    function it_should_call_macro_not_statically()
-    {
-        static::macro('new', function()
-        {
-            return new Bool('false');
-        });
-
-        $this->new()->shouldHaveType('im\Primitive\Bool\Bool');
     }
 
 

@@ -3,4 +3,7 @@
 
 interface ObjectInterface {
 
+    public function toString();
+
+    public function toContainer();
 }

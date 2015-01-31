@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Float;
 
+use im\Primitive\Int\Int;
 use im\Primitive\Support\Abstracts\Number;
 use im\Primitive\Support\Contracts\FloatInterface;
 
@@ -51,7 +52,7 @@ class Float extends Number implements FloatInterface{
      */
     public function toInt()
     {
-        return int((int) $this->value);
+        return new Int((int) $this->value);
     }
 
     /**

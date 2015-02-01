@@ -914,6 +914,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function groupBy($groupBy)
     {
+        if ($this->isStringable($groupBy, true)) $groupBy = $this->getStringable($groupBy);
+
         $results = [];
 
         foreach ($this->items as $key => $value)
@@ -1660,8 +1662,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     protected function getGroupByKey($groupBy, $key, $value)
     {
-        if ($this->isStringable($groupBy, true)) $groupBy = $this->getStringable($groupBy);
-
         if ( ! is_string($groupBy) && is_callable($groupBy))
         {
             return $groupBy($value, $key);

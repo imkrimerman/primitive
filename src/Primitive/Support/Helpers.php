@@ -1,14 +1,12 @@
 <?php
 
-use im\Primitive\Container\ContainerFactory;
-use im\Primitive\Object\Object;
-use im\Primitive\Support\Dump\Dumper;
-use im\Primitive\Container\Container;
-use im\Primitive\Container\RevertableContainer;
-use im\Primitive\String\String;
 use im\Primitive\Int\Int;
-use im\Primitive\Float\Float;
 use im\Primitive\Bool\Bool;
+use im\Primitive\Float\Float;
+use im\Primitive\Object\Object;
+use im\Primitive\String\String;
+use im\Primitive\Container\ContainerFactory;
+use im\Primitive\Support\Dump\Dumper;
 
 
 if ( ! function_exists('container'))
@@ -17,7 +15,7 @@ if ( ! function_exists('container'))
      * @param mixed $from
      * @param int   $type
      *
-     * @return \im\Primitive\Container\Container
+     * @return \im\Primitive\Container\Container|\im\Primitive\Container\RevertableContainer
      */
     function container($from = [], $type = ContainerFactory::SIMPLE)
     {

@@ -1,6 +1,8 @@
 <?php namespace im\Primitive\Support;
 
 
+use Exception;
+
 class Arr {
 
     /**
@@ -171,13 +173,17 @@ class Arr {
             {
                 $part = array_shift($parts);
 
-                if (isset($array[$part]) && is_array($array[$part]))
+                if ((is_array($array)  && isset($array[$part])   && is_array($array[$part])) ||
+                    (is_object($array) && isset($array->{$part}) && is_array($array->{$part})))
                 {
                     $array =& $array[$part];
                 }
             }
 
-            unset($array[array_shift($parts)]);
+            $part = array_shift($parts);
+
+            if (is_array($array)) unset($array[$part]);
+            elseif (is_object($array)) unset($array->{$part});
 
             // clean up after each pass
             $array =& $original;
@@ -185,7 +191,7 @@ class Arr {
     }
 
     /**
-     * Get an item from an array using "dot" notation.
+     * Get an item using "dot" notation.
      *
      * @param  array  $array
      * @param  string $key
@@ -199,21 +205,11 @@ class Arr {
 
         if (isset($array[$key])) return $array[$key];
 
-        foreach (explode('.', $key) as $segment)
-        {
-            if (static::isNotArrayOrNotKeyExists($array, $segment))
-            {
-                return value($default);
-            }
-
-            $array = $array[$segment];
-        }
-
-        return $array;
+        return data_get($array, $key, $default);
     }
 
     /**
-     * Check if an item exists in an array using "dot" notation.
+     * Check if an item exists using "dot" notation.
      *
      * @param  array  $array
      * @param  string $key
@@ -226,17 +222,7 @@ class Arr {
 
         if (array_key_exists($key, $array)) return true;
 
-        foreach (explode('.', $key) as $segment)
-        {
-            if (static::isNotArrayOrNotKeyExists($array, $segment))
-            {
-                return false;
-            }
-
-            $array = $array[$segment];
-        }
-
-        return true;
+        return data_get($array, $key, new Exception('Not Found')) instanceof Exception ? false : true;
     }
 
     /**
@@ -309,7 +295,7 @@ class Arr {
     }
 
     /**
-     * Set an array item to a given value using "dot" notation.
+     * Set item to a given key using "dot" notation.
      *
      * If no key is given to the method, the entire array will be replaced.
      *
@@ -332,15 +318,20 @@ class Arr {
             // If the key doesn't exist at this depth, we will just create an empty array
             // to hold the next value, allowing us to create the arrays to hold final
             // values at the correct depth. Then we'll keep digging into the array.
-            if ( ! isset($array[$key]) || ! is_array($array[$key]))
+            if ((is_array($array)  && ( ! isset($array[$key])   || ! is_array($array[$key]))) ||
+                (is_object($array) && ( ! isset($array->{$key}) || ! is_array($array->{$key}))))
             {
                 $array[$key] = [];
             }
 
-            $array =& $array[$key];
+            if (is_array($array)) $array =& $array[$key];
+            elseif (is_object($array)) $array =& $array->{$key};
         }
 
-        $array[array_shift($keys)] = $value;
+        $key = array_shift($keys);
+
+        if (is_array($array)) $array[$key] = $value;
+        elseif (is_object($array)) $array->{$key} = $value;
 
         return $array;
     }

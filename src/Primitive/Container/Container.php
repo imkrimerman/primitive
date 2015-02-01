@@ -18,6 +18,10 @@ use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Traits\StringCheckerTrait;
+use im\Primitive\Support\Contracts\BooleanInterface;
+use im\Primitive\Support\Contracts\FloatInterface;
+use im\Primitive\Support\Contracts\IntegerInterface;
+use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ContainerInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\FileableInterface;
@@ -70,7 +74,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         }
     }
 
-
     /**
      * Magic get method
      *
@@ -83,19 +86,12 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function __get($item)
     {
-        if (method_exists($this, $item))
-        {
-            return $this->{$item}();
-        }
+        if (method_exists($this, $item)) return $this->{$item}();
 
-        if (isset($this->items[$item]))
-        {
-            return value($this->items[$item]);
-        }
+        if ($this->has($item)) return $this->get($item);
 
         throw new OffsetNotExistsException('Container item: ' . $item . ' not exists');
     }
-
 
     /**
      * Magic set method
@@ -110,7 +106,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         $this->set($key, $value);
     }
 
-
     /**
      * @return int
      */
@@ -119,12 +114,11 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->measure();
     }
 
-
     /**
      * Getter
      *
      * @param $key
-     * @param null $default
+     * @param mixed $default
      * @return mixed
      */
     public function get($key, $default = null)
@@ -142,7 +136,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function set($key, $value)
     {
-        $this->items = Arr::set($this->items, $key, $value);
+        if ($this->isIntegerable($key, true))
+        {
+            $key = $this->getIntegerable($key);
+        }
+        else
+        {
+            $key = $this->getStringable($key);
+        }
+
+        Arr::set($this->items, $key, $value);
 
         return $this;
     }
@@ -158,44 +161,12 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Push items in the Container,
      *
-     * If $key specified, $item will be pushed to specific $key.
-     *
      * @param $item
-     * @param null $key
-     *
      * @return $this
      */
-    public function push($item, $key = null)
+    public function push($item)
     {
-        if (empty($key))
-        {
-            $this->items[] = $item;
-
-            return $this;
-        }
-
-        return $this->put($key, $item);
-    }
-
-
-    /**
-     * Put value into Container
-     *
-     * @param $key
-     * @param $value
-     *
-     * @return $this
-     */
-    public function put($key, $value)
-    {
-        if ($this->has($key))
-        {
-            $this->items = Arr::set($this->items, $key, $value);
-        }
-        else
-        {
-            $this->items = Arr::add($this->items, $key, $value);
-        }
+        $this->items[] = $item;
 
         return $this;
     }
@@ -209,7 +180,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return value(array_pop($this->items));
     }
-
 
     /**
      * Adds item to the first index of Container.
@@ -225,7 +195,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
-
     /**
      * Removes first item from Container and returns it.
      *
@@ -235,7 +204,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return value(array_shift($this->items));
     }
-
 
     /**
      * Search for specified value, returns index on success, otherwise false.
@@ -252,7 +220,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return array_search($value, $this->items);
     }
 
-
     /**
      * Check if Container has specified key
      *
@@ -264,7 +231,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return Arr::has($this->items, $key);
     }
-
 
     /**
      * Checks if Container has specified value
@@ -279,45 +245,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function hasValue($value, $strict = null)
     {
-        return in_array($value, $this->items, $strict);
+        return in_array($value, $this->items, $this->getBoolable($strict));
     }
-
-
-    /**
-     * Returns first Container key
-     *
-     * @throws ContainerException
-     * @throws EmptyContainerException
-     * @return mixed
-     */
-    public function firstKey()
-    {
-        if ($this->isNotEmpty())
-        {
-            return first_key($this->items);
-        }
-
-        throw new EmptyContainerException('Empty Container');
-    }
-
-
-    /**
-     * Returns last Container key
-     *
-     * @throws ContainerException
-     * @throws EmptyContainerException
-     * @return mixed
-     */
-    public function lastKey()
-    {
-        if ($this->isNotEmpty())
-        {
-            return last_key($this->items);
-        }
-
-        throw new EmptyContainerException('Empty Container');
-    }
-
 
     /**
      * Key an associative array by a field.
@@ -327,7 +256,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function keysByField($keyBy)
     {
-        // TODO make test for keysByField
         $byField = [];
 
         $keyBy = $this->getStringable($keyBy);
@@ -342,6 +270,33 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static($byField);
     }
 
+    /**
+     * Returns first Container key
+     *
+     * @throws ContainerException
+     * @throws EmptyContainerException
+     * @return mixed
+     */
+    public function firstKey()
+    {
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
+
+        return first_key($this->items);
+    }
+
+    /**
+     * Returns last Container key
+     *
+     * @throws ContainerException
+     * @throws EmptyContainerException
+     * @return mixed
+     */
+    public function lastKey()
+    {
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
+
+        return last_key($this->items);
+    }
 
     /**
      * Return first Container value
@@ -351,14 +306,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function first()
     {
-        if ($this->isNotEmpty())
-        {
-            return first($this->items);
-        }
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
 
-        throw new EmptyContainerException('Empty Container');
+        return first($this->items);
     }
-
 
     /**
      * Return first value that passes truth test
@@ -370,14 +321,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function firstWhere(callable $function)
     {
-        if ($this->isNotEmpty())
-        {
-            return Arr::first($this->items, $function);
-        }
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
 
-        throw new EmptyContainerException('Empty Container');
+        return Arr::first($this->items, $function);
     }
-
 
     /**
      * Return last value
@@ -387,12 +334,9 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function last()
     {
-        if ($this->isNotEmpty())
-        {
-            return last($this->items);
-        }
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
 
-        throw new EmptyContainerException('Empty Container');
+        return last($this->items);
     }
 
     /**
@@ -405,12 +349,9 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function lastWhere(callable $function)
     {
-        if ($this->isNotEmpty())
-        {
-            return Arr::last($this->items, $function);
-        }
+        if ($this->isEmpty()) throw new EmptyContainerException('Empty Container');
 
-        throw new EmptyContainerException('Empty Container');
+        return Arr::last($this->items, $function);
     }
 
     /**
@@ -419,18 +360,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param bool $recursive
      *
      * @return $this
-     * @throws \im\Primitive\Container\UncountableException
      */
     public function unique($recursive = false)
     {
-        if ($recursive)
+        if ($this->getBoolable($recursive))
         {
             return new static($this->uniqueRecursive($this->items));
         }
 
         return new static(array_unique($this->items));
     }
-
 
     /**
      * Returns Container keys
@@ -442,7 +381,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static(array_keys($this->items));
     }
 
-
     /**
      * Returns Container values
      *
@@ -452,7 +390,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return new static(array_values($this->items));
     }
-
 
     /**
      * Returns keys and values divided in new Container
@@ -476,13 +413,11 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         foreach ($this->items as $key => $value)
         {
-            if (is_numeric($key)) $keys->put($key, $value);
+            if (is_numeric($key)) $keys->set($key, $value);
         }
 
         return $keys;
     }
-
-    //TODO add setKey(lastKey, newKey)
 
     /**
      * Return items only with not numeric keys
@@ -495,7 +430,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         foreach ($this->items as $key => $value)
         {
-            if ( ! is_numeric($key)) $keys->put($key, $value);
+            if ( ! is_numeric($key)) $keys->set($key, $value);
         }
 
         return $keys;
@@ -512,7 +447,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         return $this;
     }
-
 
     /**
      * Returns joined Container items with whitespace by default
@@ -549,14 +483,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     /**
      * Get new Container with the values of a given key.
      *
-     * @param  string $value
+     * 1 Argument is key to make value from. 2 Argument is key from the same arrayable which will be the key.
+     *
+     * @param  string $valueByKey
      * @param  string $key
      *
      * @return static
      */
-    public function lists($value, $key = null)
+    public function lists($valueByKey, $key = null)
     {
-        return new static(Arr::pluck($this->items, $value, $key));
+        return new static(Arr::pluck($this->items, $valueByKey, $key));
     }
 
     /**
@@ -571,6 +507,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function chunk($size = 2, $preserveKeys = false)
     {
+        $size = $this->getIntegerable($size);
+
         if ( ! is_integer($size) || $size > $this->length())
         {
             throw new BadLengthException('Chunk size is larger than container length');
@@ -578,7 +516,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         $chunks = new static;
 
-        foreach (array_chunk($this->items, $size, $preserveKeys) as $value)
+        foreach (array_chunk($this->items, $size, $this->getBoolable($preserveKeys)) as $value)
         {
             $chunks->push(new static($value));
         }
@@ -586,13 +524,12 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $chunks;
     }
 
-
     /**
      * Combines values from $array
      *
      * You can specify what to combine 'keys' or 'values' with the second argument
      *
-     * @param array|ContainerInterface|ArrayableInterface|stdClass $array
+     * @param array|ContainerInterface|ArrayableInterface|object $array
      * @param string $what
      *
      * @return static
@@ -608,17 +545,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             throw new BadLengthException('Container length should match array length.');
         }
 
-        switch ($what)
+        switch ($this->getStringable($what))
         {
             case 'keys':
                 return new static(array_combine($array, $this->values()->all()));
             case 'values':
                 return new static(array_combine($this->keys()->all(), $array));
             default:
-                throw new BadMethodCallException('Argument 2 must be string (keys or values)');
+                throw new BadMethodCallException('Argument 2 must be string or Stringable (keys or values)');
         }
     }
-
 
     /**
      * Returns filtered Container
@@ -632,14 +568,13 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function filter(callable $function, $recursive = false)
     {
-        if ($recursive === false)
+        if ( ! $this->getBoolable($recursive))
         {
             return new static(array_filter($this->items, $function));
         }
 
         return new static($this->filterRecursive($function, $this->items));
     }
-
 
     /**
      * Flips keys with values
@@ -657,7 +592,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static(array_flip($this->items));
     }
 
-
     /**
      * Traverses Container items
      *
@@ -672,7 +606,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
-
     /**
      * Run a map on each Container item
      *
@@ -684,7 +617,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return new static(array_map($function, $this->items, $this->keys()->all()));
     }
-
 
     /**
      * Transform each item with the callback
@@ -700,63 +632,42 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
-
     /**
      * Apply a user function to every Container item
      *
      * You can specify recursive walk with the second argument
      *
-     * @param callable $function
-     * @param bool $recursive
+     * @param $callback
+     * @param $recursive
      * @param null $userdata
      *
      * @return $this
      */
-    public function walk(callable $function, $recursive = false, $userdata = null)
+    public function walk(callable $callback, $recursive = false, $userdata = null)
     {
-        if ($recursive === false)
-        {
-            array_walk($this->items, $function, $userdata);
-        }
-        else
-        {
-            array_walk_recursive($this->items, $function, $userdata);
-        }
+        $function = $this->getBoolable($recursive) ? 'array_walk_recursive' : 'array_walk';
+
+        $function($this->items, $callback, $userdata);
 
         return $this;
     }
 
-
     /**
      * Merges array or Container
      *
-     * You can specify exact key to merge with the second argument
-     *
      * @param      $items
-     * @param null $key
-     *
-     * @param null $default
      *
      * @throws BadMethodCallException
      * @return $this
      */
-    public function merge($items, $key = null, $default = null)
+    public function merge($items)
     {
         if ( ! $this->isArrayable($items))
         {
-            throw new BadMethodCallException('1 Argument must be array or Container');
+            throw new BadMethodCallException('Argument 1 must be array, Container or implement Arrayable interface');
         }
 
-        if (is_null($key))
-        {
-            return new static(array_merge($this->items, $this->retrieveValue($items)));
-        }
-        elseif ($this->has($key))
-        {
-            return $this->mergeWithKey($this->retrieveValue($items), $key, $default);
-        }
-
-        throw new BadMethodCallException('Bad key given');
+        return new static(array_merge($this->items, $this->retrieveValue($items)));
     }
 
     /**
@@ -767,13 +678,17 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param null $default
      *
      * @return $this
-     * @throws UncountableException
+     * @throws InvalidArgumentException
      */
     public function mergeWithKey($items, $key, $default = null)
     {
+        $key = $this->getStringable($key);
+
+        if ( ! $this->has($key)) throw new InvalidArgumentException('Key: '.$key.' not exists');
+
         $get = $this->get($key, $default);
 
-        $value = array_merge($get, $items);
+        $value = array_merge($get, $this->retrieveValue($items));
 
         return $this->copy()->set($key, $value);
     }
@@ -788,11 +703,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function increase($increaseSize = 1, $value = null)
     {
-        $this->items = array_pad($this->items, $this->length() + $increaseSize, $value);
+        $this->items = array_pad($this->items, $this->length() + $this->getIntegerable($increaseSize), $value);
 
         return $this;
     }
-
 
     /**
      * Return pseudo-random index from Container
@@ -804,6 +718,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function randomKey($quantity = 1)
     {
+        $quantity = $this->getIntegerable($quantity);
+
         if ($this->isNotEmpty() && $this->length() >= $quantity && $quantity > 0)
         {
             $random = array_rand($this->items, $quantity);
@@ -822,6 +738,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function random($quantity = 1)
     {
+        $quantity = $this->getIntegerable($quantity);
+
         $result = new static;
 
         while($quantity--)
@@ -842,7 +760,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param bool|BooleanInterface $preserveKeys
      * @param bool|BooleanInterface $set
      *
-     * @return array|Container
+     * @return static|$this
      */
     public function cut($offset, $length = null, $preserveKeys = false, $set = true)
     {
@@ -853,21 +771,20 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             $this->getBoolable($preserveKeys)
         );
 
-        if ($this->getBoolable($set) === true)
+        if ($this->getBoolable($set))
         {
             $this->items = empty($result) ? [] : $result;
 
             return $this;
         }
 
-        return $result;
+        return new static($result);
     }
-
 
     /**
      * Create new Container of all elements that do not pass a given truth test.
      *
-     * @param $callback
+     * @param callable|string|StringInterface $callback
      *
      * @return static
      */
@@ -899,7 +816,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return array_reduce($this->items, $callback, $initial);
     }
-
 
     /**
      * Encrypt Container items to JWT Token
@@ -939,11 +855,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function forget($key)
     {
-        Arr::forget($this->items, $key);
+        Arr::forget($this->items, $this->getStringable($key));
 
         return $this;
     }
-
 
     /**
      * Reset Container to empty array
@@ -957,7 +872,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
-
     /**
      * Reverse Container items
      *
@@ -967,11 +881,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function reverse($preserveKeys = true)
     {
-        $this->items = array_reverse($this->items, $preserveKeys);
+        $this->items = array_reverse($this->items, $this->getBoolable($preserveKeys));
 
         return $this;
     }
-
 
     /**
      * Return all items from Container
@@ -983,7 +896,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->value();
     }
 
-
     /**
      * Create copy of Container
      *
@@ -994,11 +906,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return clone $this;
     }
 
-
     /**
      * Group an associative array by a field or callback value.
      *
-     * @param  callable|string  $groupBy
+     * @param  callable|string|StringInterface  $groupBy
      * @return static
      */
     public function groupBy($groupBy)
@@ -1013,17 +924,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static($results);
     }
 
-
     /**
      * Return copy of Container except given keys
      *
-     * @param array $keys
+     * @param $keys
      *
-     * @return $this
+     * @return static
      */
-    public function except(array $keys)
+    public function except($keys)
     {
-        return new static(Arr::except($this->items, $keys));
+        return new static(Arr::except($this->items, $this->retrieveValue($keys)));
     }
 
     /**
@@ -1036,14 +946,13 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function exceptIndex($nth)
     {
-        if ($this->isEmpty() || (int) $nth >= $this->length())
+        if ($this->isEmpty() || $this->getIntegerable($nth) >= $this->length())
         {
             throw new OffsetNotExistsException('Offset: '. $nth .' not exist');
         }
 
         return $this->copy()->forget($this->keys()->get($nth));
     }
-
 
     /**
      * Return rest items after given index
@@ -1120,18 +1029,16 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $items
      *
      * @return static
-     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      */
     public function difference($items)
     {
         if ($this->isArrayable($items))
         {
-            return new static(array_diff($this->items, $this->retrieveValue($items)));
+            return new static(array_diff_key($this->items, $this->retrieveValue($items)));
         }
 
         throw new BadMethodCallException('Argument 1 should be array, Container or implement ArrayableInterface');
     }
-
 
     /**
      * Get gathered column of a nested array element.
@@ -1141,9 +1048,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function column($key)
     {
-        return new static(Arr::fetch($this->items, $key));
+        return new static(Arr::fetch($this->items, $this->getStringable($key)));
     }
-
 
     /**
      * Create a new Container instance if the value isn't one already.
@@ -1154,14 +1060,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function make($data = [])
     {
-        if ($data instanceof Container)
-        {
-            return $data;
-        }
+        if ($data instanceof Container) return $data;
 
-        return new static($data);
+        return new static($this->retrieveValue($data));
     }
-
 
     /**
      * Remove all not true items from Container
@@ -1169,21 +1071,24 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * You can specify second argument to make it recursive
      *
-     * @param bool          $recursive
-     * @param callable|null $function
+     * @param bool                 $recursive
+     * @param callable|string|null $function
      *
      * @return $this
      */
-    public function truly($recursive = false, callable $function = null)
+    public function truly($recursive = false, $function = null)
     {
-        if (is_null($function))
+        $recursive = $this->getBoolable($recursive);
+
+        $function = $this->getSearchable($function, null);
+
+        if (is_null($function) || ! is_callable($function))
         {
             $function = function ($item) {return ! empty($item);};
         }
 
         return new static($this->filter($function, $recursive));
     }
-
 
     /**
      * Take all items recursively by key
@@ -1195,6 +1100,8 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     public function take($key)
     {
         $take = [];
+
+        $key = $this->getStringable($key);
 
         $this->walk(function ($value, $key_) use ($key, & $take)
         {
@@ -1212,10 +1119,11 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * @return mixed
      * @throws OffsetNotExistsException
-     * @throws UncountableException
      */
     public function pull($key)
     {
+        $key = $this->getStringable($key);
+
         if ( ! $this->has($key))
         {
             throw new OffsetNotExistsException("Key: {$key} not exists");
@@ -1223,7 +1131,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         return Arr::pull($this->items, $key);
     }
-
 
     /**
      * Recursively removes values by key
@@ -1234,7 +1141,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function without($key)
     {
-        return new static($this->forgetRecursive($key, $this->items));
+        return new static($this->forgetRecursive($this->getStringable($key), $this->items));
     }
 
     /**
@@ -1249,14 +1156,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function intersect($array, $assoc = false)
     {
-        if ($assoc === true)
-        {
-            return new static(array_intersect_assoc($this->items, $this->retrieveValue($array)));
-        }
+        $function = $this->getBoolable($assoc) ? 'array_intersect_assoc' : 'array_intersect';
 
-        return new static(array_intersect($this->items, $this->retrieveValue($array)));
+        return new static($function($this->items, $this->retrieveValue($array)));
     }
-
 
     /**
      * Returns intersection by keys with Arrayable
@@ -1270,7 +1173,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return new static(array_intersect_key($this->items, $this->retrieveValue($array)));
     }
 
-
     /**
      * User sort
      *
@@ -1280,14 +1182,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function sort(callable $function)
     {
-        if (is_callable($function))
-        {
-            usort($this->items, $function);
-        }
+        usort($this->items, $function);
 
         return $this;
     }
-
 
     /**
      * Reset keys to numeric
@@ -1301,10 +1199,14 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
+    /**
+     * Return sum of number values
+     *
+     * @return \im\Primitive\Int\Int
+     */
     public function sum()
     {
-        //TODO make test for sum
-        return int(array_sum($this->filter('is_int', true)->flatten()->all()));
+        return new Int(array_sum($this->flatten()->filter('is_numeric')->all()));
     }
 
     /**
@@ -1312,23 +1214,21 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      *
      * You can specify second parameter to preserve keys reset
      *
-     * @param array $condition
-     * @param bool $preserveKeys
+     * @param $condition
+     * @param $preserveKeys
      * @throws ContainerException
      * @throws EmptyContainerException
      *
      * @return $this
      */
-    public function where(array $condition, $preserveKeys = true)
+    public function where($condition, $preserveKeys = true)
     {
-        if (empty($condition))
-        {
-            return $this;
-        }
+        $condition = $this->retrieveValue($condition);
 
-        return new static($this->whereCondition($condition, $preserveKeys));
+        if (empty($condition)) return $this;
+
+        return new static($this->whereCondition($condition, $this->getBoolable($preserveKeys)));
     }
-
 
     /**
      * Check if Container items is associative
@@ -1340,7 +1240,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->keys()->filter('is_int')->length() !== $this->length();
     }
 
-
     /**
      * Check if Container items is not associative
      *
@@ -1350,7 +1249,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return ! $this->isAssoc();
     }
-
 
     /**
      * Check if Container is multi-dimensional
@@ -1362,7 +1260,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->values()->filter('is_scalar')->length() !== $this->length();
     }
 
-
     /**
      * Check if Container is not multi-dimensional
      *
@@ -1373,7 +1270,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return ! $this->isMulti();
     }
 
-
     /**
      * Check if Container is empty
      *
@@ -1383,7 +1279,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return ! (bool) $this->length();
     }
-
 
     /**
      * Check if Container is not empty
@@ -1402,7 +1297,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function toInt()
     {
-        return new Int($this->sum());
+        return $this->sum();
     }
 
     /**
@@ -1461,7 +1356,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         }, $this->items);
     }
 
-
     /**
      * Construct from array
      *
@@ -1474,7 +1368,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->initialize($array);
     }
 
-
     /**
      * Return converted Container to Json
      *
@@ -1486,7 +1379,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         return json_encode($this->items, $options);
     }
-
 
     /**
      * Construct from Json
@@ -1505,7 +1397,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this;
     }
 
-
     /**
      * Write Container items to file
      *
@@ -1517,9 +1408,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function toFile($path, $jsonOptions = 0)
     {
-        $source = pathinfo($path, PATHINFO_DIRNAME);
-
-        if (is_dir($source))
+        if (is_dir(pathinfo($path, PATHINFO_DIRNAME)))
         {
             return (bool) file_put_contents($path, $this->toJson($jsonOptions));
         }
@@ -1540,10 +1429,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     public function fromFile($file)
     {
-        if ( ! $this->isFile($file))
-        {
-            throw new NotIsFileException('Not is file: ' . $file);
-        }
+        if ( ! $this->isFile($file)) throw new NotIsFileException('Not is file: ' . $file);
 
         $content = file_get_contents($file);
 
@@ -1559,13 +1445,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         throw new ContainerException('Can\'t convert file to Container');
     }
 
-
     /**
      * @param $content
      *
      * @return $this
-     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
-     * @throws \im\Primitive\Container\UncountableException
      */
     public function fromSerialized($content)
     {
@@ -1577,7 +1460,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         throw new BadMethodCallException('Expected serialized, got: ' . $content);
     }
 
-
     /**
      * Construct from Encrypted Container
      *
@@ -1585,7 +1467,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      * @param $key
      *
      * @return \im\Primitive\Container\Container
-     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      */
     public function fromEncrypted($encrypted, $key)
     {
@@ -1599,16 +1480,14 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         throw new BadMethodCallException('Expected encrypted Container, got: ' . $encrypted);
     }
 
-
     /**
      * Construct from string
      *
      * @param string $string
      *
      * @return $this
-     * @throws \im\Primitive\Container\Exceptions\BadMethodCallException
      * @throws \im\Primitive\Container\Exceptions\ContainerException
-     * @throws \im\Primitive\Container\Exceptions\NotIsFileException
+     * @throws \im\Primitive\Support\Exceptions\NotIsFileException
      */
     protected function fromString($string)
     {
@@ -1627,7 +1506,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         throw new BadMethodCallException('Argument 1 should be valid json, serialized or file with json or serialized data');
     }
-
 
     /**
      * Return json representation of Container
@@ -1673,7 +1551,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         throw new BadMethodCallException('Can\'t find method: '.$method.' in class'. __CLASS__);
     }
 
-
     /**
      *  Destructor
      */
@@ -1691,14 +1568,10 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     protected function measure($default = 0)
     {
-        if (is_array($this->items))
-        {
-            return count($this->items);
-        }
+        if ( ! is_array($this->items)) return $default;
 
-        return $default;
+        return count($this->items);
     }
-
 
     /**
      * @param array $conditions
@@ -1709,8 +1582,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     protected function whereCondition(array $conditions, $preserveKeys)
     {
-        $key = first_key($conditions);
-        $value = array_shift($conditions);
+        $key = first_key($conditions);  $value = array_shift($conditions);
 
         $where = $this->whereRecursive($this->items, $key, $value, $preserveKeys);
 
@@ -1721,7 +1593,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         return $where;
     }
-
 
     /**
      * Recursively traversing tree
@@ -1755,7 +1626,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $outputArray;
     }
 
-
     /**
      * @param RecursiveIteratorIterator $iterator
      * @param Iterator $subIterator
@@ -1780,7 +1650,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $outputArray;
     }
 
-
     /**
      * Get the "group by" key value.
      *
@@ -1799,7 +1668,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return data_get($value, $groupBy);
     }
 
-
     /**
      * Recursive filter
      *
@@ -1810,10 +1678,7 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
      */
     protected function filterRecursive(callable $function, $items)
     {
-        if ( ! $this->isArrayable($items))
-        {
-            return $items;
-        }
+        if ( ! $this->isArrayable($items)) return $items;
 
         foreach ($items as $key => $item)
         {
@@ -1822,7 +1687,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         return array_filter($items, $function);
     }
-
 
     /**
      * Recursive unset
@@ -1846,7 +1710,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
         return $items;
     }
-
 
     /**
      * Unique items recursively
@@ -1913,7 +1776,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     | Countable
     |--------------------------------------------------------------------------
     */
-
     /**
      * For countable implementation
      *
@@ -1929,7 +1791,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     | JsonSerializable
     |--------------------------------------------------------------------------
     */
-
     /**
      * @return array
      */
@@ -1947,7 +1808,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     | IteratorAggregate
     |--------------------------------------------------------------------------
     */
-
     /**
      * @return RecursiveContainerIterator
      */
@@ -1961,7 +1821,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     | ArrayAccess
     |--------------------------------------------------------------------------
     */
-
     /**
      * @param mixed $offset
      * @param mixed $value
@@ -1976,7 +1835,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         $this->set($offset, $value);
     }
 
-
     /**
      * @param mixed $offset
      *
@@ -1987,7 +1845,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         return $this->has($offset);
     }
 
-
     /**
      * @param mixed $offset
      */
@@ -1995,7 +1852,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     {
         $this->forget($offset);
     }
-
 
     /**
      * @param mixed $offset

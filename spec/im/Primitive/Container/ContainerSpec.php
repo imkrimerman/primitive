@@ -47,7 +47,7 @@ class ContainerSpec extends ObjectBehavior
 
         $this->has('key')->shouldBe(true);
 
-        $this->all->shouldBeEqualTo(['key' => 'value']);
+        $this->all()->shouldBeEqualTo(['key' => 'value']);
     }
 
     function it_should_construct_from_file_with_json()
@@ -74,30 +74,37 @@ class ContainerSpec extends ObjectBehavior
         $this->minusLengthCheck(2);
     }
 
+    function it_should_get_value_by_key_with_dot_notation()
+    {
+        $obj = new \stdClass();
+        $obj->value = 'added';
+
+        $this->set('new.value', 'added');
+
+        $this->get('new.value')->shouldBe('added');
+    }
+
+    function it_should_set_item_by_key_with_dot_notation()
+    {
+        $match = $this->initializer;
+
+        $match['wife']['like'] = 'husband';
+
+        $this->set('wife.like', 'husband')->all()->shouldBe($match);
+
+        $obj = new \stdClass();
+        $obj->value = 'added';
+
+        $this->set('new.value', 'added');
+
+        $this->get('new.value')->shouldBe('added');
+    }
+
     function it_should_push_item_without_key_to_Container()
     {
         $this->push('newItem');
 
         $this->hasValue('newItem')->shouldBe(true);
-
-        $this->plusLengthCheck();
-    }
-
-    function it_should_push_item_with_key_to_Container()
-    {
-        $this->push('newItem', 'newKey');
-
-        $this->has('newKey')->shouldBe(true);
-        $this->hasValue('newItem')->shouldBe(true);
-
-        $this->plusLengthCheck();
-    }
-
-    function it_should_push_item_with_dot_key_and_create_multi_array_in_Container()
-    {
-        $this->push('newItem', 'new.key');
-
-        $this->has('new.key')->shouldBe(true);
 
         $this->plusLengthCheck();
     }
@@ -140,6 +147,15 @@ class ContainerSpec extends ObjectBehavior
         $this->has('name')->shouldBe(true);
 
         $this->has('wife.hobby')->shouldBe(true);
+
+        $obj = new \stdClass();
+        $obj->value = 15;
+
+        $this->initializer['new'] = $obj;
+
+        $this->fromArray($this->initializer)->has('new.value')->shouldBe(true);
+
+        $this->has('noKey')->shouldBe(false);
     }
 
     function it_should_return_first_key_from_Container()
@@ -338,12 +354,12 @@ class ContainerSpec extends ObjectBehavior
                 [
                     'name' => 'John',
                     'surname' => 'Doe',
-                    'email' => 'johndoe@example.com'
+                    'email' => 'johndoe@example.com',
                 ],
                 [
                     'name' => 'Jane',
                     'surname' => 'Doe',
-                    'email' => 'janedoe@example.com'
+                    'email' => 'janedoe@example.com',
                 ]
             ]
         );
@@ -555,7 +571,7 @@ class ContainerSpec extends ObjectBehavior
 
     function it_should_merge_items_by_key_with_given_array_and_leave_length_the_same()
     {
-        $this->merge(['name' => 'Mike'], 'wife')->get('wife.name')->shouldBe('Mike');
+        $this->mergeWithKey(['name' => 'Mike'], 'wife')->get('wife.name')->shouldBe('Mike');
 
         $this->lengthCheck();
     }
@@ -691,6 +707,17 @@ class ContainerSpec extends ObjectBehavior
         unset($initializer['wife']['hobby']);
 
         $this->forget('wife.hobby')->all()->shouldBeEqualTo($initializer);
+
+        $obj = new \stdClass();
+        $obj->value = 15;
+
+        $this->initializer['new'] = $obj;
+
+        $match = $this->initializer;
+
+        unset($match['new']->value);
+
+        $this->fromArray($this->initializer)->forget('new.value')->all()->shouldBe($match);
 
         $this->lengthCheck();
     }
@@ -1086,7 +1113,7 @@ class ContainerSpec extends ObjectBehavior
         $this->lengthCheck(3);
     }
 
-    function it_should_sort_items_in_Container()
+    function it_should_sort_items_with_callable_in_Container()
     {
         $initializer = [
             [
@@ -1141,6 +1168,18 @@ class ContainerSpec extends ObjectBehavior
             'email' => 'janemc@example.com',
             'order' => 4
         ]);
+    }
+
+    function it_should_calculate_sum_of_items()
+    {
+        $sum = [10, 20, 1, [20, [10]]];
+        $init = array_merge($this->initializer, $sum);
+
+        $int = $this->fromArray($init)->sum();
+
+        $int->shouldHaveType('im\Primitive\Int\Int');
+
+        $int->value()->shouldBe(61);
     }
 
     function it_should_reset_keys_in_Container()

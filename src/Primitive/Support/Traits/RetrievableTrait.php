@@ -30,7 +30,7 @@ trait RetrievableTrait {
             case $value instanceof stdClass:
                 return get_object_vars($value);
             default:
-                return $default;
+                return value($default);
         }
     }
 
@@ -61,7 +61,7 @@ trait RetrievableTrait {
                 return (string) $value;
 
             default:
-                return $default;
+                return value($default);
         }
     }
 
@@ -93,7 +93,7 @@ trait RetrievableTrait {
                 return $value->toBool()->value();
 
             default:
-                return $default;
+                return value($default);
         }
     }
 
@@ -121,7 +121,7 @@ trait RetrievableTrait {
                 return $value->toInt()->value();
 
             default:
-                return $default;
+                return value($default);
         }
     }
 
@@ -148,7 +148,7 @@ trait RetrievableTrait {
                 return $value->toFloat()->value();
 
             default:
-                return $default;
+                return value($default);
         }
     }
 
@@ -168,8 +168,12 @@ trait RetrievableTrait {
         {
             return $this->getStringable($value, $default);
         }
+        elseif (is_callable($value))
+        {
+            return $value;
+        }
 
-        return $default;
+        return value($default);
     }
 
     /**
@@ -188,54 +192,80 @@ trait RetrievableTrait {
     /**
      * @param mixed $value
      *
+     * @param bool  $strict
+     *
      * @return bool
      */
-    public function isStringable($value)
+    public function isStringable($value, $strict = false)
     {
-        return  is_string($value) ||
-                is_array($value) ||
-                is_numeric($value) ||
-                is_bool($value) ||
-                $value instanceof StringInterface ||
-                $value instanceof ContainerInterface ||
-                $value instanceof ArrayableInterface ||
-                (is_object($value) && method_exists($value, '__toString'));
+        if ( ! $this->getBoolable($strict))
+        {
+            return  is_string($value) ||
+                    is_array($value) ||
+                    is_numeric($value) ||
+                    is_bool($value) ||
+                    $value instanceof StringInterface ||
+                    $value instanceof ContainerInterface ||
+                    $value instanceof ArrayableInterface ||
+                    (is_object($value) && method_exists($value, '__toString'));
+        }
+
+        return is_string($value) || $strict instanceof StringInterface;
     }
 
     /**
      * @param mixed $value
      *
+     * @param bool  $strict
+     *
      * @return bool
      */
-    public function isIntegerable($value)
+    public function isIntegerable($value, $strict = false)
     {
-        return  is_numeric($value) ||
-                is_string($value) ||
-                is_bool($value) ||
+        if ( ! $this->getBoolable($strict))
+        {
+            return  is_numeric($value) ||
+                    is_string($value) ||
+                    is_bool($value) ||
+                    $value instanceof IntegerInterface ||
+                    $value instanceof FloatInterface ||
+                    $value instanceof StringInterface ||
+                    $value instanceof BooleanInterface;
+        }
+
+        return  is_int($value) ||
+                is_real($value) ||
                 $value instanceof IntegerInterface ||
-                $value instanceof FloatInterface ||
-                $value instanceof StringInterface ||
-                $value instanceof BooleanInterface;
+                $value instanceof FloatInterface;
     }
 
     /**
      * @param mixed $value
      *
+     * @param bool  $strict
+     *
      * @return bool
      */
-    public function isFloatable($value)
+    public function isFloatable($value, $strict = false)
     {
-        return $this->isIntegerable($value);
+        return $this->isIntegerable($value, $strict);
     }
 
     /**
      * @param mixed $value
      *
+     * @param bool  $strict
+     *
      * @return bool
      */
-    public function isBoolable($value)
+    public function isBoolable($value, $strict = false)
     {
-        return  $this->getIntegerable($value);
+        if ( ! $this->getBoolable($strict))
+        {
+            return $this->isIntegerable($value);
+        }
+
+        return is_bool($value) || $value instanceof BooleanInterface;
     }
 
     /**

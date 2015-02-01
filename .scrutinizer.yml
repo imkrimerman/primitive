@@ -12,6 +12,7 @@ checks:
         avoid_tab_indentation: true
         avoid_usage_of_logical_operators: true
         avoid_useless_overridden_methods: true
+        blank_line_after_namespace_declaration: true
         classes_in_camel_caps: true
         code_rating: true
         deprecated_code_usage: true

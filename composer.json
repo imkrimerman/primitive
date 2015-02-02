@@ -15,7 +15,7 @@
         "ext-mbstring": "*",
         "danielstjules/stringy": "~1.5",
         "firebase/php-jwt": "1.0.0",
-        "symfony/var-dumper": "3.0.*@dev"
+        "symfony/var-dumper": "2.6.*"
     },
     "require-dev": {
         "phpspec/phpspec": "2.1.1",

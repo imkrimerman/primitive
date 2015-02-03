@@ -186,7 +186,7 @@ trait RetrievableTrait {
         return  is_array($value) ||
                 $value instanceof ContainerInterface ||
                 $value instanceof ArrayableInterface ||
-                $value instanceof stdClass;
+                is_object($value);
     }
 
     /**

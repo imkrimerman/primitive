@@ -795,17 +795,19 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function compress()
     {
-        $this->string = gzcompress($this->string);
-
-        return $this;
+        return new static(gzcompress($this->string));
     }
 
     /**
+     * @param null|string|StringInterface $string
+     *
      * @return $this
      */
-    public function uncompress()
+    public function uncompress($string = null)
     {
-        $this->string = gzuncompress($this->string);
+        $string = $this->isStringable($string) ? $this->retrieveValue($string) : $this->string;
+
+        $this->string = gzuncompress($string);
 
         return $this;
     }
@@ -825,7 +827,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function fromEncrypted($encrypted)
     {
-        $this->string = $this->fromBase64($this->retrieveValue($encrypted))->uncompress()->value();
+        $this->string = $this->fromBase64($encrypted)->uncompress()->value();
 
         return $this;
     }

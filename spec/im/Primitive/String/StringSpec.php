@@ -649,8 +649,28 @@ class StringSpec extends ObjectBehavior
         $str = gzcompress($this->init);
 
         $this->set($str)->uncompress()->value()->shouldBe($this->init);
+
+        $this->set($this->init)->uncompress($str)->value()->shouldBe($this->init);
     }
 
+    function it_should_return_encrypted_string()
+    {
+        $encrypted = $this->encrypt();
+
+        $encrypted->value()->shouldBeString();
+    }
+
+    function it_should_construct_from_encrypted_string()
+    {
+        $encrypted = $this->encrypt();
+
+        $this->fromEncrypted($encrypted)->value()->shouldBe($this->init);
+    }
+
+    function it_should_return_length_of_string()
+    {
+        $this->length()->shouldBe(mb_strlen($this->init));
+    }
 
     /**
      * Abstract Type methods

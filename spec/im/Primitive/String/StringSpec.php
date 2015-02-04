@@ -672,6 +672,107 @@ class StringSpec extends ObjectBehavior
         $this->length()->shouldBe(mb_strlen($this->init));
     }
 
+    function it_should_return_inner_string()
+    {
+        $this->all()->shouldBe($this->init);
+    }
+
+    function it_should_check_if_string_is_empty()
+    {
+        $this->isEmpty()->shouldBe(false);
+
+        $this->set('')->isEmpty()->shouldBe(true);
+    }
+
+    function it_should_check_if_string_is_not_empty()
+    {
+        $this->isNotEmpty()->shouldBe(true);
+
+        $this->set('')->isNotEmpty()->shouldBe(false);
+    }
+
+    function it_should_check_if_string_is_alpha()
+    {
+        $this->isAlpha()->shouldBe(true);
+
+        $this->set('123qwe')->isAlpha()->shouldBe(false);
+    }
+
+    function it_should_check_if_string_is_alphanumeric()
+    {
+        $this->isAlphanumeric()->shouldBe(true);
+
+        $this->set('123qwe')->isAlphanumeric()->shouldBe(true);
+
+        $this->set('./../')->isAlphanumeric()->shouldBe(false);
+    }
+
+    function it_should_check_if_string_is_whitespace_chars()
+    {
+        $this->isWhitespaces()->shouldBe(false);
+
+        $this->set("\n\t  ")->isWhitespaces()->shouldBe(true);
+    }
+
+    function it_should_check_if_string_is_hexadecimal()
+    {
+        $this->isHex()->shouldBe(false);
+
+        $this->set('2AF3')->isHex()->shouldBe(true);
+    }
+
+    function it_should_check_if_string_is_upper()
+    {
+        $this->isUpper()->shouldBe(false);
+
+        $this->upper()->isUpper()->shouldBe(true);
+    }
+
+    function it_should_check_if_string_is_lower()
+    {
+        $this->isLower()->shouldBe(false);
+
+        $this->lower()->isLower()->shouldBe(true);
+
+        $this->upper()->isLower()->shouldBe(false);
+    }
+
+    function it_should_check_if_is_uuid()
+    {
+        $uuid = $this->uuid();
+
+        $uuid->isUuid()->shouldBe(true);
+
+        $this->set('asdaa234-sd34-df35-vd2f-ptuqwv45ct56')->isUuid()->shouldBe(false);
+    }
+
+    function it_should_check_if_is_json()
+    {
+        $this->isJson()->shouldBe(false);
+
+        $this->set('{"name":"fooBar"}')->isJson()->shouldBe(true);
+    }
+
+    function it_should_check_if_is_file()
+    {
+        $this->isFile()->shouldBe(false);
+
+        $this->set(__DIR__.'/../Container/data.json')->isFile()->shouldBe(true);
+    }
+
+    function it_should_check_if_is_serialized()
+    {
+        $this->isSerialized()->shouldBe(false);
+
+        $this->set('a:4:{s:4:"name";s:4:"John";s:7:"surname";s:3:"Doe";s:5:"email";s:19:"johndoe@example.com";s:4:"wife";a:4:{s:4:"name";s:4:"Jane";s:7:"surname";s:3:"Doe";s:5:"email";s:19:"janedoe@example.com";s:5:"hobby";s:5:"music";}}
+')->isSerialized()->shouldBe(true);
+    }
+
+    function it_should_auto_convert_to_string()
+    {
+        $this->__toString()->shouldBe($this->init);
+    }
+
     /**
      * Abstract Type methods
      */

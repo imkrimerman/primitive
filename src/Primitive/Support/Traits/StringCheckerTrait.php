@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Support\Traits;
 
+use im\Primitive\Support\Str;
 use JWT;
 use UnexpectedValueException;
 
@@ -38,7 +39,7 @@ trait StringCheckerTrait {
      */
     public function isFile($string)
     {
-        return is_file($string) && is_readable($string);
+        return Str::isFile($string);
     }
 
 
@@ -51,12 +52,7 @@ trait StringCheckerTrait {
      */
     public function isJson($string)
     {
-        if (is_string($string))
-        {
-            return is_array(json_decode($string, true));
-        }
-
-        return false;
+        return Str::isJson($string);
     }
 
 
@@ -69,6 +65,6 @@ trait StringCheckerTrait {
      */
     public function isSerialized($string)
     {
-        return $string === 'b:0;' || @unserialize($string) !== false;
+        return Str::isSerialized($string);
     }
 }

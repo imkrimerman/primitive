@@ -406,4 +406,47 @@ class Str {
 
         return static::$studlyCache[$value] = str_replace(' ', '', $value);
     }
+
+    /**
+     * Check if string is readable file
+     *
+     * @param string $string
+     *
+     * @return bool
+     */
+    public static function isFile($string)
+    {
+        return is_file($string) && is_readable($string);
+    }
+
+
+    /**
+     * Checks if given string is Json
+     *
+     * @param $string
+     *
+     * @return bool
+     */
+    public static function isJson($string)
+    {
+        if (is_string($string))
+        {
+            return is_array(json_decode($string, true));
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Checks if given string is serialized
+     *
+     * @param $string
+     *
+     * @return bool
+     */
+    public static function isSerialized($string)
+    {
+        return $string === 'b:0;' || @unserialize($string) !== false;
+    }
 }

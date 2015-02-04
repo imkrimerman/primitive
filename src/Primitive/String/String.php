@@ -24,7 +24,6 @@ use im\Primitive\Support\Contracts\ArrayableInterface;
 class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
 
     use RetrievableTrait;
-    use StringCheckerTrait;
 
     /**
      * @var string
@@ -833,14 +832,6 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @return int
-     */
-    protected function measure()
-    {
-        return mb_strlen($this->string);
-    }
-
-    /**
      * @return string
      */
     public function all()
@@ -869,7 +860,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isAlpha()
     {
-        return StaticStringy::isAlpha($this->string);
+        return $this->is('^[[:alpha:]]*$');
     }
 
     /**
@@ -877,7 +868,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isAlphanumeric()
     {
-        return StaticStringy::isAlphanumeric($this->string);
+        return $this->is('^[[:alnum:]]*$');
     }
 
     /**
@@ -885,7 +876,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isWhitespaces()
     {
-        return StaticStringy::isBlank($this->string);
+        return $this->is('^[[:space:]]*$');
     }
 
     /**
@@ -893,23 +884,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isHex()
     {
-        return StaticStringy::isHexadecimal($this->string);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isSerialized()
-    {
-        return StaticStringy::isSerialized($this->string);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isJson()
-    {
-        return is_array(json_decode($this->string, true));
+        return $this->is('^[[:xdigit:]]*$');
     }
 
     /**
@@ -917,7 +892,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isLower()
     {
-        return StaticStringy::isLowerCase($this->string);
+        return $this->is('^[[:lower:]]*$');
     }
 
     /**
@@ -925,7 +900,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isUpper()
     {
-        return StaticStringy::isUpperCase($this->string);
+        return $this->is('^[[:upper:]]*$');
     }
 
     /**
@@ -935,16 +910,37 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
      */
     public function isUuid($uuid = null)
     {
-        if (is_null($uuid))
-        {
-            $uuid = $this->string;
-        }
+        if (is_null($uuid)) $uuid = $this->string;
 
         $uuid = $this->retrieveValue($uuid);
 
         return (bool) preg_match(
             '/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $uuid
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function isJson()
+    {
+        return Str::isJson($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFile()
+    {
+        return Str::isFile($this->string);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSerialized()
+    {
+        return Str::isSerialized($this->string);
     }
 
     /**
@@ -1000,6 +996,14 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     public function __destruct()
     {
         unset($this->string);
+    }
+
+    /**
+     * @return int
+     */
+    protected function measure()
+    {
+        return mb_strlen($this->string);
     }
 
     /**

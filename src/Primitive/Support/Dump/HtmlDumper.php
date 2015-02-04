@@ -2,6 +2,7 @@
 
 use Symfony\Component\VarDumper\Dumper\HtmlDumper as SymfonyHtmlDumper;
 
+
 class HtmlDumper extends SymfonyHtmlDumper {
 
     /**

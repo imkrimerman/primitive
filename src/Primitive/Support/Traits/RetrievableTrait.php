@@ -27,7 +27,7 @@ trait RetrievableTrait {
                 return $value->value();
             case $value instanceof ArrayableInterface:
                 return $value->toArray();
-            case $value instanceof stdClass:
+            case is_object($value):
                 return get_object_vars($value);
             default:
                 return value($default);
@@ -186,7 +186,7 @@ trait RetrievableTrait {
         return  is_array($value) ||
                 $value instanceof ContainerInterface ||
                 $value instanceof ArrayableInterface ||
-                is_object($value);
+                is_object($value) && ! $this->isStringable($value) && ! $this->isIntegerable($value);
     }
 
     /**

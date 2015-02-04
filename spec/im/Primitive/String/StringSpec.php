@@ -677,6 +677,13 @@ class StringSpec extends ObjectBehavior
         $this->all()->shouldBe($this->init);
     }
 
+    function it_should_get_file_contents_if_is_file()
+    {
+        $this->shouldThrow('im\Primitive\String\Exceptions\StringException')->duringContents();
+
+        $this->set(__DIR__.'/../Container/data.json')->contents()->isJson()->shouldBe(true);
+    }
+
     function it_should_check_if_string_is_empty()
     {
         $this->isEmpty()->shouldBe(false);

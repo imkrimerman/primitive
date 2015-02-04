@@ -156,7 +156,7 @@ class Arr {
     /**
      * Remove one or many array items from a given array using "dot" notation.
      *
-     * @param  array        $array
+     * @param  array|object $array
      * @param  array|string $keys
      *
      * @return void
@@ -176,7 +176,8 @@ class Arr {
                 if ((is_array($array) && isset($array[$part]) && is_array($array[$part])) ||
                     (is_object($array) && isset($array->{$part}) && is_array($array->{$part})))
                 {
-                    $array =& $array[$part];
+                    if (is_array($array)) $array =& $array[$part];
+                    elseif (is_object($array)) $array =& $array->{$part};
                 }
             }
 
@@ -193,7 +194,7 @@ class Arr {
     /**
      * Get an item using "dot" notation.
      *
-     * @param  array  $array
+     * @param  array|object  $array
      * @param  string $key
      * @param  mixed  $default
      *
@@ -211,7 +212,7 @@ class Arr {
     /**
      * Check if an item exists using "dot" notation.
      *
-     * @param  array  $array
+     * @param  array|object  $array
      * @param  string $key
      *
      * @return bool
@@ -299,7 +300,7 @@ class Arr {
      *
      * If no key is given to the method, the entire array will be replaced.
      *
-     * @param  array  $array
+     * @param  array|object  $array
      * @param  string $key
      * @param  mixed  $value
      *

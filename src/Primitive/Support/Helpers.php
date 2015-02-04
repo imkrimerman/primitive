@@ -285,31 +285,6 @@ if ( ! function_exists('str_replace_array'))
     }
 }
 
-if ( ! function_exists('object_length'))
-{
-    /**
-     * Count object length
-     *
-     * @param $object
-     *
-     * @return int
-     */
-    function object_length($object)
-    {
-        if (is_object($object))
-        {
-            $reflactor = new ReflectionClass($object);
-
-            $properties = $reflactor->getProperties();
-            $constants = $reflactor->getConstants();
-
-            return count($properties) + count($constants);
-        }
-
-        return 0;
-    }
-}
-
 if ( ! function_exists('object_get'))
 {
     /**
@@ -382,7 +357,7 @@ if ( ! function_exists('data_get'))
     }
 }
 
-if ( ! function_exists('ddump'))
+if ( ! function_exists('_dd'))
 {
     /**
      * Dump the passed variables and end the script.
@@ -390,14 +365,14 @@ if ( ! function_exists('ddump'))
      * @param  mixed
      * @return void
      */
-    function ddump()
+    function _dd()
     {
         array_map(function($x) { (new Dumper)->dump($x); }, func_get_args()); die;
     }
 }
 
 
-if ( ! function_exists('dump'))
+if ( ! function_exists('_d'))
 {
     /**
      * Dump the passed variables.
@@ -405,7 +380,7 @@ if ( ! function_exists('dump'))
      * @param  mixed
      * @return void
      */
-    function dump()
+    function _d()
     {
         array_map(function($x) { (new Dumper)->dump($x); }, func_get_args());
     }

@@ -2,24 +2,28 @@
 
 use Countable;
 use ArrayAccess;
-use im\Primitive\Container\Container;
-use im\Primitive\String\String;
 use Traversable;
 use IteratorAggregate;
 use JsonSerializable;
 
+use im\Primitive\String\String;
+use im\Primitive\Container\Container;
+use im\Primitive\Support\Arr;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Contracts\ObjectInterface;
+use im\Primitive\Support\Contracts\FileableInterface;
 use im\Primitive\Support\Contracts\JsonableInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Support\Exceptions\OffsetNotExistsException;
+use im\Primitive\Support\Traits\RetrievableTrait;
 
 
-class Object extends Type implements ObjectInterface, JsonSerializable, JsonableInterface, ArrayAccess, ArrayableInterface, IteratorAggregate, Countable {
+class Object extends Type implements ObjectInterface, JsonSerializable, JsonableInterface, ArrayAccess, ArrayableInterface, FileableInterface, IteratorAggregate, Countable {
+
+    use RetrievableTrait;
 
     /**
-     * @param $from
+     * @param mixed $from
      */
     public function __construct($from = [])
     {
@@ -38,52 +42,61 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     }
 
     /**
-     * @param      $field
-     * @param null $default
+     * @param $property
+     * @return mixed|null
+     */
+    public function __get($property)
+    {
+        return $this->get($property);
+    }
+
+    /**
+     * @param       $property
+     * @param mixed $default
      *
      * @return mixed|null
      */
-    public function get($field, $default = null)
+    public function get($property, $default = null)
     {
-        if ($this->has($field))
+        if ($this->has($property))
         {
-            return $this->retrieveValue($field);
+            return $this->retrieveValue($property);
         }
 
         return $default;
     }
 
     /**
-     * @param $field
+     * @param $property
      * @param $value
      *
      * @return $this
      */
-    public function set($field, $value)
+    public function set($property, $value)
     {
-        $this->{$field} = $value;
+        Arr::set($this, $this->getStringable($property), $value);
 
         return $this;
     }
 
     /**
-     * @param $field
+     * @param $property
      *
      * @return bool
      */
-    public function has($field)
+    public function has($property)
     {
-        return isset($this->{$field});
+        return Arr::has($this, $this->getStringable($property));
     }
 
     /**
-     * @param $field
+     * @param $property
      *
      * @return $this
      */
-    public function forget($field)
+    public function forget($property)
     {
-        unset($this->{$field});
+        Arr::forget($this, $property);
 
         return $this;
     }
@@ -97,30 +110,20 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     {
         $array = (new Container($from))->notNumericKeys();
 
-        foreach ($array as $field => $value)
+        foreach ($array as $property => $value)
         {
-            $this->{$field} = $value;
+            $this->{$property} = $value;
         }
 
         return $this;
     }
 
     /**
-     * @return \im\Primitive\Container\Container
+     * @return array
      */
     public function value()
     {
-        return new Container(get_object_vars($this));
-    }
-
-    /**
-     * @param $field
-     *
-     * @return mixed
-     */
-    protected function retrieveValue($field)
-    {
-        return object_get($this, $field);
+        return get_object_vars($this);
     }
 
     /**
@@ -128,7 +131,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function length()
     {
-        return object_length($this);
+        return $this->toContainer()->length();
     }
 
     /**
@@ -152,7 +155,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function toContainer()
     {
-        return $this->value();
+        return new Container($this->value());
     }
 
     /**
@@ -160,7 +163,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function toJson()
     {
-        return $this->value()->toJson();
+        return $this->toContainer()->toJson();
     }
 
     /**
@@ -178,7 +181,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      */
     public function toArray()
     {
-        return $this->value()->toArray();
+        return $this->value();
     }
 
     /**
@@ -186,9 +189,42 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
      *
      * @return \im\Primitive\Object\Object
      */
-    public function fromArray(array $array = array())
+    public function fromArray(array $array = [])
     {
         return $this->initialize($array);
+    }
+
+    /**
+     * @param $file
+     * @return bool
+     */
+    public function toFile($file)
+    {
+        if (is_dir(pathinfo($file, PATHINFO_DIRNAME)))
+        {
+            return (bool) file_put_contents($file, $this->toJson());
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $file
+     * @return $this
+     */
+    public function fromFile($file)
+    {
+        return $this->initialize($file);
+    }
+
+    /**
+     * @param $property
+     *
+     * @return mixed
+     */
+    protected function retrieveValue($property)
+    {
+        return data_get($this, $property);
     }
 
     /*
@@ -196,17 +232,17 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     | JsonSerializable
     |--------------------------------------------------------------------------
     */
-
     /**
      * (PHP 5 &gt;= 5.4.0)<br/>
      * Specify data which should be serialized to JSON
+     *
      * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
      * @return mixed data which can be serialized by <b>json_encode</b>,
-     * which is a value of any type other than a resource.
+     *       which is a value of any type other than a resource.
      */
     function jsonSerialize()
     {
-        return $this->value()->jsonSerialize();
+        return $this->toContainer()->jsonSerialize();
     }
 
     /*
@@ -214,10 +250,10 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     | ArrayAccess
     |--------------------------------------------------------------------------
     */
-
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Whether a offset exists
+     *
      * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      *
      * @param mixed $offset <p>
@@ -237,6 +273,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Offset to retrieve
+     *
      * @link http://php.net/manual/en/arrayaccess.offsetget.php
      *
      * @param mixed $offset <p>
@@ -253,12 +290,13 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
             return $this->get($offset);
         }
 
-        throw new OffsetNotExistsException('Offset: '.$offset.' not exists.');
+        throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists.');
     }
 
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Offset to set
+     *
      * @link http://php.net/manual/en/arrayaccess.offsetset.php
      *
      * @param mixed $offset <p>
@@ -278,6 +316,7 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Offset to unset
+     *
      * @link http://php.net/manual/en/arrayaccess.offsetunset.php
      *
      * @param mixed $offset <p>
@@ -296,15 +335,15 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     | Countable
     |--------------------------------------------------------------------------
     */
-
     /**
      * (PHP 5 &gt;= 5.1.0)<br/>
      * Count elements of an object
+     *
      * @link http://php.net/manual/en/countable.count.php
      * @return int The custom count as an integer.
-     * </p>
-     * <p>
-     * The return value is cast to an integer.
+     *       </p>
+     *       <p>
+     *       The return value is cast to an integer.
      */
     public function count()
     {
@@ -320,12 +359,13 @@ class Object extends Type implements ObjectInterface, JsonSerializable, Jsonable
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Retrieve an external iterator
+     *
      * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
      * @return Traversable An instance of an object implementing <b>Iterator</b> or
-     * <b>Traversable</b>
+     *       <b>Traversable</b>
      */
     public function getIterator()
     {
-        return new RecursiveContainerIterator($this->value()->all());
+        return $this->toContainer()->getIterator();
     }
 }

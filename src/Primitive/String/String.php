@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
+use im\Primitive\String\Exceptions\StringException;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
@@ -840,6 +841,20 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
+     * @return static
+     * @throws \im\Primitive\String\Exceptions\StringException
+     */
+    public function contents()
+    {
+        if ($this->isFile())
+        {
+            return new static(file_get_contents($this->string));
+        }
+
+        throw new StringException('Not is file: '.$this->string);
+    }
+
+    /**
      * @return bool
      */
     public function isEmpty()
@@ -982,7 +997,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     {
         $value = $this->value();
 
-        if ( ! $this->isFile($value) || ! $this->isJson() || ! $this->isSerialized())
+        if ( ! $this->isFile() || ! $this->isJson() || ! $this->isSerialized())
         {
             $value = [$value];
         }

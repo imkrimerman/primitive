@@ -14,7 +14,7 @@ class ContainerFactory {
      *
      * @return \im\Primitive\Container\Container|\im\Primitive\Container\RevertableContainer
      */
-    public function create($from, $type)
+    public function make($from, $type)
     {
         switch ($type)
         {
@@ -30,7 +30,7 @@ class ContainerFactory {
     /**
      * @return static
      */
-    public static function initialize()
+    public static function create()
     {
         return new static;
     }

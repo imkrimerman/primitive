@@ -19,7 +19,7 @@ if ( ! function_exists('container'))
      */
     function container($from = [], $type = ContainerFactory::SIMPLE)
     {
-        return ContainerFactory::initialize()->create($from, $type);
+        return ContainerFactory::create()->make($from, $type);
     }
 }
 
@@ -247,18 +247,11 @@ if ( ! function_exists('factorial'))
      */
     function factorial($value)
     {
-        if ($value < 0)
-        {
-            throw new InvalidArgumentException('Number cannot be less than zero');
-        }
+        if ($value < 0) throw new InvalidArgumentException('Number cannot be less than zero');
 
         $factorial = 1;
 
-        while ($value > 0)
-        {
-            $factorial *= $value;
-            --$value;
-        }
+        while ($value > 0) $factorial *= $value--;
 
         return $factorial;
     }

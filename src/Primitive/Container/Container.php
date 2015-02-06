@@ -1,10 +1,6 @@
 <?php namespace im\Primitive\Container;
 
 use \Iterator;
-use \Countable;
-use \ArrayAccess;
-use \JsonSerializable;
-use \IteratorAggregate;
 use \BadMethodCallException;
 use \InvalidArgumentException;
 use \RecursiveIteratorIterator;
@@ -15,16 +11,13 @@ use im\Primitive\String\String;
 use im\Primitive\Object\Object;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
-use im\Primitive\Support\Abstracts\Type;
-use im\Primitive\Support\Traits\RetrievableTrait;
+use im\Primitive\Support\Abstracts\ComplexType;
 use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\BooleanInterface;
 use im\Primitive\Support\Contracts\FloatInterface;
 use im\Primitive\Support\Contracts\IntegerInterface;
 use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ContainerInterface;
-use im\Primitive\Support\Contracts\JsonableInterface;
-use im\Primitive\Support\Contracts\FileableInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Support\Exceptions\NotIsFileException;
@@ -33,9 +26,9 @@ use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
 
-class Container extends Type implements ContainerInterface, ArrayAccess, ArrayableInterface, JsonableInterface, JsonSerializable, FileableInterface, Countable, IteratorAggregate {
 
-    use RetrievableTrait;
+class Container extends ComplexType implements ContainerInterface {
+
     use StringCheckerTrait;
 
     /*
@@ -1345,44 +1338,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
     }
 
     /**
-     * Return converted Container to array
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        return array_map(function ($item)
-        {
-            return $this->retrieveValue($item);
-
-        }, $this->items);
-    }
-
-    /**
-     * Construct from array
-     *
-     * @param array $array
-     *
-     * @return $this
-     */
-    public function fromArray(array $array = [])
-    {
-        return $this->initialize($array);
-    }
-
-    /**
-     * Return converted Container to Json
-     *
-     * @param int $options
-     *
-     * @return string
-     */
-    public function toJson($options = 0)
-    {
-        return json_encode($this->items, $options);
-    }
-
-    /**
      * Construct from Json
      *
      * @param $json
@@ -1397,25 +1352,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         }
 
         return $this;
-    }
-
-    /**
-     * Write Container items to file
-     *
-     * You can specify second argument to call json_encode with params
-     *
-     * @param $path
-     * @param int $jsonOptions
-     * @return bool
-     */
-    public function toFile($path, $jsonOptions = 0)
-    {
-        if (is_dir(pathinfo($path, PATHINFO_DIRNAME)))
-        {
-            return (bool) file_put_contents($path, $this->toJson($jsonOptions));
-        }
-
-        return false;
     }
 
     /**
@@ -1775,21 +1711,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
 
     /*
     |--------------------------------------------------------------------------
-    | Countable
-    |--------------------------------------------------------------------------
-    */
-    /**
-     * For countable implementation
-     *
-     * @return int
-     */
-    public function count()
-    {
-        return $this->measure();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
     | JsonSerializable
     |--------------------------------------------------------------------------
     */
@@ -1803,19 +1724,6 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
             return ! is_callable($value);
 
         })->all();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | IteratorAggregate
-    |--------------------------------------------------------------------------
-    */
-    /**
-     * @return RecursiveContainerIterator
-     */
-    public function getIterator()
-    {
-        return new RecursiveContainerIterator($this->items);
     }
 
     /*
@@ -1835,39 +1743,5 @@ class Container extends Type implements ContainerInterface, ArrayAccess, Arrayab
         }
 
         $this->set($offset, $value);
-    }
-
-    /**
-     * @param mixed $offset
-     *
-     * @return bool
-     */
-    public function offsetExists($offset)
-    {
-        return $this->has($offset);
-    }
-
-    /**
-     * @param mixed $offset
-     */
-    public function offsetUnset($offset)
-    {
-        $this->forget($offset);
-    }
-
-    /**
-     * @param mixed $offset
-     *
-     * @throws OffsetNotExistsException
-     * @return null
-     */
-    public function offsetGet($offset)
-    {
-        if ($this->has($offset))
-        {
-            return $this->get($offset);
-        }
-
-        throw new OffsetNotExistsException('Offset: ' . $offset . ' not exists');
     }
 }

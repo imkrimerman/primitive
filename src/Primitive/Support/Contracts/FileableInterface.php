@@ -3,7 +3,7 @@
 
 interface FileableInterface
 {
-    public function toFile($file);
+    public function toFile($file, $jsonOptions = 0);
 
     public function fromFile($file);
 }

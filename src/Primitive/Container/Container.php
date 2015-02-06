@@ -1630,9 +1630,9 @@ class Container extends ComplexType implements ContainerInterface {
      * Recursive unset
      *
      * @param $forgetKey
-     * @param $items
+     * @param mixed $items
      *
-     * @return
+     * @return mixed
      */
     protected function forgetRecursive($forgetKey, $items)
     {

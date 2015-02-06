@@ -1,6 +1,6 @@
 <?php namespace im\Primitive\Support\Contracts;
 
-interface TypeInterface {
+interface TypeContract {
 
     public function value();
 

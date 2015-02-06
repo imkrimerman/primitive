@@ -1,7 +1,7 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface FileableInterface
+interface FileableContract
 {
     public function toFile($file, $jsonOptions = 0);
 

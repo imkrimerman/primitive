@@ -2,18 +2,26 @@
 
 use im\Primitive\Float\Float;
 use im\Primitive\Support\Abstracts\Number;
-use im\Primitive\Support\Contracts\IntegerInterface;
+use im\Primitive\Support\Contracts\IntegerContract;
 
-
-class Int extends Number implements IntegerInterface {
+/**
+ * Class Int
+ *
+ * @package im\Primitive\Int
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
+class Int extends Number implements IntegerContract {
 
     /**
+     * Storing value
      * @var int
      */
     protected $value;
 
     /**
-     * @param $value
+     * Construct Int Type
+     *
+     * @param mixed $value
      */
     function __construct($value)
     {
@@ -21,6 +29,8 @@ class Int extends Number implements IntegerInterface {
     }
 
     /**
+     * Convert Int Type to Float Type
+     *
      * @return \im\Primitive\Float\Float
      */
     public function toFloat()
@@ -29,8 +39,9 @@ class Int extends Number implements IntegerInterface {
     }
 
     /**
-     * @param $value
+     * {@inheritdoc}
      *
+     * @param mixed $value
      * @return $this
      */
     protected function initialize($value)
@@ -41,8 +52,9 @@ class Int extends Number implements IntegerInterface {
     }
 
     /**
-     * @param $value
+     * {@inheritdoc}
      *
+     * @param mixed $value
      * @return int
      */
     protected function retrieveValue($value)
@@ -51,6 +63,8 @@ class Int extends Number implements IntegerInterface {
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @return int
      */
     protected function getDefault()

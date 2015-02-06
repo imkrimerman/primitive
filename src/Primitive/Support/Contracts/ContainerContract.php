@@ -1,13 +1,13 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface FloatInterface {
+interface ContainerContract {
 
     public function toInt();
 
-    public function toBool();
+    public function toFloat();
 
     public function toString();
 
-    public function toContainer();
+    public function toBool();
 }

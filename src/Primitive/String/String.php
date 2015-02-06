@@ -18,21 +18,30 @@ use im\Primitive\Float\Float;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
-use im\Primitive\Support\Contracts\StringInterface;
-use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Contracts\StringContract;
+use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\String\Exceptions\StringException;
 
-class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
+/**
+ * Class String
+ *
+ * @package im\Primitive\String
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
+class String extends Type implements StringContract, Countable, ArrayAccess, IteratorAggregate {
 
     use RetrievableTrait;
 
     /**
+     * Storing value
      * @var string
      */
     protected $string;
 
     /**
-     * @param string $string
+     * Construct String Type
+     *
+     * @param mixed $string
      */
     public function __construct($string = '')
     {
@@ -41,7 +50,6 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
 
     /**
      * @param $value
-     *
      * @return mixed
      */
     public function __get($value)
@@ -229,7 +237,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null|array|ContainerInterface|ArrayableInterface $ignore
+     * @param null|array|ContainerInterface|ArrayableContract $ignore
      *
      * @return static
      */
@@ -250,7 +258,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|Container|ArrayableInterface $strings
+     * @param array|Container|ArrayableContract $strings
      * @param bool $caseSensitive
      *
      * @return bool
@@ -263,7 +271,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|Container|ArrayableInterface $strings
+     * @param array|Container|ArrayableContract $strings
      * @param bool $caseSensitive
      *
      * @return bool
@@ -413,8 +421,8 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|ContainerInterface|ArrayableInterface|string $search
-     * @param string|StringInterface $replace
+     * @param array|ContainerInterface|ArrayableContract|string $search
+     * @param string|StringContract $replace
      *
      * @return static
      */
@@ -446,7 +454,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|Container|ArrayableInterface|string $needles
+     * @param array|Container|ArrayableContract|string $needles
      *
      * @param bool                                      $caseSensitive
      *
@@ -460,7 +468,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param array|Container|ArrayableInterface|string $needles
+     * @param array|Container|ArrayableContract|string $needles
      *
      * @return bool
      */
@@ -799,7 +807,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null|string|StringInterface $string
+     * @param null|string|StringContract $string
      *
      * @return $this
      */
@@ -919,7 +927,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
     }
 
     /**
-     * @param null|string|StringInterface $uuid
+     * @param null|string|StringContract $uuid
      *
      * @return bool
      */

@@ -1,6 +1,5 @@
 <?php namespace im\Primitive\Support;
 
-
 use Exception;
 
 class Arr {

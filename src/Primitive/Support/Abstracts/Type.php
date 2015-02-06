@@ -2,10 +2,10 @@
 
 use Serializable;
 use im\Primitive\Support\Dump\Dumper;
-use im\Primitive\Support\Contracts\TypeInterface;
+use im\Primitive\Support\Contracts\TypeContract;
 
 
-abstract class Type implements TypeInterface, Serializable {
+abstract class Type implements TypeContract, Serializable {
 
     /**
      * @param $value

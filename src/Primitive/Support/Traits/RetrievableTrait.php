@@ -1,11 +1,11 @@
 <?php namespace im\Primitive\Support\Traits;
 
-use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\Support\Contracts\BooleanInterface;
-use im\Primitive\Support\Contracts\ContainerInterface;
-use im\Primitive\Support\Contracts\FloatInterface;
-use im\Primitive\Support\Contracts\IntegerInterface;
-use im\Primitive\Support\Contracts\StringInterface;
+use im\Primitive\Support\Contracts\ArrayableContract;
+use im\Primitive\Support\Contracts\BooleanContract;
+use im\Primitive\Support\Contracts\ContainerContract;
+use im\Primitive\Support\Contracts\FloatContract;
+use im\Primitive\Support\Contracts\IntegerContract;
+use im\Primitive\Support\Contracts\StringContract;
 
 
 trait RetrievableTrait {
@@ -22,9 +22,9 @@ trait RetrievableTrait {
         {
             case is_array($value);
                 return $value;
-            case $value instanceof ContainerInterface:
+            case $value instanceof ContainerContract:
                 return $value->value();
-            case $value instanceof ArrayableInterface:
+            case $value instanceof ArrayableContract:
                 return $value->toArray();
             case is_object($value):
                 return get_object_vars($value);
@@ -44,12 +44,12 @@ trait RetrievableTrait {
         switch (true)
         {
             case is_string($value):
-            case $value instanceof StringInterface:
+            case $value instanceof StringContract:
                 return (string) $value;
 
             case is_array($value):
-            case $value instanceof ContainerInterface:
-            case $value instanceof ArrayableInterface:
+            case $value instanceof ContainerContract:
+            case $value instanceof ArrayableContract:
                 return (string) container($value)->join();
 
             case is_bool($value):
@@ -81,14 +81,14 @@ trait RetrievableTrait {
                 return (bool) ((int) $value);
 
             case is_string($value):
-            case $value instanceof StringInterface:
+            case $value instanceof StringContract:
                 return $this->fromString($value);
 
-            case $value instanceof BooleanInterface:
+            case $value instanceof BooleanContract:
                 return $value->value();
 
-            case $value instanceof IntegerInterface:
-            case $value instanceof FloatInterface:
+            case $value instanceof IntegerContract:
+            case $value instanceof FloatContract:
                 return $value->toBool()->value();
 
             default:
@@ -111,12 +111,12 @@ trait RetrievableTrait {
             case is_bool($value):
                 return (int) $value;
 
-            case $value instanceof IntegerInterface:
-            case $value instanceof StringInterface:
+            case $value instanceof IntegerContract:
+            case $value instanceof StringContract:
                 return (int) $value->value();
 
-            case $value instanceof FloatInterface:
-            case $value instanceof BooleanInterface:
+            case $value instanceof FloatContract:
+            case $value instanceof BooleanContract:
                 return $value->toInt()->value();
 
             default:
@@ -138,12 +138,12 @@ trait RetrievableTrait {
             case is_bool($value):
                 return (float) $value;
 
-            case $value instanceof FloatInterface:
-            case $value instanceof StringInterface:
+            case $value instanceof FloatContract:
+            case $value instanceof StringContract:
                 return (float) $value->value();
 
-            case $value instanceof IntegerInterface:
-            case $value instanceof BooleanInterface:
+            case $value instanceof IntegerContract:
+            case $value instanceof BooleanContract:
                 return $value->toFloat()->value();
 
             default:
@@ -183,8 +183,8 @@ trait RetrievableTrait {
     public function isArrayable($value)
     {
         return  is_array($value) ||
-                $value instanceof ContainerInterface ||
-                $value instanceof ArrayableInterface ||
+                $value instanceof ContainerContract ||
+                $value instanceof ArrayableContract ||
                 is_object($value) && ! $this->isStringable($value) && ! $this->isIntegerable($value);
     }
 
@@ -203,13 +203,13 @@ trait RetrievableTrait {
                     is_array($value) ||
                     is_numeric($value) ||
                     is_bool($value) ||
-                    $value instanceof StringInterface ||
-                    $value instanceof ContainerInterface ||
-                    $value instanceof ArrayableInterface ||
+                    $value instanceof StringContract ||
+                    $value instanceof ContainerContract ||
+                    $value instanceof ArrayableContract ||
                     (is_object($value) && method_exists($value, '__toString'));
         }
 
-        return is_string($value) || $strict instanceof StringInterface;
+        return is_string($value) || $strict instanceof StringContract;
     }
 
     /**
@@ -226,16 +226,16 @@ trait RetrievableTrait {
             return  is_numeric($value) ||
                     is_string($value) ||
                     is_bool($value) ||
-                    $value instanceof IntegerInterface ||
-                    $value instanceof FloatInterface ||
-                    $value instanceof StringInterface ||
-                    $value instanceof BooleanInterface;
+                    $value instanceof IntegerContract ||
+                    $value instanceof FloatContract ||
+                    $value instanceof StringContract ||
+                    $value instanceof BooleanContract;
         }
 
         return  is_int($value) ||
                 is_real($value) ||
-                $value instanceof IntegerInterface ||
-                $value instanceof FloatInterface;
+                $value instanceof IntegerContract ||
+                $value instanceof FloatContract;
     }
 
     /**
@@ -264,7 +264,7 @@ trait RetrievableTrait {
             return $this->isIntegerable($value);
         }
 
-        return is_bool($value) || $value instanceof BooleanInterface;
+        return is_bool($value) || $value instanceof BooleanContract;
     }
 
     /**

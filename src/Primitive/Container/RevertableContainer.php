@@ -1,34 +1,37 @@
 <?php namespace im\Primitive\Container;
 
-use im\Primitive\Support\Contracts\RevertableInterface;
+use im\Primitive\Support\Contracts\RevertableContract;
 
+/**
+ * Class RevertableContainer
+ *
+ * @package im\Primitive\Container
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
+class RevertableContainer extends Container implements RevertableContract {
 
-class RevertableContainer extends Container implements RevertableInterface {
-
-    /*
-    |--------------------------------------------------------------------------
-    | Storing clone of main items, used for reverting
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Storing clone of main items, used for reverting
+     * @var array
+     */
     protected $clone;
 
     /**
-     * Initialize items from array
+     * {@inheritdoc}
      *
-     * @param $array
-     *
+     * @param mixed $from
      * @return $this
      */
-    protected function initialize($array)
+    protected function initialize($from)
     {
-        parent::initialize($array);
+        parent::initialize($from);
 
         return $this->assignClone();
     }
 
 
     /**
-     * Saves Container state to clone, to revert in future
+     * Save Container state to clone, to revert in future
      *
      * @return $this
      */
@@ -38,7 +41,7 @@ class RevertableContainer extends Container implements RevertableInterface {
     }
 
     /**
-     * Reverts Container state from clone
+     * Revert Container state from clone
      *
      * @return $this
      */
@@ -51,6 +54,8 @@ class RevertableContainer extends Container implements RevertableInterface {
 
 
     /**
+     * Getter for clone
+     *
      * @return array
      */
     public function getClone()
@@ -59,6 +64,8 @@ class RevertableContainer extends Container implements RevertableInterface {
     }
 
     /**
+     * Assign inner items to clone
+     *
      * @return $this
      */
     protected function assignClone()

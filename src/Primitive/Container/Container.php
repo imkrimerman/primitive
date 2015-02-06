@@ -13,12 +13,12 @@ use im\Primitive\Support\Arr;
 use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\ComplexType;
 use im\Primitive\Support\Traits\StringCheckerTrait;
-use im\Primitive\Support\Contracts\BooleanInterface;
-use im\Primitive\Support\Contracts\FloatInterface;
-use im\Primitive\Support\Contracts\IntegerInterface;
-use im\Primitive\Support\Contracts\StringInterface;
-use im\Primitive\Support\Contracts\ContainerInterface;
-use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\Support\Contracts\BooleanContract;
+use im\Primitive\Support\Contracts\FloatContract;
+use im\Primitive\Support\Contracts\IntegerContract;
+use im\Primitive\Support\Contracts\StringContract;
+use im\Primitive\Support\Contracts\ContainerContract;
+use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Support\Exceptions\NotIsFileException;
 use im\Primitive\Support\Exceptions\OffsetNotExistsException;
@@ -26,17 +26,19 @@ use im\Primitive\Container\Exceptions\ContainerException;
 use im\Primitive\Container\Exceptions\BadLengthException;
 use im\Primitive\Container\Exceptions\EmptyContainerException;
 
-
-class Container extends ComplexType implements ContainerInterface {
+/**
+ * Class Container
+ *
+ * @package im\Primitive\Container
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
+class Container extends ComplexType implements ContainerContract {
 
     use StringCheckerTrait;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Storing main items
-    |--------------------------------------------------------------------------
-    */
     /**
+     * Storing main items
+     *
      * @var array
      */
     protected $items;
@@ -46,7 +48,7 @@ class Container extends ComplexType implements ContainerInterface {
      *
      * Container can be constructed from array, json, serialized, Container or file that contains json or serialized
      *
-     * @param array|string|ContainerInterface|StringInterface $from
+     * @param array|string|ContainerContract|StringContract $from
      *
      * @throws BadMethodCallException
      * @throws ContainerException
@@ -244,7 +246,7 @@ class Container extends ComplexType implements ContainerInterface {
     /**
      * Key an associative array by a field.
      *
-     * @param  string|StringInterface  $keyBy
+     * @param  string|StringContract  $keyBy
      * @return static
      */
     public function keysByField($keyBy)
@@ -522,7 +524,7 @@ class Container extends ComplexType implements ContainerInterface {
      *
      * You can specify what to combine 'keys' or 'values' with the second argument
      *
-     * @param array|ContainerInterface|ArrayableInterface|object $array
+     * @param array|ContainerContract|ArrayableContract|object $array
      * @param string $what
      *
      * @return static
@@ -748,10 +750,10 @@ class Container extends ComplexType implements ContainerInterface {
      *
      * You can return result or assign to Container with the forth argument
      *
-     * @param int|IntegerInterface $offset
-     * @param null|int|IntegerInterface $length
-     * @param bool|BooleanInterface $preserveKeys
-     * @param bool|BooleanInterface $set
+     * @param int|IntegerContract $offset
+     * @param null|int|IntegerContract $length
+     * @param bool|BooleanContract $preserveKeys
+     * @param bool|BooleanContract $set
      *
      * @return static|$this
      */
@@ -777,7 +779,7 @@ class Container extends ComplexType implements ContainerInterface {
     /**
      * Create new Container of all elements that do not pass a given truth test.
      *
-     * @param callable|string|StringInterface $callback
+     * @param callable|string|StringContract $callback
      *
      * @return static
      */
@@ -902,7 +904,7 @@ class Container extends ComplexType implements ContainerInterface {
     /**
      * Group an associative array by a field or callback value.
      *
-     * @param  callable|string|StringInterface  $groupBy
+     * @param  callable|string|StringContract  $groupBy
      * @return static
      */
     public function groupBy($groupBy)
@@ -952,7 +954,7 @@ class Container extends ComplexType implements ContainerInterface {
     /**
      * Return rest items after given index
      *
-     * @param int|IntegerInterface|FloatInterface $index
+     * @param int|IntegerContract|FloatContract $index
      *
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadLengthException
@@ -1032,7 +1034,7 @@ class Container extends ComplexType implements ContainerInterface {
             return new static(array_diff_key($this->items, $this->retrieveValue($items)));
         }
 
-        throw new BadMethodCallException('Argument 1 should be array, Container or implement ArrayableInterface');
+        throw new BadMethodCallException('Argument 1 should be array, Container or implement ArrayableContract');
     }
 
     /**
@@ -1689,7 +1691,7 @@ class Container extends ComplexType implements ContainerInterface {
     }
 
     /**
-     * Results array of items from Container or ArrayableInterface.
+     * Results array of items from Container or ArrayableContract.
      *
      * @param $value
      * @return array

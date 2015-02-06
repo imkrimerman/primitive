@@ -1,7 +1,7 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface ArrayableInterface
+interface ArrayableContract
 {
     public function toArray();
 

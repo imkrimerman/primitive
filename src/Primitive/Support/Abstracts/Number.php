@@ -7,11 +7,11 @@ use im\Primitive\Bool\Bool;
 use im\Primitive\String\String;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Str;
-use im\Primitive\Support\Contracts\TypeInterface;
+use im\Primitive\Support\Contracts\TypeContract;
 use im\Primitive\Support\Traits\RetrievableTrait;
 
 
-abstract class Number extends Type implements TypeInterface, Serializable {
+abstract class Number extends Type implements TypeContract, Serializable {
 
     use RetrievableTrait;
 

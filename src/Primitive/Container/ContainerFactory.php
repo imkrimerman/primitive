@@ -1,17 +1,32 @@
 <?php namespace im\Primitive\Container;
 
+use \InvalidArgumentException;
 
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
-
+/**
+ * Class ContainerFactory
+ *
+ * @package im\Primitive\Container
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 class ContainerFactory {
 
+    /**
+     * Simple Container Type
+     * @var int
+     */
     const SIMPLE = 1;
+
+    /**
+     * Revertable Container Type
+     * @var int
+     */
     const REVERTABLE = 2;
 
     /**
+     * Return constructed instance of Container Type
+     *
      * @param mixed $from
      * @param int   $type
-     *
      * @return \im\Primitive\Container\Container|\im\Primitive\Container\RevertableContainer
      */
     public function make($from, $type)
@@ -28,6 +43,8 @@ class ContainerFactory {
     }
 
     /**
+     * Create Container Factory Instance
+     *
      * @return static
      */
     public static function create()

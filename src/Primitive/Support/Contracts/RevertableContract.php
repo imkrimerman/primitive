@@ -1,9 +1,11 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface RevertableInterface
+interface RevertableContract
 {
     public function revert();
 
     public function save();
+
+    public function getClone();
 }

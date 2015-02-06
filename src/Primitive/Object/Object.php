@@ -4,12 +4,19 @@ use im\Primitive\String\String;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Arr;
 use im\Primitive\Support\Abstracts\ComplexType;
-use im\Primitive\Support\Contracts\ObjectInterface;
+use im\Primitive\Support\Contracts\ObjectContract;
 
-
-class Object extends ComplexType implements ObjectInterface {
+/**
+ * Class Object
+ *
+ * @package im\Primitive\Object
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
+class Object extends ComplexType implements ObjectContract {
 
     /**
+     * Construct Object Type.
+     *
      * @param mixed $from
      */
     public function __construct($from = [])
@@ -18,18 +25,21 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $field
-     * @param $value
+     * Magic set method. Dynamically sets value.
      *
+     * @param string|StringContract $property
+     * @param mixed $value
      * @return \im\Primitive\Object\Object
      */
-    public function __set($field, $value)
+    public function __set($property, $value)
     {
-        return $this->set($field, $value);
+        return $this->set($property, $value);
     }
 
     /**
-     * @param $property
+     * Magic get method. Dynamically gets value.
+     *
+     * @param string|StringContract $property
      * @return mixed|null
      */
     public function __get($property)
@@ -38,13 +48,17 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param       $property
-     * @param mixed $default
+     * Getter for value. Supports dot notation.
+     * Can retrieve value from objects, arrays, Containers, instances of ArrayableContract and ObjectContract.
      *
+     * @param string|StringContract $property
+     * @param mixed $default
      * @return mixed|null
      */
     public function get($property, $default = null)
     {
+        $property = $this->getStringable($property);
+
         if ($this->has($property))
         {
             return $this->retrieveValue($property);
@@ -54,9 +68,12 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $property
-     * @param $value
+     * Setter for value. Supports dot notation.
+     * Can set value to objects, arrays, Containers, instances of ArrayableContract and ObjectContract
+     * or create nested arrays (if dot notation is used) if was not set.
      *
+     * @param string|StringContract $property
+     * @param mixed $value
      * @return $this
      */
     public function set($property, $value)
@@ -67,8 +84,10 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $property
+     * Check if Object has specified property. Supports dot notation.
+     * Can check in objects, arrays, Containers, instances of ArrayableContract and ObjectContract.
      *
+     * @param string|StringContract $property
      * @return bool
      */
     public function has($property)
@@ -77,8 +96,11 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $property
+     * Forget specified property. Supports dot notation.
+     * Can unset it in objects (public properties), arrays, Containers,
+     * instances of ArrayableContract and ObjectContract.
      *
+     * @param string|StringContract $property
      * @return $this
      */
     public function forget($property)
@@ -89,8 +111,10 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $from
+     * {@inheritdoc}
+     * Can be constructed like Container Type.
      *
+     * @param mixed $from
      * @return $this
      */
     protected function initialize($from)
@@ -106,6 +130,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @return array
      */
     public function value()
@@ -114,6 +140,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @return int
      */
     public function length()
@@ -122,6 +150,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * Return string representation of Object Type (json).
+     *
      * @return string
      */
     public function __toString()
@@ -130,6 +160,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * Convert Object Type to String Type.
+     *
      * @return \im\Primitive\String\String
      */
     public function toString()
@@ -138,6 +170,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * Convert Object Type to Container Type.
+     *
      * @return \im\Primitive\Container\Container
      */
     public function toContainer()
@@ -146,8 +180,9 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $json
+     * Construct Object from json.
      *
+     * @param $json
      * @return \im\Primitive\Object\Object
      */
     public function fromJson($json)
@@ -156,6 +191,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * Construct Object from file.
+     *
      * @param $file
      * @return $this
      */
@@ -165,8 +202,10 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
-     * @param $property
+     * {@inheritdoc}
+     * Retrieves with dot notation.
      *
+     * @param string|StringContract $property
      * @return mixed
      */
     protected function retrieveValue($property)
@@ -175,6 +214,8 @@ class Object extends ComplexType implements ObjectInterface {
     }
 
     /**
+     * {@inheritdoc}
+     *
      * @return null
      */
     protected function getDefault()
@@ -211,12 +252,10 @@ class Object extends ComplexType implements ObjectInterface {
      *
      * @link http://php.net/manual/en/arrayaccess.offsetset.php
      *
-     * @param mixed $offset <p>
-     *                      The offset to assign the value to.
-     *                      </p>
-     * @param mixed $value  <p>
-     *                      The value to set.
-     *                      </p>
+     * @param mixed $offset
+     *      The offset to assign the value to.
+     * @param mixed $value
+     *      The value to set.
      *
      * @return void
      */

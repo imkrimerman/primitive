@@ -5,14 +5,14 @@ use ArrayAccess;
 use JsonSerializable;
 use IteratorAggregate;
 use im\Primitive\Support\Traits\RetrievableTrait;
-use im\Primitive\Support\Contracts\ArrayableInterface;
-use im\Primitive\Support\Contracts\FileableInterface;
-use im\Primitive\Support\Contracts\JsonableInterface;
+use im\Primitive\Support\Contracts\ArrayableContract;
+use im\Primitive\Support\Contracts\FileableContract;
+use im\Primitive\Support\Contracts\JsonableContract;
 use im\Primitive\Support\Exceptions\OffsetNotExistsException;
 use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 
 
-abstract class ComplexType extends Type implements FileableInterface, JsonableInterface, JsonSerializable, ArrayableInterface, ArrayAccess, IteratorAggregate, Countable {
+abstract class ComplexType extends Type implements FileableContract, JsonableContract, JsonSerializable, ArrayableContract, ArrayAccess, IteratorAggregate, Countable {
 
     use RetrievableTrait;
 

@@ -1,7 +1,7 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface JsonableInterface
+interface JsonableContract
 {
     public function toJson();
 

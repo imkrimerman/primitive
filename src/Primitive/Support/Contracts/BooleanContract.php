@@ -1,7 +1,11 @@
 <?php namespace im\Primitive\Support\Contracts;
 
 
-interface ObjectInterface {
+interface BooleanContract {
+
+    public function toInt();
+
+    public function toFloat();
 
     public function toString();
 

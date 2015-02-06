@@ -1,6 +1,5 @@
 <?php namespace im\Primitive\Support\Traits;
 
-use stdClass;
 use im\Primitive\Support\Contracts\ArrayableInterface;
 use im\Primitive\Support\Contracts\BooleanInterface;
 use im\Primitive\Support\Contracts\ContainerInterface;

@@ -1,7 +1,6 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
-use im\Primitive\String\Exceptions\StringException;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
@@ -11,6 +10,7 @@ use InvalidArgumentException;
 
 use Stringy\Stringy;
 use Stringy\StaticStringy;
+use SliceableStringy\SliceableStringy;
 use im\Primitive\Support\Str;
 use im\Primitive\Int\Int;
 use im\Primitive\Bool\Bool;
@@ -18,9 +18,9 @@ use im\Primitive\Float\Float;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Traits\RetrievableTrait;
-use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\StringInterface;
 use im\Primitive\Support\Contracts\ArrayableInterface;
+use im\Primitive\String\Exceptions\StringException;
 
 class String extends Type implements StringInterface, Countable, ArrayAccess, IteratorAggregate {
 
@@ -1068,137 +1068,6 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
         return '';
     }
 
-    /**
-     * Return a new instance given start, stop and step
-     * arguments for the desired slice. Start, which indicates the starting
-     * index of the slice, defaults to the first character in the string if
-     * step is positive, and the last character if negative. Stop, which
-     * indicates the exclusive boundary of the range, defaults to the length
-     * of the string if step is positive, and before the first character
-     * if negative. Step allows the user to include only every nth character
-     * in the result, with its sign determining the direction in which indices
-     * are sampled. Throws an exception if step is equal to 0.
-     *
-     * @param $start
-     * @param $stop
-     * @param $step
-     *
-     * @return static
-     */
-    protected function getSlice($start, $stop, $step)
-    {
-        $length = $this->length();
-
-        $step = (isset($step)) ? $step : 1;
-
-        if ($step === 0)
-        {
-            throw new InvalidArgumentException('Slice step cannot be 0');
-        }
-
-        if (isset($start))
-        {
-            $start = $this->adjustBoundary($length, $start, $step);
-        }
-        else
-        {
-            $start = ($step > 0) ? 0 : $length - 1;
-        }
-
-        if (isset($stop))
-        {
-            $stop = $this->adjustBoundary($length, $stop, $step);
-        }
-        else
-        {
-            $stop = ($step > 0) ? $length : -1;
-        }
-
-        // Return an empty string if the set of indices would be empty
-        if (($step > 0 && $start >= $stop) || ($step < 0 && $start <= $stop))
-        {
-            return new static;
-        }
-
-        // Return the substring if step is 1
-        if ($step === 1)
-        {
-            return $this->cut($start, $stop - $start);
-        }
-
-        // Otherwise iterate over the slice indices
-        $string = '';
-
-        foreach ($this->getIndices($start, $stop, $step) as $index)
-        {
-            $string .= (isset($this[$index])) ? $this[$index] : '';
-        }
-
-        return new static($string);
-    }
-
-    /**
-     * Adjusts the start or stop boundary based on the provided length and step.
-     * The logic here uses CPython's PySlice_GetIndices as a reference. See:
-     * https://github.com/python-git/python/blob/master/Objects/sliceobject.c
-     *
-     * @param $length
-     * @param $boundary
-     * @param $step
-     *
-     * @return int
-     */
-    protected function adjustBoundary($length, $boundary, $step)
-    {
-        if ($boundary < 0)
-        {
-            $boundary += $length;
-
-            if ($boundary < 0)
-            {
-                $boundary = ($step < 0) ? -1 : 0;
-            }
-
-        }
-        elseif ($boundary >= $length)
-        {
-            $boundary = ($step < 0) ? $length - 1 : $length;
-        }
-
-        return $boundary;
-    }
-
-    /**
-     * Returns an array of indices to be included in the slice.
-     *
-     * @param int $start Start index of the slice
-     * @param int $stop  Boundary for the slice
-     * @param int $step  Rate at which to include characters
-     *
-     * @return array An array of indices in the string
-     */
-    protected function getIndices($start, $stop, $step)
-    {
-        $indices = [];
-
-        if ($step > 0)
-        {
-            for ($i = $start; $i < $stop; $i += $step)
-            {
-                $indices[] = $i;
-            }
-        }
-        else
-        {
-            for ($i = $start; $i > $stop; $i += $step)
-            {
-                $indices[] = $i;
-            }
-        }
-
-        return $indices;
-    }
-
     /*
     |--------------------------------------------------------------------------
     | ArrayAccess
@@ -1267,28 +1136,7 @@ class String extends Type implements StringInterface, Countable, ArrayAccess, It
             return $this->at($args);
         }
 
-        $args = explode(':', $args);
-
-        // Too many colons, invalid slice syntax
-        if (count($args) > 3)
-        {
-            throw new InvalidArgumentException('Too many slice arguments');
-        }
-
-        // Get slice arguments
-        for ($i = 0; $i < 3; $i++)
-        {
-            if (isset($args[$i]) && $args[$i] !== '')
-            {
-                $args[$i] = (int) $args[$i];
-            }
-            else
-            {
-                $args[$i] = null;
-            }
-        }
-
-        return call_user_func_array([$this, 'getSlice'], $args);
+        return new static((new SliceableStringy($this->string))->offsetGet($args).'');
     }
 
     /*

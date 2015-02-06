@@ -9,11 +9,18 @@
             "email": "i.m.krimerman@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
+    "repositories": [
+        {
+            "url": "https://github.com/imkrimerman/SliceableStringy.git",
+            "type": "git"
+        }
+    ],
     "require": {
         "php": ">=5.5",
         "ext-mbstring": "*",
         "danielstjules/stringy": "~1.5",
+        "imkrimerman/sliceable-stringy": "1.0.1",
         "firebase/php-jwt": "1.0.0",
         "symfony/var-dumper": "2.6.*"
     },

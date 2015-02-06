@@ -35,6 +35,12 @@ abstract class ComplexType extends Type implements FileableInterface, JsonableIn
         return false;
     }
 
+    /**
+     * Construct Type from file
+     *
+     * @param $file
+     * @return mixed
+     */
     abstract public function fromFile($file);
 
     /**
@@ -206,9 +212,8 @@ abstract class ComplexType extends Type implements FileableInterface, JsonableIn
      *
      * @link http://php.net/manual/en/countable.count.php
      * @return int The custom count as an integer.
-     *       </p>
-     *       <p>
-     *       The return value is cast to an integer.
+     *
+     * The return value is cast to an integer.
      */
     public function count()
     {

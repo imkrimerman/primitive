@@ -37,6 +37,8 @@ abstract class Type implements TypeInterface, Serializable {
      */
     abstract public function __toString();
 
+    abstract protected function getDefault();
+
     /**
      * @param $value
      *

@@ -171,7 +171,15 @@ class Object extends ComplexType implements ObjectInterface {
      */
     protected function retrieveValue($property)
     {
-        return data_get($this, $property);
+        return data_get($this, $property, $this->getDefault());
+    }
+
+    /**
+     * @return null
+     */
+    protected function getDefault()
+    {
+        return null;
     }
 
     /*

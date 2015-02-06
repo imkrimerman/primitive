@@ -59,7 +59,7 @@ class Container extends ComplexType implements ContainerInterface {
         }
         elseif ($this->isStringable($from))
         {
-            $this->fromString($this->getStringable($from));
+            $this->fromStringable($this->getStringable($from));
         }
         else
         {
@@ -1427,7 +1427,7 @@ class Container extends ComplexType implements ContainerInterface {
      * @throws \im\Primitive\Container\Exceptions\ContainerException
      * @throws \im\Primitive\Support\Exceptions\NotIsFileException
      */
-    protected function fromString($string)
+    protected function fromStringable($string)
     {
         if ($this->isFile($string))
         {

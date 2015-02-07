@@ -149,7 +149,7 @@ class SliceableString extends String {
                 $boundary = ($step < 0) ? -1 : 0;
             }
         }
-        else if ($boundary >= $length)
+        elseif ($boundary >= $length)
         {
             $boundary = ($step < 0) ? $length - 1 : $length;
         }

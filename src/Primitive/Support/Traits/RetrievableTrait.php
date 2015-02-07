@@ -45,6 +45,9 @@ trait RetrievableTrait {
         {
             case is_string($value):
             case $value instanceof StringContract:
+            case $value instanceof BooleanContract:
+            case $value instanceof IntegerContract:
+            case $value instanceof FloatContract:
                 return (string) $value;
 
             case is_array($value):
@@ -90,6 +93,9 @@ trait RetrievableTrait {
             case $value instanceof IntegerContract:
             case $value instanceof FloatContract:
                 return $value->toBool()->value();
+
+            case $value instanceof ContainerContract:
+                return $value->isNotEmpty();
 
             default:
                 return value($default);

@@ -24,6 +24,7 @@ use im\Primitive\String\Exceptions\StringException;
 
 /**
  * Class String
+ * String manipulation class with support of multi-byte
  *
  * @package im\Primitive\String
  * @author Igor Krimerman <i.m.krimerman@gmail.com>
@@ -33,13 +34,13 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     use RetrievableTrait;
 
     /**
-     * Storing value
+     * Storing value.
      * @var string
      */
     protected $string;
 
     /**
-     * Construct String Type
+     * Construct String Type.
      *
      * @param mixed $string
      */
@@ -49,22 +50,29 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param $value
+     * Magic get method to support method calls (without parameters) as variables.
+     *
+     * @param string|StringContract $value
      * @return mixed
      */
     public function __get($value)
     {
+        $value = $this->retrieveValue($value);
+
         if (method_exists($this, $value))
         {
             return $this->{$value}();
         }
 
-        throw new BadMethodCallException('No: ' . $value . ' found');
+        throw new BadMethodCallException('No method: ' . $value . ' found');
     }
 
     /**
-     * @param $string
+     * Setter.
+     * It can set from string, numeric, bool, array, object that implements __toString,
+     * ArrayableContract, ContainerContract, BooleanContract, IntegerContract, FloatContract.
      *
+     * @param mixed $string
      * @return $this
      */
     public function set($string)
@@ -75,6 +83,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Getter. Alias for value method.
+     *
      * @return string
      */
     public function get()
@@ -83,6 +93,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return storing value.
+     *
      * @return string
      */
     public function value()
@@ -91,6 +103,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return length of string.
+     *
      * @return int
      */
     public function length()
@@ -99,46 +113,56 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return Container of all chars.
+     *
      * @return \im\Primitive\Container\Container
      */
     public function chars()
     {
-        return container(StaticStringy::chars($this->string));
+        return new Container(StaticStringy::chars($this->string));
     }
 
     /**
-     * @param string $string
-     * @param string $delimiter
+     * Return String with appended delimiter and content.
      *
-     * @return $this
+     * @param mixed $string
+     * @param mixed $delimiter
+     * @return $this|static
      */
     public function append($string, $delimiter = '')
     {
         if ($this->isValidArgs($string, $delimiter))
         {
-            $this->string .= $this->retrieveValue($delimiter) . $this->retrieveValue($string);
+            return new static(
+                $this->string . $this->retrieveValue($delimiter) . $this->retrieveValue($string)
+            );
         }
 
         return $this;
     }
 
     /**
-     * @param string $string
-     * @param string $delimiter
+     * Return String with prepended content and delimiter.
      *
-     * @return $this
+     * @param mixed $string
+     * @param mixed $delimiter
+     * @return $this|static
      */
     public function prepend($string, $delimiter = '')
     {
         if ($this->isValidArgs($string, $delimiter))
         {
-            $this->string = $this->retrieveValue($string) . $this->retrieveValue($delimiter) . $this->string;
+            return new static(
+                $this->retrieveValue($string) . $this->retrieveValue($delimiter) . $this->string
+            );
         }
 
         return $this;
     }
 
     /**
+     * Return String all lower case.
+     *
      * @return static
      */
     public function lower()
@@ -147,6 +171,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return String with lower case first letter.
+     *
      * @return static
      */
     public function lowerFirst()
@@ -155,6 +181,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return String with all upper case.
+     *
      * @return static
      */
     public function upper()
@@ -163,6 +191,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return String with upper case first letter.
+     *
      * @return static
      */
     public function upperFirst()
@@ -171,6 +201,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return camel case String with upper case first letter.
+     *
      * @return static
      */
     public function upperCamel()
@@ -179,6 +211,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return Title Case String. (<- like this)
+     *
      * @return static
      */
     public function title()
@@ -187,6 +221,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return camelCase String.
+     *
      * @return static
      */
     public function camel()
@@ -195,6 +231,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return dashed-case String.
+     *
      * @return static
      */
     public function dashed()
@@ -203,16 +241,18 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $delimiter
+     * Return snake_case String.
      *
      * @return static
      */
-    public function snake($delimiter = '_')
+    public function snake()
     {
-        return new static(Str::snake($this->string, $this->retrieveValue($delimiter)));
+        return new static(StaticStringy::underscored($this->string));
     }
 
     /**
+     * Return StudlyCase String.
+     *
      * @return static
      */
     public function studly()
@@ -221,6 +261,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return String with swapped case.
+     * UpperCase -> uPPERcASE
+     *
      * @return static
      */
     public function swapCase()
@@ -229,6 +272,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return capitalized first word of the string, replaces underscores with
+     * spaces, and strips '_id'.
+     *
      * @return static
      */
     public function humanize()
@@ -237,8 +283,11 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param null|array|ContainerInterface|ArrayableContract $ignore
+     * Return a trimmed string with the first letter of each word capitalized.
+     * Ignores the case of other letters, preserving any acronyms. Also accepts
+     * an arrayable, $ignore, allowing you to list words not to be capitalized.
      *
+     * @param mixed $ignore
      * @return static
      */
     public function titleize($ignore = null)
@@ -247,20 +296,28 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $string
-     * @param bool $caseSensitive
+     * Return true if the string contains $needle, false otherwise. By default,
+     * the comparison is case-sensitive, but can be made insensitive by setting
+     * $caseSensitive to false.
      *
+     * @param mixed $needle
+     * @param mixed $caseSensitive
      * @return bool
      */
-    public function has($string, $caseSensitive = true)
+    public function has($needle, $caseSensitive = true)
     {
-        return StaticStringy::contains($this->string, $this->retrieveValue($string), $caseSensitive);
+        return StaticStringy::contains(
+            $this->string, $this->retrieveValue($needle), $this->getBoolable($caseSensitive)
+        );
     }
 
     /**
-     * @param array|Container|ArrayableContract $strings
-     * @param bool $caseSensitive
+     * Return true if the string contains any $needles, false otherwise. By
+     * default, the comparison is case-sensitive, but can be made insensitive
+     * by setting $caseSensitive to false.
      *
+     * @param mixed $strings
+     * @param mixed $caseSensitive
      * @return bool
      */
     public function hasAny($strings, $caseSensitive = true)
@@ -271,9 +328,12 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param array|Container|ArrayableContract $strings
-     * @param bool $caseSensitive
+     * Return true if the string contains all $needles, false otherwise. By
+     * default, the comparison is case-sensitive, but can be made insensitive
+     * by setting $caseSensitive to false.
      *
+     * @param mixed $strings
+     * @param mixed $caseSensitive
      * @return bool
      */
     public function hasAll($strings, $caseSensitive = true)
@@ -284,6 +344,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Trim the string and replaces consecutive whitespace characters with a
+     * single space. This includes tabs and newline characters, as well as
+     * multi-byte whitespace such as the thin space and ideographic space.
+     *
      * @return static
      */
     public function collapseWhitespace()
@@ -292,6 +356,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return an ASCII version of the String. A set of non-ASCII characters are
+     * replaced with their closest ASCII counterparts, and the rest are removed.
+     *
      * @return static
      */
     public function toAscii()
@@ -300,8 +367,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $tabLength
+     * Convert each tab in the string to some number of spaces, as defined by
+     * $tabLength. By default, each tab is converted to 4 consecutive spaces.
      *
+     * @param int $tabLength
      * @return static
      */
     public function toSpaces($tabLength = 4)
@@ -310,8 +379,11 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $tabLength
+     * Convert each occurrence of some consecutive number of spaces, as
+     * defined by $tabLength, to a tab. By default, each 4 consecutive spaces
+     * are converted to a tab.
      *
+     * @param int $tabLength
      * @return static
      */
     public function toTabs($tabLength = 4)
@@ -320,8 +392,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $surround
+     * Surround String with given string.
      *
+     * @param mixed $surround
      * @return static
      */
     public function surround($surround)
@@ -330,9 +403,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $insert
-     * @param int $index
+     * Insert $insert into the String at the $index provided.
      *
+     * @param mixed $insert
+     * @param mixed $index
      * @return static
      */
     public function insert($insert, $index)
@@ -343,6 +417,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Return a reversed string. A multi-byte version of strrev().
+     *
      * @return static
      */
     public function reverse()
@@ -351,8 +427,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $index
+     * Return char at provided $index
      *
+     * @param mixed $index
      * @return static
      */
     public function at($index)
@@ -361,8 +438,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $length
+     * Return first $length chars
      *
+     * @param mixed $length
      * @return static
      */
     public function first($length)
@@ -371,8 +449,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $length
+     * Return last $length chars
      *
+     * @param mixed $length
      * @return static
      */
     public function last($length)
@@ -381,8 +460,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $string
+     * Ensure that the String begins with $string. If it doesn't, it's
+     * prepended.
      *
+     * @param mixed $string
      * @return static
      */
     public function ensureLeft($string)
@@ -391,8 +472,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $string
+     * Ensure that the String ends with $substring. If it doesn't, it's
+     * appended.
      *
+     * @param mixed $string
      * @return static
      */
     public function ensureRight($string)
@@ -401,8 +484,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $string
+     * Remove the prefix $string from left, if present.
      *
+     * @param mixed $string
      * @return static
      */
     public function removeLeft($string)
@@ -411,8 +495,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $string
+     * Remove the prefix $string from right, if present.
      *
+     * @param mixed $string
      * @return static
      */
     public function removeRight($string)

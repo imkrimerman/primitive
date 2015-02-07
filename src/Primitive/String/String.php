@@ -1133,18 +1133,18 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      * the string. Throws an exception if the index does not exist, more than 3
      * slice args are given, or the step is 0.
      *
-     * @param int|string $args
+     * @param int|string|StringContract $args
      *
      * @return \im\Primitive\String\String
      */
     public function offsetGet($args)
     {
-        if ( ! $this->isStringable($args) || strpos($args, ':') === false)
+        if ( ! $this->isStringable($args, true) || strpos($args, ':') === false)
         {
             return $this->at($args);
         }
 
-        return new static((new SliceableStringy($this->string))->offsetGet($args).'');
+        return new static(SliceableString::create($this->string)->offsetGet($args));
     }
 
     /*

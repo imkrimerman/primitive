@@ -134,7 +134,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
         if ($this->isValidArgs($string, $delimiter))
         {
             return new static(
-                $this->string . $this->retrieveValue($delimiter) . $this->retrieveValue($string)
+                $this->concatenate($this->string, $this->retrieveValue($delimiter), $this->retrieveValue($string))
             );
         }
 
@@ -153,7 +153,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
         if ($this->isValidArgs($string, $delimiter))
         {
             return new static(
-                $this->retrieveValue($string) . $this->retrieveValue($delimiter) . $this->string
+                $this->concatenate($this->retrieveValue($string), $this->retrieveValue($delimiter), $this->string)
             );
         }
 
@@ -1159,6 +1159,14 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     protected function getDefault()
     {
         return '';
+    }
+
+    /**
+     * @return string
+     */
+    protected function concatenate()
+    {
+        return implode('', func_get_args());
     }
 
     /*

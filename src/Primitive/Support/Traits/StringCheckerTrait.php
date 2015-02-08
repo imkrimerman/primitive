@@ -1,19 +1,22 @@
 <?php namespace im\Primitive\Support\Traits;
 
-use im\Primitive\Support\Str;
 use JWT;
-use UnexpectedValueException;
+use Exception;
+use im\Primitive\Support\Str;
 
-
+/**
+ * Class StringCheckerTrait
+ *
+ * @package im\Primitive\Support\Traits
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 trait StringCheckerTrait {
 
     /**
      * Check if string is encrypted Container
      *
-     * @param $encrypted
-     *
-     * @param $key
-     *
+     * @param string $encrypted
+     * @param string $key
      * @return bool
      */
     public function isEncryptedContainer($encrypted, $key)
@@ -22,7 +25,7 @@ trait StringCheckerTrait {
         {
             $data = JWT::decode($encrypted, $key);
         }
-        catch(UnexpectedValueException $e)
+        catch(Exception $e)
         {
             return false;
         }
@@ -31,10 +34,30 @@ trait StringCheckerTrait {
     }
 
     /**
+     * Check if string is encrypted String
+     *
+     * @param string $encrypted
+     * @param string $key
+     * @return bool
+     */
+    public function isEncryptedString($encrypted, $key)
+    {
+        try
+        {
+            $data = JWT::decode($encrypted, $key);
+        }
+        catch(Exception $e)
+        {
+            return false;
+        }
+
+        return $this->isJson($data->string);
+    }
+
+    /**
      * Check if string is readable file
      *
      * @param string $string
-     *
      * @return bool
      */
     public function isFile($string)
@@ -46,8 +69,7 @@ trait StringCheckerTrait {
     /**
      * Checks if given string is Json
      *
-     * @param $string
-     *
+     * @param string $string
      * @return bool
      */
     public function isJson($string)
@@ -59,8 +81,7 @@ trait StringCheckerTrait {
     /**
      * Checks if given string is serialized
      *
-     * @param $string
-     *
+     * @param string $string
      * @return bool
      */
     public function isSerialized($string)

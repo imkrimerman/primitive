@@ -3,7 +3,12 @@
 use RecursiveArrayIterator;
 use im\Primitive\Support\Traits\RetrievableTrait;
 
-
+/**
+ * Class RecursiveContainerIterator
+ *
+ * @package im\Primitive\Support\Iterators
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 class RecursiveContainerIterator extends RecursiveArrayIterator {
 
     use RetrievableTrait;
@@ -12,6 +17,7 @@ class RecursiveContainerIterator extends RecursiveArrayIterator {
      * (PHP 5 &gt;= 5.1.0)<br/>
      * Returns if an iterator can be created for the current entry.
      * @link http://php.net/manual/en/recursiveiterator.haschildren.php
+     *
      * @return bool true if the current entry can be iterated over, otherwise returns false.
      */
     public function hasChildren()
@@ -25,6 +31,7 @@ class RecursiveContainerIterator extends RecursiveArrayIterator {
      * (PHP 5 &gt;= 5.1.0)<br/>
      * Returns an iterator for the current entry.
      * @link http://php.net/manual/en/recursiveiterator.getchildren.php
+     *
      * @return RecursiveIterator An iterator for the current entry.
      */
     public function getChildren()

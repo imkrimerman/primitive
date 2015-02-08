@@ -45,11 +45,9 @@ class Container extends ComplexType implements ContainerContract {
 
     /**
      * Constructor
-     *
      * Container can be constructed from array, json, serialized, Container or file that contains json or serialized
      *
      * @param array|string|ContainerContract|StringContract $from
-     *
      * @throws BadMethodCallException
      * @throws ContainerException
      */

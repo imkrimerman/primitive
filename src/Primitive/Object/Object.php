@@ -114,12 +114,12 @@ class Object extends ComplexType implements ObjectContract {
      * {@inheritdoc}
      * Can be constructed like Container Type.
      *
-     * @param mixed $from
+     * @param mixed $value
      * @return $this
      */
-    protected function initialize($from)
+    protected function initialize($value)
     {
-        $array = (new Container($from))->notNumericKeys();
+        $array = (new Container($value))->notNumericKeys();
 
         foreach ($array as $property => $value)
         {

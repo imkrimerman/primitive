@@ -2,6 +2,12 @@
 
 use Exception;
 
+/**
+ * Class Arr
+ *
+ * @package im\Primitive\Support
+ * @author Taylor Otwel | refactored Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 class Arr {
 
     /**

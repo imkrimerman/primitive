@@ -18,13 +18,10 @@ class RevertableContainer extends Container implements RevertableContract {
 
     /**
      * {@inheritdoc}
-     *
-     * @param mixed $from
-     * @return $this
      */
-    protected function initialize($from)
+    protected function initialize($value)
     {
-        parent::initialize($from);
+        parent::initialize($value);
 
         return $this->assignClone();
     }

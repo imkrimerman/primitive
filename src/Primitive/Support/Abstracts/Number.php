@@ -3,26 +3,34 @@
 use Serializable;
 use UnexpectedValueException;
 
+use im\Primitive\Int\Int;
 use im\Primitive\Bool\Bool;
+use im\Primitive\Float\Float;
 use im\Primitive\String\String;
 use im\Primitive\Container\Container;
-use im\Primitive\Support\Str;
 use im\Primitive\Support\Contracts\TypeContract;
 use im\Primitive\Support\Traits\RetrievableTrait;
 
-
+/**
+ * Class Number
+ *
+ * @package im\Primitive\Support\Abstracts
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 abstract class Number extends Type implements TypeContract, Serializable {
 
     use RetrievableTrait;
 
     /**
+     * Storing value.
      * @var number
      */
     protected $value;
 
     /**
-     * @param $value
+     * Setter for inner value.
      *
+     * @param mixed $value
      * @return $this
      */
     public function set($value)
@@ -33,6 +41,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Getter for inner value.
+     *
      * @return number
      */
     public function get()
@@ -41,7 +51,7 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @return number
+     * {@inheritdoc}
      */
     public function value()
     {
@@ -49,44 +59,48 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $plus
+     * Plus $value to inner value.
      *
+     * @param mixed $value
      * @return static
      */
-    public function plus($plus)
+    public function plus($value)
     {
-        return new static($this->value + $this->retrieveValue($plus));
+        return new static($this->value + $this->retrieveValue($value));
     }
 
     /**
-     * @param $minus
+     * Minus $value from inner value.
      *
+     * @param mixed $value
      * @return static
      */
-    public function minus($minus)
+    public function minus($value)
     {
-        return new static($this->value - $this->retrieveValue($minus));
+        return new static($this->value - $this->retrieveValue($value));
     }
 
     /**
-     * @param $multiply
+     * Multiply inner value by $value.
      *
+     * @param mixed $value
      * @return static
      */
-    public function multiply($multiply)
+    public function multiply($value)
     {
-        return new static($this->value * $this->retrieveValue($multiply));
+        return new static($this->value * $this->retrieveValue($value));
     }
 
     /**
-     * @param $divide
+     * Divide inner value by $value.
      *
+     * @param mixed $value
      * @throws UnexpectedValueException
      * @return static
      */
-    public function divide($divide)
+    public function divide($value)
     {
-        $retrieved = $this->retrieveValue($divide);
+        $retrieved = $this->retrieveValue($value);
 
         if ($retrieved === 0)
         {
@@ -97,34 +111,40 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $by
+     * Calculate modulo.
      *
+     * @param mixed $modulo
      * @return \im\Primitive\Int\Int
      */
-    public function modulo($by)
+    public function modulo($modulo)
     {
-        return int($this->value % $this->retrieveValue($by));
+        return new Int($this->value % $this->retrieveValue($modulo));
     }
 
     /**
-     * @param $pow
+     * Raise inner value to the $power.
      *
+     * @param $power
      * @return static
      */
-    public function power($pow)
+    public function power($power)
     {
-        return new static(pow($this->value, $this->retrieveValue($pow)));
+        return new static(pow($this->value, $this->retrieveValue($power)));
     }
 
     /**
+     * Calculate square root.
+     *
      * @return static
      */
     public function sqrt()
     {
-        return float(sqrt($this->value));
+        return new Float(sqrt($this->value));
     }
 
     /**
+     * Return absolute value.
+     *
      * @return static
      */
     public function abs()
@@ -133,38 +153,48 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Sine.
+     *
      * @return \im\Primitive\Float\Float
      */
     public function sin()
     {
-        return float(sin($this->value));
+        return new Float(sin($this->value));
     }
 
     /**
+     * Cosine.
+     *
      * @return \im\Primitive\Float\Float
      */
     public function cos()
     {
-        return float(cos($this->value));
+        return new Float(cos($this->value));
     }
 
     /**
+     * Tangent.
+     *
      * @return \im\Primitive\Float\Float
      */
     public function tan()
     {
-        return float(tan($this->value));
+        return new Float(tan($this->value));
     }
 
     /**
+     * Return pi.
+     *
      * @return \im\Primitive\Float\Float
      */
     public function pi()
     {
-        return float(pi());
+        return new Float(pi());
     }
 
     /**
+     * Calculate factorial of inner value.
+     *
      * @return int|number
      */
     public function factorial()
@@ -178,33 +208,37 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param int    $decimals
-     * @param string $decimalDelimiter
-     * @param string $thousandDelimiter
+     * Format a number with grouped thousands and return String.
+     *
+     * @param int|IntegerContract $decimals
+     * @param string|StringContract $decimalDelimiter
+     * @param string|StringContract $thousandDelimiter
      *
      * @return \im\Primitive\Float\Float
      */
     public function format($decimals = 2, $decimalDelimiter = '.', $thousandDelimiter = ' ')
     {
-        return string(
+        return new String(
             number_format(
                 (float) $this->value,
-                (int) $decimals,
-                (string) $decimalDelimiter,
-                (string) $thousandDelimiter
+                $this->getIntegerable($decimals),
+                $this->getStringable($decimalDelimiter),
+                $this->getStringable($thousandDelimiter)
             )
         );
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
     public function length()
     {
-        return Str::length((string) $this->value);
+        return (new String($this->value))->length();
     }
 
     /**
+     * Check if is inner value is true.
+     *
      * @return bool
      */
     public function isTrue()
@@ -213,6 +247,7 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Check if is inner value is false.
      * @return bool
      */
     public function isFalse()
@@ -221,8 +256,9 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $value
+     * Check if is inner value is equals to $value.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isEqual($value)
@@ -231,6 +267,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Check if is inner value is negative.
+     *
      * @return bool
      */
     public function isNegative()
@@ -239,6 +277,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Check if is inner value is not negative.
+     *
      * @return bool
      */
     public function isNotNegative()
@@ -247,8 +287,9 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $value
+     * Check if is inner value is greater than $value.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isGreaterThan($value)
@@ -257,8 +298,9 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $value
+     * Check if is inner value is greater than or equal to $value.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isGreaterThanOrEqual($value)
@@ -267,8 +309,9 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $value
+     * Check if is inner value is lower than $value.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isLowerThan($value)
@@ -277,8 +320,9 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @param $value
+     * Check if is inner value is lower than or equal to $value.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isLowerThanOrEqual($value)
@@ -287,6 +331,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Convert Number Type to Bool Type.
+     *
      * @return \im\Primitive\Bool\Bool
      */
     public function toBool()
@@ -295,6 +341,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Convert Number Type to String Type.
+     *
      * @return \im\Primitive\String\String
      */
     public function toString()
@@ -303,6 +351,8 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
+     * Convert Number Type to Container Type.
+     *
      * @return \im\Primitive\Container\Container
      */
     public function toContainer()
@@ -319,7 +369,7 @@ abstract class Number extends Type implements TypeContract, Serializable {
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function __toString()
     {

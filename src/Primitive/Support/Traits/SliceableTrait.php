@@ -1,14 +1,14 @@
-<?php namespace im\Primitive\String;
+<?php namespace im\Primitive\Support\Traits;
 
 use InvalidArgumentException;
 
 /**
- * Class SliceableString
+ * Class SliceableTrait
  *
  * @package im\Primitive\String
  * @author Daniel St Jules | refactored Igor Krimerman <i.m.krimerman@gmail.com>
  */
-class SliceableString extends String {
+trait SliceableTrait {
 
     /**
      * Implements python-like string slices. Slices the string if the offset
@@ -21,18 +21,18 @@ class SliceableString extends String {
      * @param mixed $args The index from which to retrieve the char, or a
      *                    string with colons to return a slice
      *
-     * @return SliceableString          The string corresponding to the index
+     * @return static                    The string corresponding to the index
      *                                   or slice
      * @throws \OutOfBoundsException     If a positive or negative offset does
      *                                   not exist
      * @throws InvalidArgumentException If more than 3 slice arguments are
      *                                   given, or step is 0
      */
-    public function offsetGet($args)
+    public function slice($args)
     {
         if ( ! is_string($args) || strpos($args, ':') === false)
         {
-            return parent::offsetGet($args);
+            throw new InvalidArgumentException('Arguments should be string and slice `:` operator should present');
         }
 
         $args = explode(':', $args);
@@ -74,7 +74,7 @@ class SliceableString extends String {
      * @param int|null $stop  Optional boundary for the slice
      * @param int|null $step  Optional rate at which to include characters
      *
-     * @return SliceableString          A new instance containing the slice
+     * @return static                   A new instance containing the slice
      * @throws InvalidArgumentException If step is equal to 0
      */
     protected function getSlice($start, $stop, $step)
@@ -108,7 +108,7 @@ class SliceableString extends String {
         // Return an empty string if the set of indices would be empty
         if (($step > 0 && $start >= $stop) || ($step < 0 && $start <= $stop))
         {
-            return static::create('');
+            return new static('');
         }
 
         // Return the substring if step is 1
@@ -124,7 +124,7 @@ class SliceableString extends String {
             $str .= (isset($this[$index])) ? $this[$index] : '';
         }
 
-        return static::create($str);
+        return new static($str);
     }
 
     /**
@@ -187,4 +187,21 @@ class SliceableString extends String {
 
         return $indices;
     }
+
+    /**
+     * Slice part of string
+     *
+     * @param int|IntegerContract $start
+     * @param null|int|IntegerContract $length
+     * @param string|StringContract $encoding
+     * @return mixed
+     */
+    abstract public function cut($start, $length = null, $encoding = 'UTF-8');
+
+    /**
+     * Return length of string
+     *
+     * @return int
+     */
+    abstract public function length();
 }

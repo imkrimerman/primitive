@@ -10,16 +10,15 @@ use InvalidArgumentException;
 
 use Stringy\Stringy;
 use Stringy\StaticStringy;
-use SliceableStringy\SliceableStringy;
 use im\Primitive\Support\Str;
 use im\Primitive\Int\Int;
 use im\Primitive\Bool\Bool;
 use im\Primitive\Float\Float;
 use im\Primitive\Container\Container;
 use im\Primitive\Support\Abstracts\Type;
-use im\Primitive\Support\Traits\RetrievableTrait;
 use im\Primitive\Support\Contracts\StringContract;
-use im\Primitive\Support\Contracts\ArrayableContract;
+use im\Primitive\Support\Traits\SliceableTrait;
+use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\String\Exceptions\StringException;
 
 /**
@@ -31,7 +30,8 @@ use im\Primitive\String\Exceptions\StringException;
  */
 class String extends Type implements StringContract, Countable, ArrayAccess, IteratorAggregate {
 
-    use RetrievableTrait;
+    use SliceableTrait;
+    use StringCheckerTrait;
 
     /**
      * Storing value.
@@ -506,9 +506,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param array|ContainerInterface|ArrayableContract|string $search
-     * @param string|StringContract $replace
+     * Replaces all occurrences of $search by $replacement.
      *
+     * @param mixed $search
+     * @param string|StringContract $replace
      * @return static
      */
     public function replace($search, $replace)
@@ -526,9 +527,11 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $pattern
-     * @param string $replace
+     * Replaces all occurrences of $pattern by $replacement. An alias
+     * for mb_ereg_replace().
      *
+     * @param string|StringInterface $pattern
+     * @param string|StringInterface $replace
      * @return static
      */
     public function replaceRegex($pattern, $replace)
@@ -539,10 +542,12 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param array|Container|ArrayableContract|string $needles
+     * Determine if String starts with a given needles.
+     * The comparison is case-sensitive, but can be made insensitive
+     * by setting $caseSensitive to false.
      *
-     * @param bool                                      $caseSensitive
-     *
+     * @param mixed $needles
+     * @param bool $caseSensitive
      * @return bool
      */
     public function startsWith($needles, $caseSensitive = true)
@@ -553,8 +558,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param array|Container|ArrayableContract|string $needles
+     * Determine if String ends with a given needles.
      *
+     * @param mixed $needles
      * @return bool
      */
     public function endsWith($needles)
@@ -563,8 +569,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $pattern
+     * Return true if String matches the supplied pattern, false otherwise.
      *
+     * @param string|StringContract $pattern
      * @return bool
      */
     public function is($pattern)
@@ -573,8 +580,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $cap
+     * Cap a String with a single instance of a given $cap.
      *
+     * @param string|StringContract $cap
      * @return static
      */
     public function finish($cap)
@@ -583,24 +591,27 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int    $limit
-     * @param string $end
+     * Limit the number of words in a String.
      *
+     * @param int|IntegerContract $limit
+     * @param string|StringContract $end
      * @return static
      */
-    public function words($limit, $end = '...')
+    public function limitWords($limit, $end = '...')
     {
-        return new static(Str::words($this->string, $limit, $end));
+        return new static(Str::words($this->string, $this->getIntegerable($limit), $this->retrieveValue($end)));
     }
 
     /**
-     * @param string $default
+     * Parse a Class@method style callback into class and method.
+     * Return Container with parsed.
      *
+     * @param string|StringContract $default
      * @return \im\Primitive\Container\Container
      */
     public function parseCallback($default = '')
     {
-        return container(Str::parseCallback($this->string, $default));
+        return new Container(Str::parseCallback($this->string, $this->retrieveValue($default)));
     }
 
     /**
@@ -619,28 +630,31 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int $length
+     * Generate a more truly "random" alpha-numeric String.
      *
+     * @param int|IntegerContract $length
      * @return static
      */
     public function random($length = 16)
     {
-        return new static(Str::random($length));
+        return new static(Str::random($this->getIntegerable($length)));
     }
 
     /**
-     * @param int $length
+     * Generate a "random" alpha-numeric String.
      *
+     * @param int|IntegerContract $length
      * @return static
      */
     public function quickRandom($length = 16)
     {
-        return new static(Str::quickRandom($length));
+        return new static(Str::quickRandom($this->getIntegerable($length)));
     }
 
     /**
-     * @param string $delimiter
+     * Generate a URL friendly "slug".
      *
+     * @param string|StringContract $delimiter
      * @return static
      */
     public function slug($delimiter = '-')
@@ -649,28 +663,29 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $delimiter
+     * Split a String by string
      *
+     * @param string|StringContract $delimiter
      * @return \im\Primitive\Container\Container
      */
-    public function explode($delimiter)
+    public function split($delimiter)
     {
-        return container(explode($this->retrieveValue($delimiter), $this->string));
+        return new Container(explode($this->retrieveValue($delimiter), $this->string));
     }
 
-
     /**
-     * @param $delimiter
-     * @param $array
+     * Join arrayable elements with a String
      *
+     * @param string|StringContract $glue
+     * @param mixed $array
      * @return $this
      * @throws InvalidArgumentException
      */
-    public function implode($delimiter, $array)
+    public function join($glue, $array)
     {
         if ($this->isArrayable($array))
         {
-            $this->string = implode($this->retrieveValue($delimiter), $this->getArrayable($array));
+            $this->string = implode($this->retrieveValue($glue), $this->getArrayable($array));
 
             return $this;
         }
@@ -679,13 +694,19 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param null|string $what
+     * Strip whitespace (or other characters) from a String
+     * Can trim:
+     *      'front' from the beginning
+     *      'back' from the end
+     *      'all' all whitespace chars will be replace
+     *      null from the end and beginning
      *
+     * @param null|string|StringContract $what
      * @return static
      */
     public function trim($what = null)
     {
-        switch ($what)
+        switch ($this->retrieveValue($what))
         {
             case 'front':
                 return new static(ltrim($this->string));
@@ -700,7 +721,6 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
 
     /**
      * @param int $quantity
-     *
      * @return static
      */
     public function repeat($quantity = 2)
@@ -1237,7 +1257,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
             return $this->at($args);
         }
 
-        return new static(SliceableString::create($this->string)->offsetGet($args));
+        return $this->slice($args);
     }
 
     /*

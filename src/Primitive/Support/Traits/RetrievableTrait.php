@@ -7,13 +7,20 @@ use im\Primitive\Support\Contracts\FloatContract;
 use im\Primitive\Support\Contracts\IntegerContract;
 use im\Primitive\Support\Contracts\StringContract;
 
-
+/**
+ * Class RetrievableTrait
+ *
+ * @package im\Primitive\Support\Traits
+ * @author Igor Krimerman <i.m.krimerman@gmail.com>
+ */
 trait RetrievableTrait {
 
     /**
+     * Retrieve array from array, ContainerContract, ArrayableContract or
+     * object, otherwise return $default.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
      * @return mixed
      */
     public function getArrayable($value, $default = null)
@@ -34,9 +41,12 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve string from number, string, bool, array,  FloatContract, IntegerContract
+     * StringContract, BooleanContract, ContainerContract, ArrayableContract or
+     * object that has __toString method, otherwise return $default.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
      * @return string
      */
     public function getStringable($value, $default = null)
@@ -68,9 +78,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve bool from number, string, bool, FloatContract, IntegerContract
+     * StringContract, BooleanContract, ContainerContract, otherwise return $default.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
      * @return bool
      */
     public function getBoolable($value, $default = null)
@@ -85,7 +97,7 @@ trait RetrievableTrait {
 
             case is_string($value):
             case $value instanceof StringContract:
-                return $this->fromString($value);
+                return $this->boolFromString($value);
 
             case $value instanceof BooleanContract:
                 return $value->value();
@@ -103,9 +115,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve int from number, string, bool, FloatContract, IntegerContract
+     * StringContract, BooleanContract, otherwise return $default.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
      * @return int
      */
     public function getIntegerable($value, $default = null)
@@ -131,16 +145,19 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve float from number, string, bool, FloatContract, IntegerContract
+     * StringContract, BooleanContract, otherwise return $default.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
-     * @return float
+     * @return float|mixed
      */
     public function getFloatable($value, $default = null)
     {
         switch (true)
         {
             case is_numeric($value):
+            case is_string($value):
             case is_bool($value):
                 return (float) $value;
 
@@ -158,10 +175,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve value that can be used in search methods.
+     *
      * @param mixed $value
      * @param mixed $default
-     *
-     * @return array|string
+     * @return array|string|callable|mixed
      */
     public function getSearchable($value, $default = [])
     {
@@ -182,8 +200,9 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param mixed $value
+     * Check if $value is Arrayable.
      *
+     * @param mixed $value
      * @return bool
      */
     public function isArrayable($value)
@@ -195,10 +214,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Check if $value is Stringable.
+     * Second argument can be specified to check strict.
+     *
      * @param mixed $value
-     *
      * @param bool  $strict
-     *
      * @return bool
      */
     public function isStringable($value, $strict = false)
@@ -219,10 +239,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Check if $value is Integerable.
+     * Second argument can be specified to check strict.
+     *
      * @param mixed $value
-     *
      * @param bool  $strict
-     *
      * @return bool
      */
     public function isIntegerable($value, $strict = false)
@@ -245,10 +266,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Check if $value is Floatable.
+     * Second argument can be specified to check strict.
+     *
      * @param mixed $value
-     *
      * @param bool  $strict
-     *
      * @return bool
      */
     public function isFloatable($value, $strict = false)
@@ -257,10 +279,11 @@ trait RetrievableTrait {
     }
 
     /**
+     * Check if $value is Boolable.
+     * Second argument can be specified to check strict.
+     *
      * @param mixed $value
-     *
      * @param bool  $strict
-     *
      * @return bool
      */
     public function isBoolable($value, $strict = false)
@@ -274,11 +297,12 @@ trait RetrievableTrait {
     }
 
     /**
-     * @param mixed $value
+     * Construct proper Bool from string using grammar.
      *
+     * @param mixed $value
      * @return bool
      */
-    protected function fromString($value)
+    protected function boolFromString($value)
     {
         $grammar = $this->getGrammar();
 
@@ -286,10 +310,12 @@ trait RetrievableTrait {
 
         if (isset($grammar[$value])) return $grammar[$value];
 
-        return $this->getDefault();
+        return false;
     }
 
     /**
+     * Return grammar to construct Bool from string.
+     *
      * @return array
      */
     protected function getGrammar()
@@ -301,13 +327,5 @@ trait RetrievableTrait {
             'y' => true,    'n' => false,
             '+' => true,    '-' => false
         ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getDefault()
-    {
-        return '';
     }
 }

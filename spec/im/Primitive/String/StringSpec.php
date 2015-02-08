@@ -448,7 +448,7 @@ class StringSpec extends ObjectBehavior
 
     function it_should_cut_by_words_count()
     {
-        $this->set('lorem ipsum dolor foo bar')->words(3)->value()->shouldBe('lorem ipsum dolor...');
+        $this->set('lorem ipsum dolor foo bar')->limitWords(3)->value()->shouldBe('lorem ipsum dolor...');
     }
 
     function it_should_parse_callback_and_method()
@@ -475,7 +475,7 @@ class StringSpec extends ObjectBehavior
 
     function it_should_explode_value_in_container()
     {
-        $explode = $this->explode('B');
+        $explode = $this->split('B');
 
         $explode->shouldHaveType(Container::class);
 
@@ -484,9 +484,9 @@ class StringSpec extends ObjectBehavior
 
     function it_should_implode_arrayable_to_value()
     {
-        $this->implode('', container(['foo', 'Bar']))->value()->shouldBe($this->init);
+        $this->join('', container(['foo', 'Bar']))->value()->shouldBe($this->init);
 
-        $this->shouldThrow('InvalidArgumentException')->duringImplode('', true);
+        $this->shouldThrow('InvalidArgumentException')->duringJoin('', true);
     }
 
     function it_should_trim_value_by_given_parameter()

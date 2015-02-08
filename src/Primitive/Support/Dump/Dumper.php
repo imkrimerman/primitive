@@ -3,6 +3,12 @@
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 
+/**
+ * Class Dumper
+ *
+ * @package im\Primitive\Support\Dump
+ * @author Taylor Otwel
+ */
 class Dumper {
 
     /**

@@ -4,7 +4,7 @@
 [![Latest Unstable Version](https://poser.pugx.org/im/primitive/v/unstable.svg)](https://packagist.org/packages/im/primitive)
 [![License](https://poser.pugx.org/im/primitive/license.svg)](https://packagist.org/packages/im/primitive)
 
-##Primitive Types 2.0
+##PHP Primitive Types 2.0
 
 ###Types for web artisans. Killer features for simplicity.
     - Build with Laravel in mind.
@@ -26,7 +26,7 @@ Add a dependency to your composer.json file, if you use [Composer](http://getcom
 ###Documentation
 Documentation for primitives ...
 
-### Contributing To Laravel
+### Contributing
 **All issues and pull requests should be filed on the [im/primitive](http://github.com/imkrimerman/primitive) repository.**
 
 ### License

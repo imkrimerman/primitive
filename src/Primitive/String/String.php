@@ -958,6 +958,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      */
     public function fromEncrypted($encrypted, $key)
     {
+        $encrypted = $this->retrieveValue($encrypted);
+
+        $key = $this->retrieveValue($key);
+
         if ($this->isEncryptedString($encrypted, $key))
         {
             $data = JWT::decode($encrypted, $key);

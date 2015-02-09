@@ -6,7 +6,7 @@ use Symfony\Component\VarDumper\Dumper\HtmlDumper as SymfonyHtmlDumper;
  * Class HtmlDumper
  *
  * @package im\Primitive\Support\Dump
- * @author Taylor Otwel
+ * @author Taylor Otwell
  */
 class HtmlDumper extends SymfonyHtmlDumper {
 

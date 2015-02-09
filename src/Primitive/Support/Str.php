@@ -6,7 +6,7 @@ use Stringy\StaticStringy;
  * Class Str
  *
  * @package im\Primitive\Support
- * @author Taylor Otwel | refactored Igor Krimerman <i.m.krimerman@gmail.com>
+ * @author Taylor Otwell | refactored Igor Krimerman <i.m.krimerman@gmail.com>
  */
 class Str {
 

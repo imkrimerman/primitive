@@ -7,7 +7,7 @@ use Symfony\Component\VarDumper\Cloner\VarCloner;
  * Class Dumper
  *
  * @package im\Primitive\Support\Dump
- * @author Taylor Otwel
+ * @author Taylor Otwell
  */
 class Dumper {
 

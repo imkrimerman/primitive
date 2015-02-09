@@ -1,7 +1,7 @@
 <?php namespace im\Primitive\String;
 
-use Countable;
 use JWT;
+use Countable;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;

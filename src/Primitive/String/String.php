@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\String;
 
 use Countable;
+use JWT;
 use Traversable;
 use ArrayAccess;
 use ArrayIterator;
@@ -131,11 +132,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      */
     public function append($string, $delimiter = '')
     {
-        if ($this->isValidArgs($string, $delimiter))
+        if ($this->isValidStringAndDelimiter($string, $delimiter))
         {
-            return new static(
-                $this->concatenate($this->string, $this->retrieveValue($delimiter), $this->retrieveValue($string))
-            );
+            return new static($this->string.$this->retrieveValue($delimiter).$this->retrieveValue($string));
         }
 
         return $this;
@@ -150,11 +149,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      */
     public function prepend($string, $delimiter = '')
     {
-        if ($this->isValidArgs($string, $delimiter))
+        if ($this->isValidStringAndDelimiter($string, $delimiter))
         {
-            return new static(
-                $this->concatenate($this->retrieveValue($string), $this->retrieveValue($delimiter), $this->string)
-            );
+            return new static($this->retrieveValue($string).$this->retrieveValue($delimiter).$this->string);
         }
 
         return $this;
@@ -352,7 +349,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      */
     public function collapseWhitespace()
     {
-        return new static(StaticStringy::collapseWhitespace($this->string));
+        return $this->replaceRegex('[[:space:]]+', ' ')->trim();
     }
 
     /**
@@ -699,7 +696,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      *      'front' from the beginning
      *      'back' from the end
      *      'all' all whitespace chars will be replace
-     *      null from the end and beginning
+     *       null from the end and beginning
      *
      * @param null|string|StringContract $what
      * @return static
@@ -713,53 +710,50 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
             case 'back':
                 return new static(rtrim($this->string));
             case 'all':
-                return $this->replaceRegex('\s*', '');
+                return $this->replaceRegex('[[:space:]]+', '');
             default:
                 return new static(trim($this->string));
         }
     }
 
     /**
-     * @param int $quantity
+     * Repeat a String
+     *
+     * @param int|IntegerContract $quantity
      * @return static
      */
     public function repeat($quantity = 2)
     {
-        return new static(str_repeat($this->string, (int) $quantity));
+        return new static(str_repeat($this->string, $this->getIntegerable($quantity)));
     }
 
     /**
-     * @param bool $quick
+     * A multi-byte str_shuffle() function. It returns a string with its
+     * characters in random order.
      *
      * @return static
      */
-    public function shuffle($quick = true)
+    public function shuffle()
     {
-        if ($this->getBoolable($quick))
-        {
-            return new static(str_shuffle($this->string));
-        }
-
         return new static(StaticStringy::shuffle($this->string));
     }
 
     /**
-     * @return \im\Primitive\Container\Container
-     */
-    public function wordSplit()
-    {
-        return container(str_word_count($this->string, 2));
-    }
-
-    /**
+     * Strip HTML and PHP tags from a String.
+     * You can use the optional second parameter to specify tags which should
+     * not be stripped.
+     *
+     * @param null|mixed $allowed
      * @return static
      */
-    public function stripTags()
+    public function stripTags($allowed = null)
     {
-        return new static(strip_tags($this->string));
+        return new static(strip_tags($this->string, $this->getArrayable($allowed)));
     }
 
     /**
+     * Encodes String with MIME base64
+     *
      * @return static
      */
     public function base64()
@@ -768,8 +762,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param string $base
+     * Decodes String encoded with MIME base64
      *
+     * @param string|StringContract $base
      * @return $this
      */
     public function fromBase64($base)
@@ -778,76 +773,79 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int    $flags
-     * @param string $encoding
+     * Convert all applicable characters to HTML entities.
      *
+     * @param int $flags
+     * @param string|StringContract $encoding
      * @return static
      */
     public function toEntities($flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
-        return new static(htmlentities($this->string, $flags, $encoding));
+        return new static(htmlentities($this->string, $flags, $this->retrieveValue($encoding)));
     }
 
     /**
-     * @param string|null $entities
-     * @param int    $flags
-     * @param string $encoding
+     * Convert all HTML entities to their applicable characters.
+     * First optional argument can be specified to decode and construct from $entities.
      *
+     * @param string|StringContract|null $entities
+     * @param int $flags
+     * @param string|StringContract $encoding
      * @return $this
      */
     public function fromEntities($entities = null, $flags = ENT_QUOTES, $encoding = 'UTF-8')
     {
         if ( ! is_null($entities))
         {
-            $this->string = html_entity_decode($this->retrieveValue($entities), $flags, $encoding);
+            $this->string = html_entity_decode(
+                $this->retrieveValue($entities), $flags, $this->retrieveValue($encoding)
+            );
 
             return $this;
         }
 
-        return new static(html_entity_decode($this->string, $flags, $encoding));
+        return new static(html_entity_decode($this->string, $flags, $this->retrieveValue($encoding)));
     }
 
     /**
      * Echo string
      *
-     * @param string $before
-     * @param string $after
-     *
+     * @param string|StringContract $before
+     * @param string|StringContract $after
      * @return $this
      */
     public function say($before = '', $after = '')
     {
-        if ( ! $this->isStringable($before))
-        {
-            $before = '';
-        }
-
-        if ( ! $this->isStringable($after))
-        {
-            $after = '';
-        }
-
         echo $this->retrieveValue($before), $this->string, $this->retrieveValue($after);
 
         return $this;
     }
 
     /**
-     * @param int      $offset
-     * @param int|null $length
-     * @param string   $encoding
+     * Get part of String
      *
+     * @param int|IntegerContract $offset
+     * @param int|IntegerContract|null $length
+     * @param string|StringContract $encoding
      * @return static
      */
     public function cut($offset, $length = null, $encoding = 'UTF-8')
     {
-        return new static(mb_substr($this->string, $offset, $length, $encoding));
+        return new static(
+            mb_substr(
+                $this->string,
+                $this->getIntegerable($offset),
+                $this->getIntegerable($length),
+                $this->retrieveValue($encoding)
+            )
+        );
     }
 
     /**
-     * @param int    $limit
-     * @param string $end
+     * Limit the number of characters in a String.
      *
+     * @param int|IntegerContract $limit
+     * @param string|StringContract $end
      * @return static
      */
     public function limit($limit = 100, $end = '...')
@@ -858,9 +856,11 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param int    $limit
-     * @param string $end
+     * Truncates the string to a given length, while ensuring that it does not
+     * split words. If word will be in the middle of limit, minus one word will be returned.
      *
+     * @param int|IntegerContract $limit
+     * @param string|StringContract $end
      * @return static
      */
     public function limitSafe($limit = 100, $end = '...')
@@ -871,21 +871,21 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Parse GET data.
+     *
      * @return \im\Primitive\Container\Container
      */
     public function toVars()
     {
         $vars = [];
 
-        if (mb_parse_str($this->string, $vars) && ! is_null($vars))
-        {
-            return container($vars);
-        }
-
-        return container();
+        return mb_parse_str($this->string, $vars) && ! is_null($vars) ? new Container($vars) : new Container;
     }
 
     /**
+     * Clean String.
+     * Strip tags, convert all entities and trim.
+     *
      * @return $this
      */
     public function clean()
@@ -894,6 +894,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Reset to an empty String.
+     *
      * @return $this
      */
     public function reset()
@@ -904,6 +906,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Compress a String.
+     *
      * @return static
      */
     public function compress()
@@ -912,11 +916,14 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param null|string|StringContract $string
+     * Decompress a String.
+     * If optional argument $string specified than it will
+     * decompress and construct from it.
      *
+     * @param null|string|StringContract $string
      * @return $this
      */
-    public function uncompress($string = null)
+    public function decompress($string = null)
     {
         $string = $this->isStringable($string) ? $this->retrieveValue($string) : $this->string;
 
@@ -926,26 +933,44 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Encrypt and sign a String into a JWT token.
+     *
+     * @param string|StringContract $key to encrypt with
+     * @param int|IntegerContract $expires timestamp
      * @return static
      */
-    public function encrypt()
+    public function encrypt($key, $expires)
     {
-        return $this->compress()->base64();
+        $payload = [
+            'exp' => $this->getIntegerable($expires),
+            'string' => $this->string
+        ];
+
+        return JWT::encode($payload, $this->getStringable($key));
     }
 
     /**
-     * @param string $encrypted
+     * Construct from proper encrypted String with JWT.
      *
+     * @param string|StringContract $encrypted
+     * @param string|StringContract $key
      * @return $this
      */
-    public function fromEncrypted($encrypted)
+    public function fromEncrypted($encrypted, $key)
     {
-        $this->string = $this->fromBase64($encrypted)->uncompress()->value();
+        if ($this->isEncryptedString($encrypted, $key))
+        {
+            $data = JWT::decode($encrypted, $key);
 
-        return $this;
+            return $this->initialize($data->string);
+        }
+
+        throw new BadMethodCallException('Expected encrypted String, got: ' . $encrypted);
     }
 
     /**
+     * Return value. Alias for value method.
+     *
      * @return string
      */
     public function all()
@@ -954,6 +979,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Get file contents, if String is proper file path.
+     *
      * @return static
      * @throws \im\Primitive\String\Exceptions\StringException
      */
@@ -968,6 +995,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is empty.
+     *
      * @return bool
      */
     public function isEmpty()
@@ -976,6 +1005,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is not empty.
+     *
      * @return bool
      */
     public function isNotEmpty()
@@ -984,6 +1015,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String has only alpha chars.
+     *
      * @return bool
      */
     public function isAlpha()
@@ -992,6 +1025,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String has only alphanumeric chars.
+     *
      * @return bool
      */
     public function isAlphanumeric()
@@ -1000,6 +1035,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String has only whitespace chars.
+     *
      * @return bool
      */
     public function isWhitespaces()
@@ -1008,6 +1045,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is hexadecimal.
+     *
      * @return bool
      */
     public function isHex()
@@ -1016,6 +1055,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is in lower case.
+     *
      * @return bool
      */
     public function isLower()
@@ -1024,6 +1065,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is in upper case.
+     *
      * @return bool
      */
     public function isUpper()
@@ -1032,8 +1075,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param null|string|StringContract $uuid
+     * Check if String is Unique User Identifier generated by String.
+     * If optional $uuid argument is specified, it will check it not inner value.
      *
+     * @param null|string|StringContract $uuid
      * @return bool
      */
     public function isUuid($uuid = null)
@@ -1048,6 +1093,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is proper json.
+     *
      * @return bool
      */
     public function isJson()
@@ -1056,6 +1103,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is proper file path.
+     *
      * @return bool
      */
     public function isFile()
@@ -1064,6 +1113,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Check if String is proper serialized.
+     *
      * @return bool
      */
     public function isSerialized()
@@ -1072,7 +1123,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function __toString()
     {
@@ -1080,6 +1131,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Convert String Type to Bool Type.
+     *
      * @return \im\Primitive\Bool\Bool
      */
     public function toBool()
@@ -1088,6 +1141,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Convert String Type to Int Type.
+     *
      * @return \im\Primitive\Int\Int
      */
     public function toInt()
@@ -1104,6 +1159,10 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Convert String Type to Container Type.
+     * If String is proper json, serialized or file path with json or serialized
+     * than it will grab contents decode it and construct Container from it.
+     *
      * @return \im\Primitive\Container\Container
      */
     public function toContainer()
@@ -1119,6 +1178,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Destructor
+     *
      * @return void
      */
     public function __destruct()
@@ -1127,6 +1188,8 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * Measure String length.
+     *
      * @return int
      */
     protected function measure()
@@ -1135,38 +1198,35 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @param $string
-     *
-     * @return $this
+     * {@inheritdoc}
      */
-    protected function initialize($string)
+    protected function initialize($value)
     {
-        if ( ! $this->isStringable($string))
+        if ( ! $this->isStringable($value))
         {
             throw new InvalidArgumentException('Argument 1 should be string or object implementing __toString');
         }
 
-        $this->string = $this->retrieveValue($string);
+        $this->string = $this->retrieveValue($value);
 
         return $this;
     }
 
 
     /**
-     * @param $string
-     * @param $delimiter
+     * Check if given $string and $delimiter is Stringable.
      *
+     * @param mixed $string
+     * @param mixed $delimiter
      * @return bool
      */
-    protected function isValidArgs($string, $delimiter)
+    protected function isValidStringAndDelimiter($string, $delimiter)
     {
         return $this->isStringable($string) && $this->isStringable($delimiter);
     }
 
     /**
-     * @param $value
-     *
-     * @return string
+     * {@inheritdoc}
      */
     protected function retrieveValue($value)
     {
@@ -1174,19 +1234,11 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     protected function getDefault()
     {
         return '';
-    }
-
-    /**
-     * @return string
-     */
-    protected function concatenate()
-    {
-        return implode('', func_get_args());
     }
 
     /*
@@ -1194,10 +1246,16 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     | ArrayAccess
     |--------------------------------------------------------------------------
     */
-
     /**
+     * (PHP 5 &gt;= 5.0.0)
+     * Offset to set. Sets chars to given index.
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
      * @param mixed $offset
+     * The offset to assign the value to.
      * @param mixed $value
+     * The value to set.
+     *
+     * @return void
      */
     public function offsetSet($offset, $value)
     {
@@ -1213,14 +1271,19 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * (PHP 5 &gt;= 5.0.0)
+     * Whether a offset exists.
+     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      * @param mixed $offset
+     * An offset to check for.
      *
-     * @return bool
+     * @return boolean true on success or false on failure.
+     * The return value will be casted to boolean if non-boolean was returned.
      */
     public function offsetExists($offset)
     {
         $length = $this->length();
-        $offset = (int) $offset;
+        $offset = $this->getIntegerable($offset);
 
         if ($offset >= 0) return ($length > $offset);
 
@@ -1228,7 +1291,13 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
+     * (PHP 5 &gt;= 5.0.0)
+     * Offset to unset.
+     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
      * @param mixed $offset
+     * The offset to unset.
+     *
+     * @return void
      */
     public function offsetUnset($offset)
     {
@@ -1239,7 +1308,9 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     }
 
     /**
-     * Implements python-like string slices. Slices the string if the offset
+     * Get offset. Implements python-like string slices.
+     * If slice (['2:4:1']) is not present it will return char at offset,
+     * otherwise slices the string if the offset
      * contains at least a single colon. Slice notation follow the format
      * "start:stop:step". If no colon is present, returns the character at the
      * given index. Offsets may be negative to count from the last character in
@@ -1247,7 +1318,6 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
      * slice args are given, or the step is 0.
      *
      * @param int|string|StringContract $args
-     *
      * @return \im\Primitive\String\String
      */
     public function offsetGet($args)
@@ -1265,9 +1335,13 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     | Countable
     |--------------------------------------------------------------------------
     */
-
     /**
-     * @return mixed
+     * (PHP 5 &gt;= 5.1.0)
+     * Count chars of a String.
+     * @link http://php.net/manual/en/countable.count.php
+     *
+     * @return int The custom count as an integer.
+     * The return value is cast to an integer.
      */
     public function count()
     {
@@ -1279,13 +1353,12 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     | IteratorAggregate
     |--------------------------------------------------------------------------
     */
-
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Retrieve an external iterator
+     * (PHP 5 &gt;= 5.0.0)
+     * Retrieve an external iterator.
      * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-     * @return Traversable An instance of an object implementing <b>Iterator</b> or
-     * <b>Traversable</b>
+     *
+     * @return Traversable An instance
      */
     public function getIterator()
     {

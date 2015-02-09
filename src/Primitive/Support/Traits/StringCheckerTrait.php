@@ -51,7 +51,7 @@ trait StringCheckerTrait {
             return false;
         }
 
-        return $this->isJson($data->string);
+        return is_string($data->string);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace spec\im\Primitive\String;
 
 use im\Primitive\Container\Container;
+use JWT;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use Stringy\StaticStringy;
@@ -523,17 +524,6 @@ class StringSpec extends ObjectBehavior
         $this->shuffle(false)->value()->shouldNotBe($this->init);
     }
 
-    function it_should_split_words_in_Container()
-    {
-        $init = 'lorem ipsum dolorm';
-
-        $words = $this->set($init)->wordSplit();
-
-        $words->shouldHaveType(Container::class);
-
-        $words->all()->shouldBe(str_word_count($init, 2));
-    }
-
     function it_should_strip_tags()
     {
         $tags = '<div>'.$this->init.'</div>';
@@ -644,27 +634,40 @@ class StringSpec extends ObjectBehavior
         $this->compress()->value()->shouldBe(gzcompress($this->init));
     }
 
-    function it_should_uncompress_string()
+    function it_should_decompress_string()
     {
         $str = gzcompress($this->init);
 
-        $this->set($str)->uncompress()->value()->shouldBe($this->init);
+        $this->set($str)->decompress()->value()->shouldBe($this->init);
 
-        $this->set($this->init)->uncompress($str)->value()->shouldBe($this->init);
+        $this->set($this->init)->decompress($str)->value()->shouldBe($this->init);
     }
 
     function it_should_return_encrypted_string()
     {
-        $encrypted = $this->encrypt();
+        $key = 'cypher';
+        $expires = time() + 3600;
 
-        $encrypted->value()->shouldBeString();
+        $encrypted = $this->encrypt($key, $expires);
+
+        $encrypted->shouldBeString();
+
+        $payload = [
+            'exp' => $expires,
+            'string' => $this->init
+        ];
+
+        $encrypted->shouldBeEqualTo(JWT::encode($payload, $key));
     }
 
     function it_should_construct_from_encrypted_string()
     {
-        $encrypted = $this->encrypt();
+        $key = 'cypher';
+        $expires = time() + 3600;
 
-        $this->fromEncrypted($encrypted)->value()->shouldBe($this->init);
+        $encrypted = $this->encrypt($key, $expires);
+
+        $this->fromEncrypted($encrypted, $key)->all()->shouldBeEqualTo($this->init);
     }
 
     function it_should_return_length_of_string()

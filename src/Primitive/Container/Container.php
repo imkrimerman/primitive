@@ -59,7 +59,7 @@ class Container extends ComplexType implements ContainerContract {
         }
         elseif ($this->isStringable($from))
         {
-            $this->fromStringable($this->getStringable($from));
+            $this->fromString($this->getStringable($from));
         }
         else
         {
@@ -68,14 +68,15 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Magic get method
+     * Magic get method. For support of object style get.
+     * First we try to find method with $item name and call it. Note that
+     * you can only call methods without parameters. If no such method than
+     * we try to find such key with dot notation.
+     * Supports dot notation.
      *
-     * For support of object style get
-     *
-     * @param $item
-     *
+     * @param mixed $item
      * @throws OffsetNotExistsException
-     * @return null
+     * @return mixed
      */
     public function __get($item)
     {
@@ -87,12 +88,11 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Magic set method
+     * Magic set method. For support of object style set.
+     * Set $key with $value. Supports dot notation.
      *
-     * For support of object style set
-     *
-     * @param $key
-     * @param $value
+     * @param mixed $key
+     * @param mixed $value
      */
     public function __set($key, $value)
     {
@@ -100,7 +100,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
     public function length()
     {
@@ -108,43 +108,33 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Getter
+     * Getter. Supports dot notation.
      *
-     * @param $key
+     * @param mixed $key
      * @param mixed $default
      * @return mixed
      */
     public function get($key, $default = null)
     {
-        return value(Arr::get($this->items, $key, $default));
+        return value(Arr::get($this->items, $this->getKey($key), $default));
     }
 
     /**
-     * Setter
+     * Setter. Supports dot notation.
      *
-     * @param $key
-     * @param $value
-     *
+     * @param mixed $key
+     * @param mixed $value
      * @return $this
      */
     public function set($key, $value)
     {
-        if ($this->isIntegerable($key, true))
-        {
-            $key = $this->getIntegerable($key);
-        }
-        else
-        {
-            $key = $this->getStringable($key);
-        }
-
-        Arr::set($this->items, $key, $value);
+        Arr::set($this->items, $this->getKey($key), $value);
 
         return $this;
     }
 
     /**
-     * @return array
+     * {@inheritdoc}
      */
     public function value()
     {
@@ -152,9 +142,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Push items in the Container,
+     * Push item in a Container.
      *
-     * @param $item
+     * @param mixed $item
      * @return $this
      */
     public function push($item)
@@ -165,7 +155,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Remove last item from Container and returns it.
+     * Remove last item from Container and return it.
      *
      * @return mixed
      */
@@ -175,10 +165,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Adds item to the first index of Container.
+     * Add item to the first index of Container.
      *
-     * @param $item
-     *
+     * @param mixed $item
      * @return $this
      */
     public function prepend($item)
@@ -189,7 +178,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Removes first item from Container and returns it.
+     * Remove first item from Container and return it.
      *
      * @return mixed
      */
@@ -199,41 +188,34 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Search for specified value, returns index on success, otherwise false.
-     *
+     * Search for specified value, return index on success, otherwise false.
      * First level search.
      *
-     * @param $value
-     *
+     * @param mixed $value
      * @return mixed
      */
     public function search($value)
     {
-        // TODO make recursive search (return dot.notation)
-        return array_search($value, $this->items);
+        return array_search($this->getSearchable($value, $value), $this->items);
     }
 
     /**
-     * Check if Container has specified key
+     * Check if Container has specified key.
      *
-     * @param $key
-     *
+     * @param mixed $key
      * @return bool
      */
     public function has($key)
     {
-        return Arr::has($this->items, $key);
+        return Arr::has($this->items, $this->getKey($key));
     }
 
     /**
-     * Checks if Container has specified value
+     * Checks if Container has specified value.
+     * First level search.
      *
-     * First level search
-     *
-     * @param      $value
-     *
-     * @param null $strict
-     *
+     * @param mixed $value
+     * @param null|bool|BooleanContract $strict
      * @return bool
      */
     public function hasValue($value, $strict = null)
@@ -264,7 +246,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns first Container key
+     * Return first Container key.
      *
      * @throws ContainerException
      * @throws EmptyContainerException
@@ -278,7 +260,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns last Container key
+     * Return last Container key.
      *
      * @throws ContainerException
      * @throws EmptyContainerException
@@ -292,7 +274,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return first Container value
+     * Return first Container value.
      *
      * @return mixed
      * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
@@ -305,10 +287,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return first value that passes truth test
+     * Return first value that passes truth test.
      *
-     * @param \Callable $function
-     *
+     * @param callable $function
      * @return mixed
      * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
      */
@@ -320,7 +301,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return last value
+     * Return last value.
      *
      * @return mixed
      * @throws EmptyContainerException
@@ -333,10 +314,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return last value that passes truth test
+     * Return last value that passes truth test.
      *
      * @param callable $function
-     *
      * @return mixed
      * @throws \im\Primitive\Container\Exceptions\EmptyContainerException
      */
@@ -348,10 +328,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Makes Container items unique
+     * Unique Container items.
      *
-     * @param bool $recursive
-     *
+     * @param bool|BooleanContract $recursive
      * @return $this
      */
     public function unique($recursive = false)
@@ -365,7 +344,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns Container keys
+     * Return Container keys.
      *
      * @return Container
      */
@@ -375,7 +354,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns Container values
+     * Return Container values
      *
      * @return Container
      */
@@ -386,7 +365,7 @@ class Container extends ComplexType implements ContainerContract {
 
     /**
      * Returns keys and values divided in new Container
-     * with indexes 'keys' for keys and 'values' for values
+     * with indexes 'keys' for keys and 'values' for values.
      *
      * @return Container
      */
@@ -396,7 +375,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return items only with numeric keys
+     * Return items only with numeric keys.
      *
      * @return static
      */
@@ -413,7 +392,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return items only with not numeric keys
+     * Return items only with not numeric keys.
      *
      * @return static
      */
@@ -430,7 +409,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Shuffles Container items
+     * Shuffle Container items.
      *
      * @return $this
      */
@@ -442,10 +421,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns joined Container items with whitespace by default
+     * Return joined Container items with whitespace by default.
      *
-     * @param string $glue
-     *
+     * @param string|StringContract $glue
      * @return \im\Primitive\String\String
      */
     public function join($glue = '')
@@ -457,44 +435,40 @@ class Container extends ComplexType implements ContainerContract {
             $object[$key] = is_array($retrieved) && empty($retrieved) ? '' : $retrieved;
         }
 
-        return string(implode($glue, $copy));
+        return string(implode($this->getStringable($glue, ''), $copy));
     }
 
     /**
      * Concatenate values of a given key as a string.
      *
-     * @param      $key
-     * @param null $glue
-     *
+     * @param mixed $key
+     * @param null|mixed $glue
      * @return \im\Primitive\String\String
      */
     public function joinByKey($key, $glue = null)
     {
-        return string(implode($glue, $this->lists($key)->all()));
+        return string(implode($glue, $this->lists($this->getKey($key))->all()));
     }
 
     /**
      * Get new Container with the values of a given key.
+     * 1 Argument is key to make value from.
+     * 2 Argument is key from the same Arrayable which will be the key.
      *
-     * 1 Argument is key to make value from. 2 Argument is key from the same arrayable which will be the key.
-     *
-     * @param  string $valueByKey
-     * @param  string $key
-     *
+     * @param  mixed $valueByKey
+     * @param  mixed $key
      * @return static
      */
     public function lists($valueByKey, $key = null)
     {
-        return new static(Arr::pluck($this->items, $valueByKey, $key));
+        return new static(Arr::pluck($this->items, $this->getKey($valueByKey), $this->getKey($key)));
     }
 
     /**
-     * Return split Container items into chunks wrapped with new Container
+     * Return split Container items into chunks wrapped with new Container.
      *
-     * @param int  $size
-     *
-     * @param bool $preserveKeys
-     *
+     * @param int|IntegerContract  $size
+     * @param bool|BooleanContract $preserveKeys
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadLengthException
      */
@@ -518,13 +492,11 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Combines values from $array
+     * Combine values from $array.
+     * You can specify what to combine 'keys' or 'values' with the second argument.
      *
-     * You can specify what to combine 'keys' or 'values' with the second argument
-     *
-     * @param array|ContainerContract|ArrayableContract|object $array
-     * @param string $what
-     *
+     * @param mixed $array
+     * @param string|StringContract $what
      * @return static
      * @throws BadMethodCallException
      * @throws BadLengthException
@@ -550,13 +522,11 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns filtered Container
-     *
-     * You can specify recursive filter with the second argument
+     * Return filtered Container.
+     * You can specify recursive filter with the second argument.
      *
      * @param callable $function
-     * @param bool $recursive
-     *
+     * @param bool|BooleanContract $recursive
      * @return Container
      */
     public function filter(callable $function, $recursive = false)
@@ -570,7 +540,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Flips keys with values
+     * Flip keys with values.
      *
      * @return $this
      * @throws \im\Primitive\Container\Exceptions\ContainerException
@@ -586,10 +556,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Traverses Container items
+     * Traverse Container items.
      *
      * @param callable $function
-     *
      * @return $this
      */
     public function each(callable $function)
@@ -600,10 +569,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Run a map on each Container item
+     * Run a map on each Container item.
      *
      * @param callable $function
-     *
      * @return $this
      */
     public function map(callable $function)
@@ -612,10 +580,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Transform each item with the callback
+     * Transform each item with the callback.
      *
      * @param callable $function
-     *
      * @return $this
      */
     public function transform(callable $function)
@@ -626,14 +593,12 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Apply a user function to every Container item
+     * Apply a user function to every Container item.
+     * You can specify recursive walk with the second argument.
      *
-     * You can specify recursive walk with the second argument
-     *
-     * @param $callback
-     * @param $recursive
-     * @param null $userdata
-     *
+     * @param callable $callback
+     * @param bool|BooleanContract $recursive
+     * @param null|mixed $userdata
      * @return $this
      */
     public function walk(callable $callback, $recursive = false, $userdata = null)
@@ -646,10 +611,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Merges array or Container
+     * Merge Arrayable with Container.
      *
-     * @param      $items
-     *
+     * @param  mixed $items
      * @throws BadMethodCallException
      * @return $this
      */
@@ -664,18 +628,17 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Merge array with specified key in Container
+     * Merge Arrayable with specified key in Container.
      *
-     * @param      $items
-     * @param      $key
+     * @param mixed $items
+     * @param mixed $key
      * @param null $default
-     *
      * @return $this
      * @throws InvalidArgumentException
      */
     public function mergeWithKey($items, $key, $default = null)
     {
-        $key = $this->getStringable($key);
+        $key = $this->getKey($key);
 
         if ( ! $this->has($key)) throw new InvalidArgumentException('Key: '.$key.' not exists');
 
@@ -687,11 +650,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Increase Container to the specified length with a value
+     * Increase Container to the specified length with a value.
      *
-     * @param int        $increaseSize
-     * @param            $value
-     *
+     * @param int|IntegerContract $increaseSize
+     * @param null|mixed $value
      * @return $this
      */
     public function increase($increaseSize = 1, $value = null)
@@ -702,10 +664,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return pseudo-random index from Container
+     * Return pseudo-random index from Container.
      *
-     * @param int $quantity
-     *
+     * @param int|IntegerContract $quantity
      * @throws BadMethodCallException
      * @return mixed
      */
@@ -724,9 +685,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return pseudo-random item from Container
+     * Return pseudo-random item from Container.
      *
-     * @param int $quantity
+     * @param int|IntegerContract $quantity
      * @return array
      */
     public function random($quantity = 1)
@@ -744,18 +705,16 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Cuts a slice of the Container
-     *
-     * You can return result or assign to Container with the forth argument
+     * Cut a slice of a Container.
+     * You can return result or assign to Container with the forth argument.
      *
      * @param int|IntegerContract $offset
      * @param null|int|IntegerContract $length
      * @param bool|BooleanContract $preserveKeys
      * @param bool|BooleanContract $set
-     *
      * @return static|$this
      */
-    public function cut($offset, $length = null, $preserveKeys = false, $set = true)
+    public function cut($offset, $length = null, $preserveKeys = false, $set = false)
     {
         $result = array_slice(
             $this->items,
@@ -778,7 +737,6 @@ class Container extends ComplexType implements ContainerContract {
      * Create new Container of all elements that do not pass a given truth test.
      *
      * @param callable|string|StringContract $callback
-     *
      * @return static
      */
     public function reject($callback)
@@ -791,6 +749,8 @@ class Container extends ComplexType implements ContainerContract {
             });
         }
 
+        $callback = $this->getStringable($callback);
+
         return $this->copy()->filter(function($item) use ($callback)
         {
             return $item != $callback;
@@ -798,11 +758,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Reduce items to one value
+     * Reduce items to one value.
      *
      * @param callable $callback
-     * @param null     $initial
-     *
+     * @param null|mixed $initial
      * @return mixed
      */
     public function reduce(callable $callback, $initial = null)
@@ -811,11 +770,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Encrypt Container items to JWT Token
+     * Encrypt Container items to JWT Token.
      *
-     * @param string|String $key
-     * @param int $expires
-     *
+     * @param string|StringContract $key
+     * @param int|IntegerContract $expires
      * @return string
      */
     public function encrypt($key, $expires)
@@ -829,7 +787,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns base64 representation of Container
+     * Return base64 representation of Container.
      *
      * @return string
      */
@@ -839,12 +797,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Remove key from Container with dot notation
+     * Remove key from Container. Supports dot notation.
      *
-     * @param $key
-     *
+     * @param mixed $key
      * @return $this
-     *
      */
     public function forget($key)
     {
@@ -854,7 +810,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Reset Container to empty array
+     * Reset Container to empty array.
      *
      * @return $this
      */
@@ -866,10 +822,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Reverse Container items
+     * Reverse Container items.
      *
-     * @param bool $preserveKeys
-     *
+     * @param bool|BooleanContract $preserveKeys
      * @return $this
      */
     public function reverse($preserveKeys = true)
@@ -880,7 +835,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return all items from Container
+     * Return all items from Container. Alias for value.
      *
      * @return array
      */
@@ -890,7 +845,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Create copy of Container
+     * Create copy of Container.
      *
      * @return Container
      */
@@ -920,10 +875,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return copy of Container except given keys
+     * Return copy of Container except given keys.
      *
-     * @param $keys
-     *
+     * @param mixed $keys
      * @return static
      */
     public function except($keys)
@@ -932,16 +886,17 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return copy of Container except given offset
+     * Return copy of Container except given index.
      *
-     * @param $nth
-     *
+     * @param int|IntegerContract $nth
      * @throws OffsetNotExistsException
      * @return Container
      */
     public function exceptIndex($nth)
     {
-        if ($this->isEmpty() || $this->getIntegerable($nth) >= $this->length())
+        $nth = $this->getIntegerable($nth);
+
+        if ($this->isEmpty() || $nth >= $this->length())
         {
             throw new OffsetNotExistsException('Offset: '. $nth .' not exist');
         }
@@ -950,10 +905,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return rest items after given index
+     * Return rest items after given index.
      *
-     * @param int|IntegerContract|FloatContract $index
-     *
+     * @param int|IntegerContract $index
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\BadLengthException
      * @throws \im\Primitive\Container\Exceptions\ContainerException
@@ -985,17 +939,16 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return rest items after given key
+     * Return rest items after given key.
      *
-     * @param $key
-     *
+     * @param mixed $key
      * @return \im\Primitive\Container\Container
      * @throws \im\Primitive\Container\Exceptions\ContainerException
      * @throws \im\Primitive\Support\Exceptions\OffsetNotExistsException
      */
     public function restAfterKey($key)
     {
-        $key = $this->getStringable($key);
+        $key = $this->getKey($key);
 
         if ( ! array_key_exists($key, $this->items))
         {
@@ -1008,7 +961,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Flatten Container items
+     * Flatten Container items.
      *
      * @return $this
      */
@@ -1019,10 +972,9 @@ class Container extends ComplexType implements ContainerContract {
 
 
     /**
-     * Calculate difference of Container and given Arrayable
+     * Calculate difference of Container and given Arrayable.
      *
-     * @param $items
-     *
+     * @param mixed $items
      * @return static
      */
     public function difference($items)
@@ -1038,37 +990,20 @@ class Container extends ComplexType implements ContainerContract {
     /**
      * Get gathered column of a nested array element.
      *
-     * @param $key
+     * @param mixed $key
      * @return static
      */
     public function column($key)
     {
-        return new static(Arr::fetch($this->items, $this->getStringable($key)));
+        return new static(Arr::fetch($this->items, $this->getKey($key)));
     }
 
     /**
-     * Create a new Container instance if the value isn't one already.
+     * Remove all not true items from Container (null, '', false, 0, []).
+     * You can specify second argument to make it recursive.
      *
-     * @param array $data
-     *
-     * @return static
-     */
-    public function make($data = [])
-    {
-        if ($data instanceof Container) return $data;
-
-        return new static($this->retrieveValue($data));
-    }
-
-    /**
-     * Remove all not true items from Container
-     * (null, '', false, 0, [])
-     *
-     * You can specify second argument to make it recursive
-     *
-     * @param bool                 $recursive
-     * @param callable|string|null $function
-     *
+     * @param bool|BooleanContract $recursive
+     * @param callable|string|StringContract|null $function
      * @return $this
      */
     public function truly($recursive = false, $function = null)
@@ -1086,21 +1021,20 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Take all items recursively by key
+     * Take all items recursively by key.
      *
-     * @param $key
-     *
+     * @param mixed $key
      * @return static
      */
     public function take($key)
     {
         $take = [];
 
-        $key = $this->getStringable($key);
+        $key = $this->getKey($key);
 
-        $this->walk(function ($value, $key_) use ($key, & $take)
+        $this->walk(function ($_value_, $_key_) use ($key, & $take)
         {
-            if ($key_ == $key) $take[] = $value;
+            if ($_key_ == $key) $take[] = $_value_;
 
         }, true);
 
@@ -1108,16 +1042,15 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Get a value from the Container, and remove it.
+     * Get a value from a Container, and remove it.
      *
-     * @param $key
-     *
+     * @param mixed $key
      * @return mixed
      * @throws OffsetNotExistsException
      */
     public function pull($key)
     {
-        $key = $this->getStringable($key);
+        $key = $this->getKey($key);
 
         if ( ! $this->has($key))
         {
@@ -1128,25 +1061,22 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Recursively removes values by key
+     * Recursively remove values by key.
      *
-     * @param $key
-     *
-     * @return $this
+     * @param mixed $key
+     * @return static
      */
     public function without($key)
     {
-        return new static($this->forgetRecursive($this->getStringable($key), $this->items));
+        return new static($this->forgetRecursive($this->getKey($key), $this->items));
     }
 
     /**
-     * Return intersection with Arrayable
+     * Return intersection with Arrayable.
+     * You can specify second argument to with additional index check.
      *
-     * You can specify second argument to with additional index check
-     *
-     * @param      $array
-     * @param bool $assoc
-     *
+     * @param mixed $array
+     * @param bool|BooleanContract $assoc
      * @return Container
      */
     public function intersect($array, $assoc = false)
@@ -1157,10 +1087,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns intersection by keys with Arrayable
+     * Return intersection by keys with Arrayable.
      *
-     * @param $array
-     *
+     * @param mixed $array
      * @return Container
      */
     public function intersectKey($array)
@@ -1169,21 +1098,22 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * User sort
+     * Return user sorted Container.
      *
      * @param callable $function
-     *
-     * @return $this
+     * @return static
      */
     public function sort(callable $function)
     {
-        usort($this->items, $function);
+        $copy = $this->all();
 
-        return $this;
+        usort($copy, $function);
+
+        return new static($copy);
     }
 
     /**
-     * Reset keys to numeric
+     * Reset keys to numeric.
      *
      * @return $this
      */
@@ -1195,7 +1125,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return sum of number values
+     * Return sum of numeric values.
      *
      * @return \im\Primitive\Int\Int
      */
@@ -1205,16 +1135,14 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Finds all items by key or key value pairs
+     * Find all items by key or key value pairs.
+     * You can specify second parameter to preserve keys reset.
      *
-     * You can specify second parameter to preserve keys reset
-     *
-     * @param $condition
-     * @param $preserveKeys
+     * @param mixed $condition
+     * @param bool|BooleanContract $preserveKeys
      * @throws ContainerException
      * @throws EmptyContainerException
-     *
-     * @return $this
+     * @return static
      */
     public function where($condition, $preserveKeys = true)
     {
@@ -1226,7 +1154,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container items is associative
+     * Check if Container items is associative.
      *
      * @return bool
      */
@@ -1236,7 +1164,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container items is not associative
+     * Check if Container items is not associative.
      *
      * @return bool
      */
@@ -1246,7 +1174,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container is multi-dimensional
+     * Check if Container is multi-dimensional.
      *
      * @return bool
      */
@@ -1256,7 +1184,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container is not multi-dimensional
+     * Check if Container is not multi-dimensional.
      *
      * @return bool
      */
@@ -1266,7 +1194,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container is empty
+     * Check if Container is empty.
      *
      * @return bool
      */
@@ -1276,7 +1204,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Check if Container is not empty
+     * Check if Container is not empty.
      *
      * @return bool
      */
@@ -1286,7 +1214,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return Int Type representation of Container
+     * Return Int Type representation of Container.
      *
      * @return \im\Primitive\Int\Int
      */
@@ -1296,7 +1224,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return Bool Type representation of Container
+     * Return Bool Type representation of Container.
      *
      * @return \im\Primitive\Bool\Bool
      */
@@ -1306,7 +1234,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return Float Type representation of Container
+     * Return Float Type representation of Container.
      *
      * @return \im\Primitive\Float\Float
      */
@@ -1316,7 +1244,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return String Type representation of Container
+     * Return String Type representation of Container.
      *
      * @param int $options
      *
@@ -1328,7 +1256,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Returns Object Type representation of Container
+     * Return Object Type representation of Container.
      *
      * @return \im\Primitive\Object\Object
      */
@@ -1338,14 +1266,15 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Construct from Json
+     * Construct from Json.
      *
      * @param $json
-     *
      * @return $this
      */
     public function fromJson($json)
     {
+        $json = $this->getStringable($json);
+
         if ($this->isJson($json))
         {
             $this->initialize(json_decode($json, true));
@@ -1355,18 +1284,18 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Construct from file
+     * Construct from file.
+     * Contents can be json or serialized array.
      *
-     * Contents can be json or serialized array
-     *
-     * @param string $file
-     *
+     * @param string|StringContract $file
      * @throws ContainerException
      * @throws NotIsFileException
      * @return $this
      */
     public function fromFile($file)
     {
+        $file = $this->getStringable($file);
+
         if ( ! $this->isFile($file)) throw new NotIsFileException('Not is file: ' . $file);
 
         $content = file_get_contents($file);
@@ -1384,12 +1313,15 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * @param $content
+     * Construct from serialized.
      *
+     * @param string|StringContract $content
      * @return $this
      */
     public function fromSerialized($content)
     {
+        $content = $this->getStringable($content);
+
         if ($this->isSerialized($content))
         {
             return $this->initialize(unserialize($content));
@@ -1399,15 +1331,18 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Construct from Encrypted Container
+     * Construct from Encrypted Container.
      *
-     * @param $encrypted
-     * @param $key
-     *
+     * @param string|StringContract $encrypted
+     * @param string|StringContract $key
      * @return \im\Primitive\Container\Container
      */
     public function fromEncrypted($encrypted, $key)
     {
+        $encrypted = $this->getStringable($encrypted);
+
+        $key = $this->getStringable($key);
+
         if ($this->isEncryptedContainer($encrypted, $key))
         {
             $data = JWT::decode($encrypted, $key);
@@ -1419,15 +1354,14 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Construct from string
+     * Construct from string.
      *
-     * @param string $string
-     *
+     * @param string|StringContract $string
      * @return $this
      * @throws \im\Primitive\Container\Exceptions\ContainerException
      * @throws \im\Primitive\Support\Exceptions\NotIsFileException
      */
-    protected function fromStringable($string)
+    protected function fromString($string)
     {
         if ($this->isFile($string))
         {
@@ -1446,7 +1380,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return json representation of Container
+     * Return json representation of Container.
      *
      * @return string
      */
@@ -1456,7 +1390,8 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Call magic
+     * Magic call method.
+     * Calls native php array functions, where with key parsed or combine.
      *
      * @param $method
      * @param $parameters
@@ -1498,10 +1433,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Measure Container length
+     * Measure Container length.
      *
      * @param int $default
-     *
      * @return int
      */
     protected function measure($default = 0)
@@ -1512,9 +1446,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
+     * Find where condition is array.
+     *
      * @param array $conditions
      * @param bool $preserveKeys
-     *
      * @return array
      * @throws EmptyContainerException
      */
@@ -1533,13 +1468,12 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Recursively traversing tree
+     * Recursively traversing tree.
      *
      * @param $array
      * @param $key
      * @param $value
      * @param $preventKeys
-     *
      * @return array
      */
     protected function whereRecursive($array, $key, $value = null, $preventKeys = false)
@@ -1565,11 +1499,12 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
+     * Convert iterator to array.
+     *
      * @param RecursiveIteratorIterator $iterator
      * @param Iterator $subIterator
      * @param array $outputArray
      * @param $preventKeys
-     *
      * @return array
      */
     protected function iteratorToArray(RecursiveIteratorIterator $iterator, Iterator $subIterator, array $outputArray, $preventKeys = false)
@@ -1607,11 +1542,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Recursive filter
+     * Recursive filter.
      *
      * @param callable $function
      * @param          $items
-     *
      * @return array
      */
     protected function filterRecursive(callable $function, $items)
@@ -1627,11 +1561,10 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Recursive unset
+     * Recursive unset.
      *
      * @param $forgetKey
      * @param mixed $items
-     *
      * @return mixed
      */
     protected function forgetRecursive($forgetKey, $items)
@@ -1650,10 +1583,9 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Unique items recursively
+     * Unique items recursively.
      *
      * @param $items
-     *
      * @return array
      */
     protected function uniqueRecursive($items)
@@ -1670,11 +1602,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Initialize items from array
-     *
-     * @param $array
-     *
-     * @return $this
+     * {@inheritdoc}
      */
     protected function initialize($array)
     {
@@ -1689,10 +1617,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Results array of items from Container or ArrayableContract.
-     *
-     * @param $value
-     * @return array
+     * {@inheritdoc}
      */
     protected function retrieveValue($value)
     {
@@ -1700,13 +1625,24 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Default value
-     *
-     * @return array
+     * {@inheritdoc}
      */
     protected function getDefault()
     {
         return [];
+    }
+
+    /**
+     * Retrieve proper key.
+     *
+     * @param mixed $key
+     * @param null|mixed $default
+     * @return int|string
+     */
+    protected function getKey($key, $default = null)
+    {
+        return ($this->isIntegerable($key, true)) ? $this->getIntegerable($key)
+                                                  : $this->getStringable($key, $default);
     }
 
     /*
@@ -1715,7 +1651,11 @@ class Container extends ComplexType implements ContainerContract {
     |--------------------------------------------------------------------------
     */
     /**
-     * @return array
+     * (PHP 5 &gt;= 5.4.0)
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by json_encode,
+     * which is a value of any type other than a resource.
      */
     public function jsonSerialize()
     {
@@ -1732,8 +1672,12 @@ class Container extends ComplexType implements ContainerContract {
     |--------------------------------------------------------------------------
     */
     /**
-     * @param mixed $offset
-     * @param mixed $value
+     * (PHP 5 &gt;= 5.0.0)
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset The offset to assign the value to.
+     * @param mixed $value The value to set.
+     * @return void
      */
     public function offsetSet($offset, $value)
     {

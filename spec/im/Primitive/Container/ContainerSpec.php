@@ -615,14 +615,14 @@ class ContainerSpec extends ObjectBehavior
     {
         $this->cut(1)->firstKey()->shouldBeEqualTo('surname');
 
-        $this->minusLengthCheck();
+        $this->lengthCheck();
     }
 
     function it_should_cut_items_between_given_offset_and_length()
     {
         $this->cut(1, 2)->lastKey()->shouldBeEqualTo('email');
 
-        $this->minusLengthCheck(2);
+        $this->lengthCheck();
     }
 
     function it_should_return_new_Container_without_rejected_values_by_given_value()
@@ -1144,30 +1144,31 @@ class ContainerSpec extends ObjectBehavior
 
         $this->fromArray($initializer);
 
-        $this->sort(function($a, $b)
+        $sorted = $this->sort(function($a, $b)
         {
             $a = $a['order'];
             $b = $b['order'];
 
             if ($a > $b) return 1;
             if ($a < $b) return -1;
-
             return 0;
         });
 
-        $this->first()->shouldBe([
+        $sorted->first()->shouldBe([
             'name' => 'John',
             'surname' => 'McDonald',
             'email' => 'johnmc@example.com',
             'order' => 0
         ]);
 
-        $this->last()->shouldBe([
+        $sorted->last()->shouldBe([
             'name' => 'Jane',
             'surname' => 'McDonald',
             'email' => 'janemc@example.com',
             'order' => 4
         ]);
+
+        $this->all()->shouldBe($initializer);
     }
 
     function it_should_calculate_sum_of_items()

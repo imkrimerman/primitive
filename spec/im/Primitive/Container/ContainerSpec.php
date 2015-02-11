@@ -139,7 +139,7 @@ class ContainerSpec extends ObjectBehavior
         $this->search('John')->shouldBe('name');
         $this->search('Doe')->shouldBe('surname');
 
-        $this->search('fake')->shouldBe(false);
+        $this->search('fake')->shouldBe(null);
     }
 
     function it_should_return_true_if_Container_has_key()

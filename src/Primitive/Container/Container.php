@@ -14,11 +14,9 @@ use im\Primitive\Support\Str;
 use im\Primitive\Support\Abstracts\ComplexType;
 use im\Primitive\Support\Traits\StringCheckerTrait;
 use im\Primitive\Support\Contracts\BooleanContract;
-use im\Primitive\Support\Contracts\FloatContract;
 use im\Primitive\Support\Contracts\IntegerContract;
 use im\Primitive\Support\Contracts\StringContract;
 use im\Primitive\Support\Contracts\ContainerContract;
-use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\Support\Iterators\RecursiveContainerIterator;
 use im\Primitive\Support\Exceptions\NotIsFileException;
 use im\Primitive\Support\Exceptions\OffsetNotExistsException;
@@ -188,15 +186,17 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Search for specified value, return index on success, otherwise false.
-     * First level search.
+     * Search for specified value, return key on success, otherwise false.
+     * If value is nested deeper than 1 level dot notation key will be returned.
+     * You can specify strict search with 2 argument.
      *
      * @param mixed $value
+     * @param bool|BooleanContract $strict
      * @return mixed
      */
-    public function search($value)
+    public function search($value, $strict = false)
     {
-        return array_search($this->getSearchable($value, $value), $this->items);
+        return Arr::search($this->items, $this->getSearchable($value, $value), $this->getBoolable($strict));
     }
 
     /**
@@ -212,15 +212,16 @@ class Container extends ComplexType implements ContainerContract {
 
     /**
      * Checks if Container has specified value.
-     * First level search.
      *
      * @param mixed $value
      * @param null|bool|BooleanContract $strict
      * @return bool
      */
-    public function hasValue($value, $strict = null)
+    public function hasValue($value, $strict = false)
     {
-        return in_array($value, $this->items, $this->getBoolable($strict));
+        return ! is_null(
+            Arr::search($this->items, $this->getSearchable($value, $value), $this->getBoolable($strict))
+        );
     }
 
     /**
@@ -418,6 +419,16 @@ class Container extends ComplexType implements ContainerContract {
         shuffle($this->items);
 
         return $this;
+    }
+
+    /**
+     * Flatten a multi-dimensional associative array with dots.
+     *
+     * @return static
+     */
+    public function dot()
+    {
+        return new static(Arr::dot($this->items));
     }
 
     /**

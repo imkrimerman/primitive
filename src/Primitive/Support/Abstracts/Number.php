@@ -28,6 +28,16 @@ abstract class Number extends Type implements TypeContract, Serializable {
     protected $value;
 
     /**
+     * Construct Number Type.
+     *
+     * @param mixed $value
+     */
+    public function __construct($value)
+    {
+        $this->initialize($value);
+    }
+
+    /**
      * Setter for inner value.
      *
      * @param mixed $value

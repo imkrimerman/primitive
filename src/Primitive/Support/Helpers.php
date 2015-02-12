@@ -124,7 +124,7 @@ if ( ! function_exists('value'))
      */
     function value($value)
     {
-        return is_callable($value) ? $value() : $value;
+        return $value instanceof Closure ? $value() : $value;
     }
 }
 

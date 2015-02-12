@@ -19,18 +19,6 @@ class Float extends Number implements FloatContract {
     protected $value;
 
     /**
-     * Construct Float Type
-     * Can be constructed with int, all real types, bool,
-     * FloatContract, IntegerContract, StringContract, BooleanContract
-     *
-     * @param mixed $value
-     */
-    public function __construct($value)
-    {
-        $this->initialize($value);
-    }
-
-    /**
      * Round fractions up
      *
      * @return static

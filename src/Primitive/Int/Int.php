@@ -19,16 +19,6 @@ class Int extends Number implements IntegerContract {
     protected $value;
 
     /**
-     * Construct Int Type
-     *
-     * @param mixed $value
-     */
-    function __construct($value)
-    {
-        $this->initialize($value);
-    }
-
-    /**
      * Convert Int Type to Float Type
      *
      * @return \im\Primitive\Float\Float

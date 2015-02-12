@@ -17,13 +17,6 @@ abstract class Type implements TypeContract, Serializable {
     use RetrievableTrait;
 
     /**
-     * Construct Type with given $value
-     *
-     * @param mixed $value
-     */
-    abstract public function __construct($value);
-
-    /**
      * Initialize inner value with given $value.
      *
      * @param mixed $value

@@ -3,7 +3,6 @@
 use im\Primitive\Support\Dump\Dumper;
 use InvalidArgumentException;
 
-
 /**
  * Interface TypeContract
  *
@@ -11,21 +10,6 @@ use InvalidArgumentException;
  * @author Igor Krimerman <i.m.krimerman@gmail.com>
  */
 interface TypeContract {
-
-    /**
-     * Construct Type with given $value
-     *
-     * @param mixed $value
-     */
-    public function __construct($value);
-
-    /**
-     * Statically create new Type Instance. Useful for chaining.
-     *
-     * @param mixed $value
-     * @return static
-     */
-    public static function create($value);
 
     /**
      * Return inner value.
@@ -86,6 +70,14 @@ interface TypeContract {
      * @return static
      */
     public function make($value);
+
+    /**
+     * Statically create new Type Instance. Useful for chaining.
+     *
+     * @param mixed $value
+     * @return static
+     */
+    public static function create($value);
 
     /**
      * Magic method to retrieve Type inner value.

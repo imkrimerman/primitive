@@ -13,7 +13,7 @@
     "require": {
         "php": ">=5.5",
         "ext-mbstring": "*",
-        "danielstjules/stringy": "~1.5",
+        "danielstjules/stringy": "1.9.*",
         "firebase/php-jwt": "1.0.0",
         "symfony/var-dumper": "2.6.*"
     },

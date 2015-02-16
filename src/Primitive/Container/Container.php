@@ -238,7 +238,7 @@ class Container extends ComplexType implements ContainerContract {
 
         foreach ($this->items as $item)
         {
-            $key = data_get($item, $keyBy);
+            $key = _data_get($item, $keyBy);
 
             $byField[$key] = $item;
         }
@@ -1549,7 +1549,7 @@ class Container extends ComplexType implements ContainerContract {
             return $groupBy($value, $key);
         }
 
-        return data_get($value, $groupBy);
+        return _data_get($value, $groupBy);
     }
 
     /**

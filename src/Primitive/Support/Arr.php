@@ -211,7 +211,7 @@ class Arr {
 
         if (isset($array[$key])) return $array[$key];
 
-        return data_get($array, $key, $default);
+        return _data_get($array, $key, $default);
     }
 
     /**
@@ -228,7 +228,7 @@ class Arr {
 
         if (array_key_exists($key, $array)) return true;
 
-        return data_get($array, $key, new Exception('Not Found')) instanceof Exception ? false : true;
+        return _data_get($array, $key, new Exception('Not Found')) instanceof Exception ? false : true;
     }
 
     /**

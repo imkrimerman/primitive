@@ -277,7 +277,7 @@ if ( ! function_exists('str_replace_array'))
     }
 }
 
-if ( ! function_exists('object_get'))
+if ( ! function_exists('_object_get'))
 {
     /**
      * Get an item from an object using "dot" notation.
@@ -287,7 +287,7 @@ if ( ! function_exists('object_get'))
      * @param  mixed $default
      * @return mixed
      */
-    function object_get($object, $key, $default = null)
+    function _object_get($object, $key, $default = null)
     {
         if (is_null($key) || trim($key) == '') return $object;
 
@@ -305,7 +305,7 @@ if ( ! function_exists('object_get'))
     }
 }
 
-if ( ! function_exists('data_get'))
+if ( ! function_exists('_data_get'))
 {
     /**
      * Get an item from an array or object using "dot" notation.
@@ -315,7 +315,7 @@ if ( ! function_exists('data_get'))
      * @param  mixed $default
      * @return mixed
      */
-    function data_get($target, $key, $default = null)
+    function _data_get($target, $key, $default = null)
     {
         if (is_null($key)) return $target;
 

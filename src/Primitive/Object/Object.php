@@ -210,7 +210,7 @@ class Object extends ComplexType implements ObjectContract {
      */
     protected function retrieveValue($property)
     {
-        return data_get($this, $property, $this->getDefault());
+        return _data_get($this, $property, $this->getDefault());
     }
 
     /**

@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Support\Traits;
 
+use Closure;
 use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\Support\Contracts\BooleanContract;
 use im\Primitive\Support\Contracts\ContainerContract;
@@ -179,7 +180,7 @@ trait RetrievableTrait {
      *
      * @param mixed $value
      * @param mixed $default
-     * @return array|string|callable|mixed
+     * @return array|string|\Closure|mixed
      */
     public function getSearchable($value, $default = [])
     {
@@ -191,7 +192,7 @@ trait RetrievableTrait {
         {
             return $this->getStringable($value, $default);
         }
-        elseif (is_callable($value))
+        elseif ($value instanceof Closure)
         {
             return $value;
         }

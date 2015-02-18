@@ -1,6 +1,7 @@
 <?php namespace im\Primitive\Support\Abstracts;
 
 use InvalidArgumentException;
+use JsonSerializable;
 use Serializable;
 use im\Primitive\Support\Dump\Dumper;
 use im\Primitive\Support\Contracts\TypeContract;
@@ -12,7 +13,7 @@ use im\Primitive\Support\Traits\RetrievableTrait;
  * @package im\Primitive\Support\Abstracts
  * @author Igor Krimerman <i.m.krimerman@gmail.com>
  */
-abstract class Type implements TypeContract, Serializable {
+abstract class Type implements TypeContract, Serializable, JsonSerializable {
 
     use RetrievableTrait;
 
@@ -138,6 +139,25 @@ abstract class Type implements TypeContract, Serializable {
      * @return number
      */
     public function __invoke()
+    {
+        return $this->value();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | JsonSerializable
+    |--------------------------------------------------------------------------
+    */
+    /**
+     * (PHP 5 &gt;= 5.4.0)
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     *
+     * @return mixed data which can be serialized by json_encode,
+     * which is a value of any type other than a resource.
+     */
+    public function jsonSerialize()
     {
         return $this->value();
     }

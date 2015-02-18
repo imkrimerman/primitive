@@ -1,5 +1,6 @@
 <?php namespace im\Primitive\Container;
 
+use Closure;
 use \Iterator;
 use \BadMethodCallException;
 use \InvalidArgumentException;
@@ -868,7 +869,7 @@ class Container extends ComplexType implements ContainerContract {
     /**
      * Group an associative array by a field or callback value.
      *
-     * @param  callable|string|StringContract  $groupBy
+     * @param  \Closure|string|StringContract  $groupBy
      * @return static
      */
     public function groupBy($groupBy)
@@ -1014,7 +1015,7 @@ class Container extends ComplexType implements ContainerContract {
      * You can specify second argument to make it recursive.
      *
      * @param bool|BooleanContract $recursive
-     * @param callable|string|StringContract|null $function
+     * @param \Closure|string|StringContract|null $function
      * @return $this
      */
     public function truly($recursive = false, $function = null)
@@ -1023,7 +1024,7 @@ class Container extends ComplexType implements ContainerContract {
 
         $function = $this->getSearchable($function, null);
 
-        if (is_null($function) || ! is_callable($function))
+        if (is_null($function) || ! $function instanceof Closure)
         {
             $function = function ($item) {return ! empty($item);};
         }
@@ -1111,10 +1112,10 @@ class Container extends ComplexType implements ContainerContract {
     /**
      * Return user sorted Container.
      *
-     * @param callable $function
+     * @param \Closure $function
      * @return static
      */
-    public function sort(callable $function)
+    public function sort(Closure $function)
     {
         $copy = $this->all();
 
@@ -1537,14 +1538,14 @@ class Container extends ComplexType implements ContainerContract {
     /**
      * Get the "group by" key value.
      *
-     * @param  callable|string  $groupBy
+     * @param  \Closure|string  $groupBy
      * @param  string  $key
      * @param  mixed  $value
      * @return string
      */
     protected function getGroupByKey($groupBy, $key, $value)
     {
-        if ( ! is_string($groupBy) && is_callable($groupBy))
+        if ( ! is_string($groupBy) && $groupBy instanceof Closure)
         {
             return $groupBy($value, $key);
         }
@@ -1555,11 +1556,11 @@ class Container extends ComplexType implements ContainerContract {
     /**
      * Recursive filter.
      *
-     * @param callable $function
+     * @param \Closure $function
      * @param          $items
      * @return array
      */
-    protected function filterRecursive(callable $function, $items)
+    protected function filterRecursive(Closure $function, $items)
     {
         if ( ! $this->isArrayable($items)) return $items;
 
@@ -1672,7 +1673,7 @@ class Container extends ComplexType implements ContainerContract {
     {
         return $this->filter(function($value)
         {
-            return ! is_callable($value);
+            return ! $value instanceof Closure;
 
         })->all();
     }

@@ -2,7 +2,6 @@
 
 use Countable;
 use ArrayAccess;
-use JsonSerializable;
 use IteratorAggregate;
 use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\Support\Contracts\FileableContract;
@@ -17,7 +16,7 @@ use im\Primitive\Support\Iterators\RecursiveContainerIterator;
  * @author Igor Krimerman <i.m.krimerman@gmail.com>
  */
 abstract class ComplexType extends Type implements
-    FileableContract, JsonableContract, JsonSerializable, ArrayableContract, ArrayAccess, IteratorAggregate, Countable {
+    FileableContract, JsonableContract, ArrayableContract, ArrayAccess, IteratorAggregate, Countable {
 
     /**
      * Write json representation of type value to file
@@ -198,21 +197,6 @@ abstract class ComplexType extends Type implements
     {
         return new RecursiveContainerIterator($this->value());
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | JsonSerializable
-    |--------------------------------------------------------------------------
-    */
-    /**
-     * (PHP 5 &gt;= 5.4.0)<br/>
-     * Specify data which should be serialized to JSON
-     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
-     *
-     * @return mixed data which can be serialized by json_encode,
-     *       which is a value of any type other than a resource.
-     */
-    abstract function jsonSerialize();
 
     /*
     |--------------------------------------------------------------------------

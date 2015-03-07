@@ -1265,7 +1265,7 @@ class String extends Type implements StringContract, Countable, ArrayAccess, Ite
     {
         if (is_null($offset))
         {
-            $this->append($value, '');
+            $this->string = $this->string.$value;
         }
 
         if ($this->offsetExists($offset))

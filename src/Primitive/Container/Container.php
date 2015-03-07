@@ -433,7 +433,7 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
-     * Return joined Container items with whitespace by default.
+     * Return joined Container items.
      *
      * @param string|StringContract $glue
      * @return \im\Primitive\String\String
@@ -442,9 +442,7 @@ class Container extends ComplexType implements ContainerContract {
     {
         foreach ($copy = Arr::flatten($this->items) as $key => $object)
         {
-            $retrieved = $this->retrieveValue($object);
-
-            $object[$key] = is_array($retrieved) && empty($retrieved) ? '' : $retrieved;
+            $copy[$key] = $this->getStringable($object);
         }
 
         return string(implode($this->getStringable($glue, ''), $copy));

@@ -1,6 +1,9 @@
 <?php namespace im\Primitive\Support\Traits;
 
 use Closure;
+use im\Primitive\Bool\Bool;
+use im\Primitive\Support\Abstracts\Number;
+use im\Primitive\Support\Abstracts\Type;
 use im\Primitive\Support\Contracts\ArrayableContract;
 use im\Primitive\Support\Contracts\BooleanContract;
 use im\Primitive\Support\Contracts\ContainerContract;
@@ -176,6 +179,37 @@ trait RetrievableTrait {
     }
 
     /**
+     * Retrieve number from any type or return default.
+     *
+     * @param $value
+     * @param null|mixed $default
+     * @return float|int|mixed
+     */
+    public function getNumberable($value, $default = null)
+    {
+        switch(true)
+        {
+            case is_int($value):
+            case is_float($value):
+                return $value;
+            case is_numeric($value) && strpos($value, '.'):
+                return (float) $value;
+            case is_numeric($value):
+            case is_bool($value):
+                return (int) $value;
+            case $value instanceof IntegerContract:
+            case $value instanceof FloatContract:
+                return $value->value();
+            case $value instanceof BooleanContract:
+                return $value->toInt()->value();
+            case $value instanceof StringContract:
+                return (int) $value->value();
+            default:
+                return value($default);
+        }
+    }
+
+    /**
      * Retrieve value that can be used in search methods.
      *
      * @param mixed $value
@@ -328,5 +362,27 @@ trait RetrievableTrait {
             'y' => true,    'n' => false,
             '+' => true,    '-' => false
         ];
+    }
+
+    /**
+     * Check if $value is instance of Primitive Type.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    public function isType($value)
+    {
+        return $value instanceof Type;
+    }
+
+    /**
+     * Check if $value is not instance of Primitive Type.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    public function isNotType($value)
+    {
+        return ! $this->isType($value);
     }
 }

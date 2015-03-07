@@ -26,11 +26,13 @@ class ContainerFactory {
      * Return constructed instance of Container Type
      *
      * @param mixed $from
-     * @param int   $type
+     * @param int|null   $type
      * @return \im\Primitive\Container\Container|\im\Primitive\Container\RevertableContainer
      */
     public function make($from, $type)
     {
+        $type = $type ?: static::SIMPLE;
+
         switch ($type)
         {
             case static::SIMPLE:

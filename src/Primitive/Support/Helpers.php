@@ -12,11 +12,11 @@ if ( ! function_exists('container'))
 {
     /**
      * @param mixed $from
-     * @param int   $type
+     * @param int|null $type check ContainerFactory types
      *
      * @return \im\Primitive\Container\Container|\im\Primitive\Container\RevertableContainer
      */
-    function container($from = [], $type = ContainerFactory::SIMPLE)
+    function container($from = [], $type = null)
     {
         return ContainerFactory::create()->make($from, $type);
     }

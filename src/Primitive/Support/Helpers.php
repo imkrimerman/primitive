@@ -295,7 +295,7 @@ if ( ! function_exists('_object_get'))
         {
             if ( ! is_object($object) || ! isset($object->{$segment}))
             {
-                return value($default);
+                return $default;
             }
 
             $object = $object->{$segment};
@@ -325,7 +325,7 @@ if ( ! function_exists('_data_get'))
             {
                 if ( ! array_key_exists($segment, $target))
                 {
-                    return value($default);
+                    return $default;
                 }
 
                 $target = $target[$segment];
@@ -334,14 +334,14 @@ if ( ! function_exists('_data_get'))
             {
                 if ( ! isset($target->{$segment}))
                 {
-                    return value($default);
+                    return $default;
                 }
 
                 $target = $target->{$segment};
             }
             else
             {
-                return value($default);
+                return $default;
             }
         }
 

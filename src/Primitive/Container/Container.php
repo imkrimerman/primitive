@@ -115,7 +115,7 @@ class Container extends ComplexType implements ContainerContract {
      */
     public function get($key, $default = null)
     {
-        return value(Arr::get($this->items, $this->getKey($key), $default));
+        return Arr::get($this->items, $this->getKey($key), $default);
     }
 
     /**
@@ -160,7 +160,7 @@ class Container extends ComplexType implements ContainerContract {
      */
     public function pop()
     {
-        return value(array_pop($this->items));
+        return array_pop($this->items);
     }
 
     /**
@@ -183,7 +183,7 @@ class Container extends ComplexType implements ContainerContract {
      */
     public function shift()
     {
-        return value(array_shift($this->items));
+        return array_shift($this->items);
     }
 
     /**

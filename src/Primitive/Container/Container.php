@@ -133,6 +133,31 @@ class Container extends ComplexType implements ContainerContract {
     }
 
     /**
+     * Push value to specified key
+     *
+     * @param mixed $key
+     * @param mixed $value
+     * @return $this
+     */
+    public function pushToKey($key, $value)
+    {
+        $keyValue = $this->get($key);
+
+        if ($keyValue instanceof static)
+        {
+            $keyValue->push($value);
+        }
+        elseif (is_array($keyValue))
+        {
+            $keyValue[] = $value;
+        }
+
+        $this->set($key, $keyValue);
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function value()
@@ -1651,7 +1676,7 @@ class Container extends ComplexType implements ContainerContract {
      */
     protected function getKey($key, $default = null)
     {
-        return ($this->isIntegerable($key, true)) ? $this->getIntegerable($key)
+        return ($this->isIntegerable($key, true)) ? $this->getIntegerable($key, $default)
                                                   : $this->getStringable($key, $default);
     }
 

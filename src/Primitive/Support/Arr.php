@@ -327,7 +327,8 @@ class Arr {
             if ((is_array($array) && ( ! isset($array[$key]) || ! is_array($array[$key]))) ||
                 (is_object($array) && ( ! isset($array->{$key}) || ! is_array($array->{$key}))))
             {
-                $array[$key] = [];
+                if (is_array($array)) $array[$key] = [];
+                elseif (is_object($array)) $array->{$key} = [];
             }
 
             if (is_array($array)) $array =& $array[$key];

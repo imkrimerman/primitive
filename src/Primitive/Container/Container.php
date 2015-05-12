@@ -141,6 +141,11 @@ class Container extends ComplexType implements ContainerContract {
      */
     public function pushToKey($key, $value)
     {
+        if ( ! $this->has($key))
+        {
+            $this->set($key, []);
+        }
+
         $keyValue = $this->get($key);
 
         if ($keyValue instanceof static)
@@ -150,6 +155,12 @@ class Container extends ComplexType implements ContainerContract {
         elseif (is_array($keyValue))
         {
             $keyValue[] = $value;
+        }
+        else
+        {
+            $this->set($key, [])->pushToKey($key, $keyValue);
+
+            return $this;
         }
 
         $this->set($key, $keyValue);

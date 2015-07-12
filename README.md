@@ -23,9 +23,6 @@ Add a dependency to your composer.json file, if you use [Composer](http://getcom
 }
 ```
 
-###Documentation
-Check [documentation](http://primitive.esy.es) and smile :)
-
 ### Contributing
 **All issues and pull requests should be filed on the [im/primitive](http://github.com/imkrimerman/primitive) repository.**
 
